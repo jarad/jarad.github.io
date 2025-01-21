@@ -8,6 +8,9 @@ group: navigation
 
 ## Regular courses
 
+- Spring 2025
+  - STAT 4610X - Sports Analytics
+  - DS 4010 - Data Science Capstone
 - Fall 2024
   - [STAT 5870-1/A (Eng)](stat5870Eng)
 - Spring 2024
