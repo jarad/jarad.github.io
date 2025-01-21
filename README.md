@@ -1,4 +1,4 @@
-jarad.github.com
+jarad.github.io
 ================
 
 This is my professional website (outside of a university).

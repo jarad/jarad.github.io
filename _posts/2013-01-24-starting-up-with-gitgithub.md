@@ -15,7 +15,7 @@ Here's what we have to do once.
 
 ## What you have to do
 
-- Go to <http://github.com>, sign up for an account, and let me know your username, e.g. mine is [jarad](http://jarad.github.com).
+- Go to <http://github.com>, sign up for an account, and let me know your username, e.g. mine is [jarad](http://jarad.github.io).
 - Follow [these instructions](https://help.github.com/articles/set-up-git).
 
 ## What I have to do

@@ -17,7 +17,7 @@ research
 
 When you use git (or any other version control software) and you make changes
 to files, you need to record those changes in a 
-[commit message](https://github.com/jarad/jarad.github.com/commits/master). 
+[commit message](https://github.com/jarad/jarad.github.io/commits/master). 
 These commit messages provide a brief summary of what changes have occurred
 in the history of the files and can allow you to back in time to a previous 
 version of the file. 

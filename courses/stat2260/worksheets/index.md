@@ -11,7 +11,7 @@ Below are worksheets
 
 If the files are ever not available on this page, 
 you can find them 
-[here](https://github.com/jarad/jarad.github.com/tree/master/courses/stat226/worksheets).
+[here](https://github.com/jarad/jarad.github.io/tree/master/courses/stat226/worksheets).
 
 ## Part I
 

@@ -13,7 +13,7 @@ layout: page
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-[R Markdown file](https://raw.githubusercontent.com/jarad/jarad.github.com/master/courses/stat486/slides/25-interactivity/25-interactivity.Rmd)
+[R Markdown file](https://raw.githubusercontent.com/jarad/jarad.github.io/master/courses/stat486/slides/25-interactivity/25-interactivity.Rmd)
 
 ```{r packages}
 library("tidyverse"); theme_set(theme_bw())

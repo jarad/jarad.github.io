@@ -12,7 +12,7 @@ slides, and YouTube links to recorded videos.
 
 If the files are ever not available here, 
 you can find them 
-[here](https://github.com/jarad/jarad.github.com/tree/master/courses/hci522/slides).
+[here](https://github.com/jarad/jarad.github.io/tree/master/courses/hci522/slides).
 
 ### Statistical Methods
 

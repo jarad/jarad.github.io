@@ -10,7 +10,7 @@ tagline: Slides and Code
 If the slides here aren't updated or you are just interested in what the 
 rmarkdown files look like, 
 you can find the source files 
-[in the courses/stat486/slides/ folder in the github repository for my website](https://github.com/jarad/jarad.github.com/tree/master/courses/stat486/slides). 
+[in the courses/stat486/slides/ folder in the github repository for my website](https://github.com/jarad/jarad.github.io/tree/master/courses/stat486/slides). 
 
 ## Review
 
@@ -53,7 +53,7 @@ you can find the source files
 - [Data Science](22-data_science/22-data_science.html)
 - [Rscripts](23-rscripts/23-rscripts.html) - [R Code](23-rscripts/23-rscripts.R)
 - Rmarkdown
-- [Interactivity](25-interactivity/25-interactivity.html) - [Rmd](https://raw.githubusercontent.com/jarad/jarad.github.com/master/courses/stat486/slides/25-interactivity/25-interactivity.Rmd)
+- [Interactivity](25-interactivity/25-interactivity.html) - [Rmd](https://raw.githubusercontent.com/jarad/jarad.github.io/master/courses/stat486/slides/25-interactivity/25-interactivity.Rmd)
 - [Shiny](26-shiny/26-shiny.html) - [R Code](26-shiny/26-shiny.R)
 
 ## Machine learning

@@ -6,7 +6,7 @@ tagline: Slides
 {% include JB/setup %}
 
 I will post lecture slides here. 
-The Rnw files can be found [here](https://github.com/jarad/jarad.github.com/tree/master/courses/stat615/slides).
+The Rnw files can be found [here](https://github.com/jarad/jarad.github.io/tree/master/courses/stat615/slides).
 
 # Slides
 
