@@ -21,10 +21,9 @@ Originally, I am from [Duluth, Minnesota](https://duluthmn.gov/ "Duluth, Minneso
   {% endfor %}
 </ul>
 
-## Spring 2025 Courses ([all courses](courses/))
+## Fall 2025 Courses ([all courses](courses/))
 
-  - STAT 4610X - Sports Analytics
-  - DS 4010 - Data Science Capstone
+  - [STAT 6150](courses/stat6150)
 
 ## Contact
 

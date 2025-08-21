@@ -8,6 +8,8 @@ group: navigation
 
 ## Regular courses
 
+- Fall
+  - [STAT 6150](stat6150)
 - Spring 2025
   - STAT 4610X - Sports Analytics
   - DS 4010 - Data Science Capstone
