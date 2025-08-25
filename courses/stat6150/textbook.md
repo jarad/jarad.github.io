@@ -7,7 +7,7 @@ tagline: Textbook
 
 The required textbook for the course is 
 
-<a href="http://www.amazon.com/gp/product/1439840954/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1439840954&linkCode=as2&tag=jarnieassprod-20&linkId=3HFCNUPX52YW2EVV"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=1439840954&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=1439840954" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+![](images/bayesian_data_analysis.jpg)
 
 Other advanced textbooks are linked below and [some introductory textbooks are here](../stat544/textbook.html).
 
