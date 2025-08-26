@@ -1,6 +1,6 @@
 ---
 layout: page
-title: STAT 6150
+title: [STAT 6150](../)
 tagline: Textbook
 ---
 {% include JB/setup %}
