@@ -7,7 +7,7 @@ tagline: Textbook
 
 The required textbook for the course is 
 
-<img src="images/bayesian_data_analysis.jpg" alt="Bayesian Data Analysis" height=10px>
+<img src="images/bayesian_data_analysis.jpg" alt="Bayesian Data Analysis" height="10">
 
 Other advanced textbooks are linked below and [some introductory textbooks are here](../stat544/textbook.html).
 
