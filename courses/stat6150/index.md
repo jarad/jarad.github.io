@@ -1,12 +1,12 @@
 ---
 layout: page
-title: STAT 615
+title: STAT 6150
 tagline: Advanced Bayesian Methods
 ---
 {% include JB/setup %}
 
 <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Bayes_icon.svg/200px-Bayes_icon.svg.png" align="right" />
-This website is designed to host course material for [STAT 615 - Advanced Bayesian Methods](http://catalog.iastate.edu/showcourse/?code=STAT-615&edition=2015-16) at [Iowa State University](http://www.iastate.edu).
+This website is designed to host course material for [STAT 6150 - Advanced Bayesian Methods](http://catalog.iastate.edu/showcourse/?code=STAT-615&edition=2015-16) at [Iowa State University](http://www.iastate.edu).
 
 - Instructor: [Jarad Niemi](http://jarad.me) (<niemi@iastate.edu>, [@NiemiSTAT](https://twitter.com/NiemiSTAT))
 - Office hours: TBD
@@ -37,12 +37,13 @@ Complex hierarchical and multilevel models, dynamic linear and generalized linea
 
 ## Prerequisite
 
-The prerequisites for the course are [STAT 544](http://catalog.iastate.edu/showcourse/?code=STAT-544&edition=2014-15) and [STAT 601](http://catalog.iastate.edu/showcourse/?code=STAT-601&edition=2014-15). 
+The prerequisites for the course are STAT 5440
+and STAT 6010. 
 
 
 ## Q&A
 
-Please use the [Blackboard](http://bb.its.iastate.edu/) discussion forum. 
+Please use the Canvas discussion forum. 
 
 ## Course topics 
 
@@ -70,5 +71,6 @@ The course aims to provide an overview of Bayesian methods in a variety of areas
 
 ## Faculty Senate Recommendations
 
-This course abides by the Faculty Senate Recommendations provided at <http://www.celt.iastate.edu/teaching/preparing-to-teach/recommended-iowa-state-university-syllabus-statements>.
+This course abides by the Faculty Senate Recommendations provided at 
+<https://celt.iastate.edu/prepare-and-teach/design-your-course/syllabus-statements/>.
 
