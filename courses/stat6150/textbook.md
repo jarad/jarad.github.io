@@ -11,21 +11,23 @@ The required textbook for the course is
 
 Other advanced textbooks are linked below and [some introductory textbooks are here](../stat544/textbook.html).
 
+
 Hierarchical Modeling:
 
-![](images/data_analysis_using_regression_and_multilevel_models.jpg)
+<img src="images/data_analysis_using_regression_and_multilevel_models.jpg" alt="Data Analysis Using Regression and Multilevel Models" height="100">
+
 
 Time series:
 
-![](images/bayesian_forecasting_and_dynamic_models.jpg)
-![](images/dynamic_linear_models_with_r.jpg)
-![](images/time_series.jpg)
+<img src="images/bayesian_forecasting_and_dynamic_models.jpg" alt="Bayesian Forecasting and Dynamic Models" height="100">
+<img src="images/dynamic_linear_models_with_r.jpg" alt="Dynamic Linear Models with R" height="100">
+<img src="images/time_series.jpg" alt="Time Series" height="100">
 
 
 Spatial:
 
-![](images/hierarchical_modeling_and_analysis_for_spatial_data.jpg)
-![](images/statistics_for_spatio-temporal_data.jpg)
+<img src="images/hierarchical_modeling_and_analysis_for_spatial_data.jpg" alt="Hierarchical Modeling and Analysis for Spatial Data" height="100">
+<img src="images/statistics_for_spatio-temporal_data.jpg" alt="Statistics for Spatio-temporal Data" height="100">
 
 
 Nonparametrics:
@@ -33,8 +35,8 @@ Nonparametrics:
 <img src="images/bayesian_nonparametrics.jpg" alt="Bayesian Nonparametrics" height="100">
 <img src="images/bayesian_nonparametrics2.jpg" alt="Bayesian Nonparametrics" height="100">
 
-Computation:
 
+Computation:
 
 <img src="images/monte_carlo_statistical_methods.jpg" alt="Monte Carlo Statistical Methods" height="100">
 <img src="images/markov_chain_monte_carlo.jpg" alt="Markov Chain Monte Carlo" height="100">
