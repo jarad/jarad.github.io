@@ -1,5 +1,5 @@
 ---
-title: "STAT 615 Background"
+title: "STAT 6150 Background"
 author: "Jarad Niemi"
 format: html
 ---

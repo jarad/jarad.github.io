@@ -1,6 +1,6 @@
 ---
 layout: page
-title: STAT 615
+title: STAT 6150
 tagline: readings
 ---
 {% include JB/setup %}

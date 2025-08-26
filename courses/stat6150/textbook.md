@@ -1,32 +1,32 @@
 ---
 layout: page
-title: STAT 615
+title: STAT 6150
 tagline: Textbook
 ---
 {% include JB/setup %}
 
 The required textbook for the course is 
 
-![](images/bayesian_data_analysis.jpg)
+<img src="images/bayesian_data_analysis.jpg" alt="Bayesian Data Analysis" width="200">
 
 Other advanced textbooks are linked below and [some introductory textbooks are here](../stat544/textbook.html).
 
 Hierarchical Modeling:
 
-<a rel="nofollow" href="http://www.amazon.com/gp/product/1439819173/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1439819173&linkCode=as2&tag=jarnieassprod-20&linkId=GSHCACNR66N45RKN"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=1439819173&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=1439819173" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
-
-
+![](images/data_analysis_using_regression_and_multilevel_models.jpg)
 
 Time series:
 
-<a href="http://www.amazon.com/gp/product/0387772375/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=0387772375&linkCode=as2&tag=jarnieassprod-20&linkId=HNQKY6TEE3CQUNWW"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=0387772375&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=0387772375" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
-<a href="http://www.amazon.com/gp/product/1420093363/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1420093363&linkCode=as2&tag=jarnieassprod-20&linkId=U6QR3AJUXZEDF7WE"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=1420093363&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=1420093363" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
-<a href="http://www.amazon.com/gp/product/1475770987/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1475770987&linkCode=as2&tag=jarnieassprod-20&linkId=3KLDSKSK6JBMSIFB"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=1475770987&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=1475770987" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+![](images/bayesian_forecasting_and_dynamic_models.jpg)
+![](images/dynamic_linear_models_with_r.jpg)
+![](images/time_series.jpg)
+
 
 Spatial:
 
-<a href="http://www.amazon.com/gp/product/1439819173/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1439819173&linkCode=as2&tag=jarnieassprod-20&linkId=A3MDJX5QFRT6DYXV"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=1439819173&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=1439819173" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
-<a href="http://www.amazon.com/gp/product/0471692743/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=0471692743&linkCode=as2&tag=jarnieassprod-20&linkId=AOOHQOWAKW7FLVTS"><img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=0471692743&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=jarnieassprod-20" ></a><img src="http://ir-na.amazon-adsystem.com/e/ir?t=jarnieassprod-20&l=as2&o=1&a=0471692743" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+![](images/hierarchical_modeling_and_analysis_for_spatial_data.jpg)
+![](images/statistics_for_spatio-temporal_data.jpg)
+
 
 Nonparametrics:
 
