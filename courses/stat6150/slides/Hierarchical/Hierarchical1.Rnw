@@ -77,8 +77,10 @@ m' &\pause = C'[m/C + y/V]
 
 \begin{frame}
 \frametitle{Normal model with normal prior (cont.)}
-For simplicity, let $V=C=1$ and $m=0$, then $\theta|y \sim N(y/2, 1/2)$. \pause
-Suppose $y=1$, then we have
+For simplicity, let $V = C = 1$ and $m = 0$, 
+then $\theta|y \sim N(y/2, 1/2)$. 
+\pause
+Suppose \alert{$y = 1$}, then we have
 
 <<colors_and_lines>>=
 colors = c(prior = "#56B4E9",
@@ -100,10 +102,10 @@ linetypes = c(prior = 2,
 
 <<normal_model_normal_prior, fig.width=7>>=
 y = 1
-d = data.frame(x=seq(-2,3,by=.01)) %>%
+d = data.frame(x=seq(-2,3,by=.01)) |>
   mutate(prior = dnorm(x),
          likelihood = dnorm(x,y),
-         posterior = dnorm(x,y/2,sqrt(1/2))) %>%
+         posterior = dnorm(x,y/2,sqrt(1/2))) |>
   melt(id.var='x', variable.name='distribution', value.name='density')
 
 ggplot(d, aes(x,density, color=distribution, linetype=distribution)) +
@@ -118,14 +120,14 @@ ggplot(d, aes(x,density, color=distribution, linetype=distribution)) +
 
 \begin{frame}
 \frametitle{Normal model with normal prior (cont.)}
-Now suppose $y=10$, then we have
+Now suppose \alert{$y = 10$}, then we have
 
 <<normal_model_normal_prior2, fig.width=7>>=
 y = 10
-d = data.frame(theta=seq(-2,12,by=.01)) %>%
+d = data.frame(theta=seq(-2,12,by=.01)) |>
   mutate(prior = dnorm(theta),
          likelihood = dnorm(theta,y),
-         posterior = dnorm(theta,y/2,sqrt(1/2))) %>%
+         posterior = dnorm(theta,y/2,sqrt(1/2))) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
@@ -160,18 +162,23 @@ and data.
 \frametitle{Normal model with $t$ prior}
 
 Now suppose
-\[ Y \sim N(\theta,V) \]
-with
-\[ \theta \sim t_v(m,C), \]
+\[ Y \sim N(\theta,V) 
+\quad \mbox{with} \quad
+\theta \sim t_v(m,C), \]
 where $E[\theta] = m$ for $v>1$ and $Var[\theta] = C \frac{v}{v-2}$ for $v>2$.
-
-\vspace{0.1in} \pause
-
-Now the posterior is
+\pause
+The posterior is
 \[ p(\theta|y) \propto e^{-(y-\theta)^2/2V} \left( 1+\frac{1}{v}\frac{(\theta-m)^2}{C}\right)^{-(v+1)/2}   \]
 \pause
 which is not a known distribution, \pause but we can normalize via
-\[ p(\theta|y) = \frac{e^{-(y-\theta)^2/2V} \left( 1+\frac{1}{v}\frac{(\theta-m)^2}{C}\right)^{-(v+1)/2} }{\int e^{-(y-\theta)^2/2V} \left( 1+\frac{1}{v}\frac{(\theta-m)^2}{C}\right)^{-(v+1)/2} d\theta} \]
+{\small 
+\[ 
+p(\theta|y) = 
+e^{-(y-\theta)^2/2V} \left( 1+\frac{1}{v}\frac{(\theta-m)^2}{C}\right)^{-(v+1)/2}
+\left/ \int e^{-(y-\theta)^2/2V} \left( 1+\frac{1}{v}\frac{(\theta-m)^2}{C}\right)^{-(v+1)/2} d\theta
+\right.
+\]
+}
 \end{frame}
 
 
@@ -179,22 +186,20 @@ which is not a known distribution, \pause but we can normalize via
 \begin{frame}
 \frametitle{Normal model with $t$ prior (cont.)}
 Alternatively, we can calculate the \alert{marginal likelihood}
-\[ \begin{array}{rl}
+\[ 
 p(y)
-&= \int p(y|\theta)p(\theta) d\theta \\
-&= \int N(y;\theta,V) t_v(\theta;m,C) d\theta
-\end{array} \]
+= \int p(y|\theta)p(\theta) d\theta 
+= \int N(y;\theta,V) t_v(\theta;m,C) d\theta
+ \]
 \pause
 where
 \begin{itemize}
 \item $N(y;\theta,V)$ is the normal density with mean $\theta$ and variance $V$ evaluated at $y$ \pause and
-\item $t_v(\theta;m,C)$ is the $t$ distribution with degrees of freedom $v$, location $m$, and scale $C$ evaluated at $\theta$.
+\item $t_v(\theta;m,C)$ is the location-scale $t$ density with degrees of freedom $v$, location $m$, and scale $\sqrt{C}$ evaluated at $\theta$
 \end{itemize}
-
-\vspace{0.1in} \pause
-
+\pause
 and then find the posterior
-\[ p(\theta|y) = N(y;\theta, V) t_v(\theta;m,C) / p(y). \]
+\[ p(\theta|y) = N(y;\theta, V) t_v(\theta;m,C) \, / \, p(y). \]
 \end{frame}
 
 
@@ -204,16 +209,16 @@ and then find the posterior
 Since this is a one dimensional integration, we can easily handle it via the {\tt integrate} function in R: \pause
 
 <<normal_model_t_prior, echo=TRUE>>=
-# A non-standard t distribution
-my_dt = Vectorize(function(x, v=1, m=0, C=1, log=FALSE) {
-  logf = dt((x-m)/sqrt(C), v, log=TRUE) - log(sqrt(C))
+# A location-scale t distribution
+my_dt = Vectorize(function(x, v = 1, m = 0, C = 1, log = FALSE) {
+  logf = dt( (x - m) / sqrt(C), v, log = TRUE) - log( sqrt(C) )
   if (log) return(logf)
   return(exp(logf))
 })
 
 # This is a function to calculate p(y|\theta)p(\theta).
-f = Vectorize(function(theta, y=1, V=1, v=1, m=0, C=1, log=FALSE) {
-  logf = dnorm(y, theta, sqrt(V), log=TRUE) + my_dt(theta, v, m, C, log=TRUE)
+f = Vectorize(function(theta, y = 1, V = 1, v = 1, m = 0, C = 1, log = FALSE) {
+  logf = dnorm(y, theta, sqrt(V), log = TRUE) + my_dt(theta, v, m, C, log = TRUE)
   if (log) return(logf)
   return(exp(logf))
 })
@@ -226,14 +231,15 @@ f = Vectorize(function(theta, y=1, V=1, v=1, m=0, C=1, log=FALSE) {
 
 \begin{frame}
 \frametitle{Normal model with $t$ prior (cont.)}
-Let $v=1$, $m=0$, $V=C=1$ and $y=1$. \pause then
+Let $v=1$, $m=0$, $V=C=1$ and \alert{$y = 1$}. 
+\pause Then
 
 <<normal_model_t_prior2>>=
 y = 1
-d = data.frame(theta=seq(-2,3,by=.01)) %>%
+d = data.frame(theta=seq(-2,3,by=.01)) |>
   mutate(prior = my_dt(theta, 1),
          likelihood = dnorm(y,theta),
-         posterior = f(theta,y=y)/py$value) %>%
+         posterior = f(theta,y=y)/py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
@@ -249,20 +255,23 @@ ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
 
 \begin{frame}
 \frametitle{Normal model with $t$ prior (cont.)}
-Let $v=1$, $m=0$, $V=C=1$, and $y=10$. \pause then
+Let $v=1$, $m=0$, $V=C=1$, and \alert{$y = 10$}. 
+\pause 
+Then
 
 <<normal_model_t_prior3>>=
 y = 10
-py = integrate(function(x) f(x,y), -Inf, Inf)
-d = data.frame(theta=seq(-2,12,by=.1)) %>%
-  mutate(prior = my_dt(theta, 1),
+py = integrate(function(x) f(x, y), -Inf, Inf)
+d = data.frame(theta=seq(-2, 12, by = .1)) |>
+  mutate(prior      = my_dt(theta, 1),
          likelihood = dnorm(y,theta),
-         posterior = f(theta,y=y)/py$value) %>%
+         posterior  = f(theta,y = y) / py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
-ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
+ggplot(d, aes(theta, density, 
+              color = distribution, linetype = distribution)) +
   geom_line() +
-  labs(x=expression(theta)) +
+  labs(x = expression(theta)) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -279,15 +288,19 @@ Let's take a look at the \emph{maximum a posteriori} (MAP) estimates as a functi
 
 <<normal_model_map>>=
 mx = 5
-map = adply(seq(-mx,mx,length=101), 1, function(d){
-  o = optimize(function(x) f(x,d), c(-mx,mx), maximum=TRUE)
-  data.frame(y = d, map_t = o$maximum, mle=d, map_normal=d/2)
-})[,-1] %>%
-  melt(id.vars='y', variable.name='model', value.name='theta')
+map = adply(seq(-mx, mx, length = 101), 1, function(d){
+  o = optimize(function(x) f(x, d), c(-mx, mx), maximum = TRUE)
+  data.frame(
+    y = d, 
+    map_t = o$maximum, 
+    mle = d, 
+    map_normal = d/2)
+})[,-1] |>
+  melt(id.vars='y', variable.name='model', value.name = 'theta')
 
 ggplot(map, aes(y, theta, color = model, linetype = model)) +
   geom_line() +
-  labs(x=expression(y), y = expression(hat(theta)[MAP])) +
+  labs(x = expression(y), y = expression(hat(theta))) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -325,9 +338,10 @@ Let $La(m,b)$ denote a Laplace (or double exponential) distribution with mean $m
 
 \pause
 
-<<laplace, fig.width=10>>=
-dlaplace = function(x,m,b) exp(-abs(x-m)/b)/(2*b)
-curve(dlaplace(x, 0, 1), -3, 3, lwd=2, xlab='x', ylab='density')
+<<laplace, fig.width=9>>=
+dlaplace = function(x, m, b) exp(-abs(x - m) / b) / (2 * b)
+curve(dlaplace(x, 0, 1), -3, 3, 
+      lwd = 2, xlab = 'x', ylab = 'density')
 @
 
 \end{frame}
@@ -357,7 +371,9 @@ where
 \begin{frame}
 \frametitle{Laplace prior (cont.)}
 
-For simplicity, let $b=V=1$, $m=0$ and suppose we observe $y=1$.
+For simplicity, let $b=V=1$, $m=0$ and \alert{$y = 1$}.
+\pause
+Then
 
 \vspace{0.1in} \pause
 
@@ -371,10 +387,10 @@ f = Vectorize(function(theta,y,V,m,b,log=FALSE) {
 y = b = V = 1; m = 0
 py = integrate(function(x) f(x, y, V, m, b), -Inf, Inf)
 
-d = data.frame(theta=seq(-2,3,by=.01)) %>%
+d = data.frame(theta=seq(-2,3,by=.01)) |>
   mutate(prior = dlaplace(theta, m, b),
          likelihood = dnorm(y, theta),
-         posterior = f(theta, y=y, V, m, b)/py$value) %>%
+         posterior = f(theta, y=y, V, m, b)/py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
@@ -390,7 +406,9 @@ ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
 \begin{frame}
 \frametitle{Laplace prior (cont.)}
 
-For simplicity, let $b=V=1$, $m=0$ and suppose we observe $y=10$.
+For simplicity, let $b = V = 1$, $m = 0$ and \alert{$y = 10$}.
+\pause
+Then
 
 \vspace{0.1in} \pause
 
@@ -398,10 +416,10 @@ For simplicity, let $b=V=1$, $m=0$ and suppose we observe $y=10$.
 y = 10
 py = integrate(function(x) f(x, y, V, m, b), -Inf, Inf)
 
-d = data.frame(theta=seq(-2,y+2,length=1001)) %>%
+d = data.frame(theta=seq(-2,y+2,length=1001)) |>
   mutate(prior = dlaplace(theta, m, b),
          likelihood = dnorm(y, theta),
-         posterior = f(theta, y=y, V, m, b)/py$value) %>%
+         posterior = f(theta, y=y, V, m, b)/py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
@@ -420,14 +438,16 @@ ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
 
 <<normal_model_laplace_prior_map>>=
 d = adply(unique(map$y), 1, function(d){
-  o = optimize(function(x) f(x,d,V,m,b,log=TRUE), c(-mx,mx), maximum=TRUE)
+  o = optimize(function(x) f(x, d, V, m, b, log = TRUE), 
+               c(-mx, mx), maximum = TRUE)
+  
   data.frame(y = d, map_laplace = o$maximum)
-})[,-1] %>%
-  melt(id.vars='y', variable.name='model', value.name='theta')
+})[,-1] |>
+  melt(id.vars = 'y', variable.name = 'model', value.name = 'theta')
 
 ggplot(rbind(map, d), aes(y, theta, color = model, linetype = model)) +
   geom_line() +
-  labs(x=expression(y), y = expression(hat(theta)[MAP])) +
+  labs(x = expression(y), y = expression(hat(theta))) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -454,7 +474,7 @@ we have $P(\theta=0|y) = 0$ for any $y$.
 
 \vspace{0.1in} \pause
 
-\alert{Can we construct a prior such that the posterior has mass at zero?}
+\alert{Can we construct a prior such that the posterior has non-zero density at zero?}
 
 
 \end{frame}
@@ -544,7 +564,9 @@ m' &\pause= C'(y/V+m/C)
 \begin{frame}
 \frametitle{Point-mass prior (cont.)}
 
-For simplicity, let $V=C=1$, $p=0.5$, $m=0$ and $y=1$. \pause Then
+For simplicity, let $V=C=1$, $p=0.5$, $m=0$ and \alert{$y = 1$}. 
+\pause 
+Then
 
 <<normal_model_point_mass_prior>>=
 y = 1
@@ -553,10 +575,10 @@ V = C = 1
 m = 0
 
 pp = 1/(1+dnorm(y,m,sqrt(C+V))/dnorm(y,0,sqrt(V)))
-d = data.frame(theta=seq(-2,3,by=.01)) %>%
+d = data.frame(theta=seq(-2,3,by=.01)) |>
   mutate(prior = dnorm(theta)/2,
          likelihood = dnorm(theta,y),
-         posterior = dnorm(theta,y/2,sqrt(1/2))*(1-pp)) %>%
+         posterior = dnorm(theta,y/2,sqrt(1/2))*(1-pp)) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 e = .05
@@ -581,7 +603,10 @@ ggplot(d, aes(theta, density, color=distribution, linetype=distribution)) +
 \begin{frame}
 \frametitle{Point-mass prior (cont.)}
 
-For simplicity, let $V=C=1$, $p=0.5$, and $m=0$. \pause Suppose we observe $y=1$.
+For simplicity, let $V=C=1$, $p=0.5$, and $m=0$
+and \alert{$y = 10$}.
+\pause
+Then
 
 <<normal_model_point_mass_prior2>>=
 y = 10
@@ -590,10 +615,10 @@ V = C = 1
 m = 0
 
 pp = 1/(1+dnorm(y,m,sqrt(C+V))/dnorm(y,0,sqrt(V)))
-d = data.frame(theta=seq(-2,y+2,by=.01)) %>%
+d = data.frame(theta=seq(-2,y+2,by=.01)) |>
   mutate(prior = dnorm(theta)*p,
          likelihood = dnorm(theta,y),
-         posterior = dnorm(theta,y/2,sqrt(1/2))*(1-pp)) %>%
+         posterior = dnorm(theta,y/2,sqrt(1/2))*(1-pp)) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 e = .05
@@ -661,7 +686,7 @@ But we already calculated this posterior earlier in the lecture, i.e. normal mod
 \begin{frame}[fragile]
 \frametitle{Point-mass prior with $t$ distribution (cont.)}
 
-Suppose $v=V=C=1$, $p=0.5$, $m=0$, and $y=1$.
+Suppose $v=V=C=1$, $p=0.5$, $m=0$, and \alert{$y = 1$}.
 
 \vspace{0.1in} \pause
 
@@ -673,7 +698,7 @@ Then, we can calculate the following integral (marginal likelihood) numerically
 
 
 <<normal_model_point_mass_t, echo=TRUE>>=
-v = C = V = 1; p = 0.5; m = 0; y=1
+v = C = V = 1; p = 0.5; m = 0; y = 1
 (int = integrate(function(x) dnorm(y,x,sqrt(V))*my_dt(x), -Inf, Inf))
 (int0 = dnorm(y,0,sqrt(V)))
 (pp = 1/(1+(1-p)*int$value/(p*int0)))
@@ -689,14 +714,17 @@ v = C = V = 1; p = 0.5; m = 0; y=1
 \begin{frame}
 \frametitle{Point-mass prior with $t$ distribution (cont.)}
 
-Suppose $v=V=C=1$, $p=0.5$, and $m=0$. \pause And we observe $y=1$.
+Suppose $v=V=C=1$, $p=0.5$, and $m=0$ 
+and \alert{$y = 1$}. 
+\pause
+Then
 
 <<normal_model_point_mass_t2>>=
 y = 1
 
 # This is a function to calculate p(y|\theta)p(\theta).
-f = Vectorize(function(theta, y=1, V=1, v=1, m=0, C=1, log=FALSE) {
-  logf = dnorm(y, theta, sqrt(V), log=TRUE) + my_dt(theta, v, m, C, log=TRUE)
+f = Vectorize(function(theta, y = 1, V = 1, v = 1, m = 0, C = 1, log = FALSE) {
+  logf = dnorm(y, theta, sqrt(V), log = TRUE) + my_dt(theta, v, m, C, log = TRUE)
   return(ifelse(log, logf, exp(logf)))
 })
 
@@ -704,10 +732,10 @@ f = Vectorize(function(theta, y=1, V=1, v=1, m=0, C=1, log=FALSE) {
 py = integrate(f, -Inf, Inf)
 
 # Find posterior
-d = data.frame(theta=seq(-2,y+2,by=.01)) %>%
+d = data.frame(theta=seq(-2,y+2,by=.01)) |>
   mutate(prior = (1-p)*my_dt(theta, 1),
          likelihood = dnorm(y,theta),
-         posterior = (1-pp)*f(theta,y=y)/py$value) %>%
+         posterior = (1-pp)*f(theta,y=y)/py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 e = .05
@@ -733,7 +761,9 @@ ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
 \begin{frame}
 \frametitle{Point-mass prior with $t$ distribution (cont.)}
 
-Suppose $v=V=C=1$, $p=0.5$, and $m=0$. \pause And we observe $y=10$.
+Suppose $v = V = C = 1$, $p = 0.5$, and $m = 0$ and \alert{$y = 10$}.
+\pause
+Then
 
 <<normal_model_point_mass_t3>>=
 y = 10
@@ -745,10 +775,10 @@ pp = 1/(1+(1-p)*int$value/(p*int0))
 py = integrate(function(x) f(x,10), -Inf, Inf)
 
 # Find posterior
-d = data.frame(theta=seq(-2,y+2,by=.01)) %>%
+d = data.frame(theta=seq(-2,y+2,by=.01)) |>
   mutate(prior = (1-p)*my_dt(theta, 1),
          likelihood = dnorm(y,theta),
-         posterior = (1-pp)*f(theta,y=y)/py$value) %>%
+         posterior = (1-pp)*f(theta,y=y)/py$value) |>
   melt(id.var='theta', variable.name='distribution', value.name='density')
 
 e = .05
