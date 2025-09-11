@@ -1,4 +1,4 @@
-\documentclass[handout, aspectratio=169]{beamer}
+\documentclass[handout,aspectratio=169]{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -248,7 +248,7 @@ p(\mu,\tau^2) \propto Ca^+(\tau;0,C).
 \]
 
 \pause
-This is a non-standard distribution, but is extremely close a normal model
+This is a non-standard distribution, but is extremely close to a normal model
 with unknown mean and variance with the standard non-informative prior 
 $p(\mu,\tau^2) \propto 1/\tau^2$ or the conjugate normal-inverse-gamma
 prior.
@@ -318,7 +318,8 @@ Now, if
 \pause
 and we assume a mixing distribution for $\phi$, \pause we have a scale mixture. 
 \pause
-Since the top level distributional assumption is normal, we refer to this as a \alert{scale mixture of normals}. 
+Since the top level distributional assumption is normal, 
+we refer to this as a \alert{scale mixture of normals}. 
 
 \end{frame}
 
@@ -344,7 +345,7 @@ Thus
 \[ \theta \sim t_{2a}(m,bC/a) \]
 \pause
 i.e. $\theta$ has a $t$ distribution with $2a$ degrees of freedom, location $m$,
-scale $bC/a$, and variance $\frac{bC}{a-1}$. 
+scale $\sqrt{bC/a}$, and variance $\frac{bC}{a-1}$. 
 \pause 
 
 \end{frame}
@@ -637,9 +638,7 @@ Let's use Metropolis-Hastings with proposal distribution
 and acceptance probability $\min\{1,\rho\}$ where
 \[ \rho = \frac{\left( 1+\eta^*/c^2\right)^{-1}}{\left( 1+\eta^{(i)}/c^2\right)^{-1}} = \frac{ 1+\eta^{(i)}/c^2}{1+\eta^*/c^2} \]
 where $\eta^{(i)}$ and $\eta^*$ are the current and proposed value respective. 
-
-\vspace{0.1in} \pause
-
+\pause
 Then we calculate $\tau = \sqrt{\eta}$.
 
 \end{frame}
@@ -659,6 +658,8 @@ Let's use Metropolis-Hastings with proposal distribution
 \[ \eta^* \sim IG\left(G-\frac{1}{2}, \sum_{g=1}^G \frac{\phi_g}{2}\right) \]
 and acceptance probability $\min\{1,\rho\}$ where again
 \[ \rho = \frac{ 1+\eta^{(i)}/c^2}{1+\eta^*/c^2}.\]
+\pause
+Then we calculate $\tau = \sqrt{\eta}$.
 
 \end{frame}
 
