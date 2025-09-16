@@ -702,7 +702,7 @@ corresponds to a $t$ distribution for the non-zero $\theta_g$.
 Similar to the previous, the $\theta_g$ are conditionally independent. \pause
 To sample $\theta_g$, we calculate 
 \[ \begin{array}{rl}
-\pi' &= \frac{\pi \prod_{i=1}^{n_g} N(y_{ig}; 0, \sigma^2)}{\pi \prod_{i=1}^{n_g} N(y_{ig}; 0, \sigma^2) + (1-\pi) \prod_{i=1}^{n_g} N(y_{ig}; \mu, \phi_g+\sigma^2) }. \\
+\pi_g' &= \frac{\pi \prod_{i=1}^{n_g} N(y_{ig}; 0, \sigma^2)}{\pi \prod_{i=1}^{n_g} N(y_{ig}; 0, \sigma^2) + (1-\pi) \prod_{i=1}^{n_g} N(y_{ig}; \mu, \phi_g+\sigma^2) }. \\
 \phi_g' &= \left( \frac{1}{\phi_g} + \frac{n_g}{\sigma^2} \right)^{-1} \\
 \mu_g' &= \phi_g' \left( \frac{1}{\phi_g}\mu + \frac{n_g}{\sigma^2}\overline{y}_g \right)
 \end{array} \]
