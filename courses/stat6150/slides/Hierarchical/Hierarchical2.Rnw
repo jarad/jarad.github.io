@@ -688,9 +688,9 @@ Then we calculate $\tau = \sqrt{\eta}$.
 
 
 
-\subsection{Point-mass distributions}
+\subsection{Discrete ixture distributions}
 \begin{frame}
-\frametitle{Dealing with point-mass distributions}
+\frametitle{Dealing with discrete mixture distributions}
 We would also like to consider models with 
 \[ \theta_g \ind \pi \delta_0 + (1-\pi) N(\mu,\phi_g) \]
 where $\phi_g = \tau^2$ corresponds to a normal and 
@@ -710,10 +710,10 @@ To sample $\theta_g$, we calculate
 
 
 \begin{frame}
-\frametitle{Dealing with point-mass distributions (cont.)}
+\frametitle{Dealing with discrete mixture distributions (cont.)}
 Let 
-\[ \theta_g \ind \pi \delta_0 + (1-\pi) f(\theta_g) \]
-and $\pi \sim Beta(s,f)$.
+\[ \theta_g \ind \pi \delta_0 + (1-\pi) h(\cdot) \]
+for some distribution $h()$ and $\pi \sim Beta(s,f)$.
 
 \vspace{0.2in} \pause
 
@@ -726,7 +726,7 @@ and $\mu$ and $\phi_g$ get updated using only those $\theta_g$ that are non-zero
 
 
 \begin{frame}
-\frametitle{Dealing with point-mass distributions (cont.)}
+\frametitle{Dealing with discrete mixture distributions (cont.)}
 
 Updating $\mu$, $\phi_g$, and $\tau$ will be very similar.
 \pause
