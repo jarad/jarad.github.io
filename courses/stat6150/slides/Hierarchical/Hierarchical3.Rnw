@@ -39,10 +39,8 @@ options(width=100)
 @
 
 <<libraries, echo=FALSE, message=FALSE, warning=FALSE>>=
-library(ggplot2)
 library(plyr)
-library(dplyr)
-library(reshape2)
+library(tidyverse); theme_set(theme_bw())
 library(arm)
 @
 
@@ -64,13 +62,13 @@ where
 \begin{itemize}
 \item $y$ is a vector of length $n$
 \item $\beta$ is an unknown vector of length $p$
-\item $X$ is a known $n\times p$ design matrix 
+\item $X$ is a known $n\times p$ model matrix 
 \item $\sigma^2$ is an unknown scalar
 \end{itemize}
 
 \vspace{0.1in} \pause
 
-For a given design matrix $X$, we are interested in the posterior 
+For a given model matrix $X$, we are interested in the posterior 
 \[ p(\beta,\sigma^2|y), \]
 \pause
 but we may also be interested in which columns of $X$ should be included, i.e. what explanatory variables should we keep in the model.
@@ -128,10 +126,12 @@ then
 \frametitle{Cricket chirps}
 	As an example, consider the relationship between the number of cricket chirps (in 15 seconds) and temperature (in Fahrenheit). From example in {\tt LearnBayes::blinreg}.
 <<chirps_data, fig.width=10>>=
-chirps=c(20,16.0,19.8,18.4,17.1,15.5,14.7,17.1,15.4,16.2,15,17.2,16,17,14.1)
-temp=c(88.6,71.6,93.3,84.3,80.6,75.2,69.7,82,69.4,83.3,78.6,82.6,80.6,83.5,76.3)
-qplot(temp,chirps)  + 
-  theme_bw()
+d <- data.frame(
+  chirps = c(20, 16.0, 19.8, 18.4, 17.1, 15.5, 14.7, 17.1, 15.4, 16.2, 15, 17.2, 16, 17, 14.1),
+  temp   = c(88.6, 71.6, 93.3, 84.3, 80.6, 75.2, 69.7, 82, 69.4, 83.3, 78.6, 82.6, 80.6, 83.5, 76.3)
+)
+
+ggplot(d, aes(x = temp, y = chirps)) + geom_point()
 @
 \end{frame}
 
@@ -142,7 +142,7 @@ qplot(temp,chirps)  +
 \frametitle{Default Bayesian regression}
 
 <<lm, echo=TRUE>>=
-summary(m <- lm(chirps~temp))
+summary(m <- lm(chirps ~ temp, data = d))
 confint(m) # Credible intervals
 @
 \end{frame}
@@ -192,7 +192,8 @@ Perhaps a reasonable prior is $p(\beta_0,\beta_1,\sigma^2) \propto N(\beta_0;0,1
 \begin{frame}[fragile]
 \frametitle{Subjective Bayesian regression}
 <<subjective, echo=TRUE, warning=FALSE>>=
-m = arm::bayesglm(chirps~temp, 
+m = arm::bayesglm(chirps ~ temp, 
+                  data = d,
                   prior.mean.for.intercept  = 0,   # E[\beta_0]
                   prior.scale.for.intercept = 10,  # SD[\beta_0]
                   prior.df.for.intercept    = Inf, # normal prior for \beta_0
@@ -218,7 +219,7 @@ summary(m)
 \begin{frame}[fragile]
 \frametitle{Subjective vs Default}
 <<t-distribution, message=FALSE, echo=TRUE>>=
-tmp = lm(chirps~temp) # default analysis
+tmp = lm(chirps ~ temp, data = d) # default analysis
 tmp$coefficients
 confint(tmp)
 
@@ -233,10 +234,19 @@ confint(m)
 \begin{frame}[fragile]
 \frametitle{Subjective vs Default}
 <<t-distribution_fit, message=FALSE, fig.width=10>>=
-qplot(temp, chirps) +
-  geom_smooth(method='lm',formula=y~x, se=FALSE, color='red', linetype=2, size=2) + 
-  geom_abline(intercept=m$coefficients[1], slope=m$coefficients[2], color='blue', linetype=3, size=2) + 
-  theme_bw()
+ggplot(d, aes(x = temp, y = chirps)) + 
+  geom_point() + 
+  geom_smooth(method    = 'lm',
+              formula   = y ~ x, 
+              se        = FALSE, 
+              color     = 'red', 
+              linetype  = 2, 
+              linewidth = 2) + 
+  geom_abline(intercept = m$coefficients[1], 
+              slope     = m$coefficients[2], 
+              color     = 'blue', 
+              linetype  = 3, 
+              linewidth = 2)
 @
 \end{frame}
 
@@ -245,18 +255,25 @@ qplot(temp, chirps) +
 
 
 \begin{frame}[fragile]
-\frametitle{Shrinkage (as $V[\beta_1]$ gets smaller)}
+\frametitle{Shrinkage (as $Var[\beta_1]$ gets smaller)}
 <<shrinkage, fig.width=10>>=
-d = ddply(data.frame(V=10^seq(-2,2,by=0.2)), .(V), function(x) {
-  m = bayesglm(chirps~temp, prior.mean=0, prior.scale=x$V, prior.df=Inf)
-  data.frame(beta0=m$coefficients[1], beta1=m$coefficients[2])
+dV = plyr::ddply(data.frame(Variance = 10^seq(-2, 2, by = 0.2)), 
+                 .(Variance), 
+                 function(x) {
+  m = bayesglm(chirps ~ temp, 
+               data        = d, 
+               prior.mean  = 0, 
+               prior.scale = x$Variance, 
+               prior.df    = Inf)
+  data.frame(beta0 = m$coefficients[1], beta1 = m$coefficients[2])
 })
-tmp = melt(d, id="V", value.name="estimate")
-ggplot(tmp, aes(V, estimate)) +
+tmp = dV |> pivot_longer(-Variance, names_to = "variable", values_to = "estimate")
+
+ggplot(tmp, aes(Variance, estimate)) +
   geom_line() +
   scale_x_log10() + 
-  facet_wrap(~variable, scales='free') + 
-  theme_bw()
+  facet_wrap(~ variable, scales = 'free') +
+  labs(x = "Variance")
 @
 \end{frame}
 
@@ -264,13 +281,12 @@ ggplot(tmp, aes(V, estimate)) +
 
 
 \begin{frame}[fragile]
-\frametitle{Shrinkage (as $V[\beta_1]$ gets smaller)}
+\frametitle{Shrinkage (as $Var[\beta_1]$ gets smaller)}
 <<shrinkage2, fig.width=10>>=
-ggplot(data.frame(chirps=chirps, temperature=temp), aes(temp, chirps)) + 
+ggplot(d, aes(x = temp, y = chirps)) + 
   geom_point() + 
-  geom_abline(data=d, aes(intercept=beta0, slope=beta1, color=V)) + 
-  scale_colour_gradient(trans = "log10") + 
-  theme_bw()
+  geom_abline(data = dV, aes(intercept = beta0, slope = beta1, color = Variance)) + 
+  scale_colour_gradient(trans = "log10") 
 @
 \end{frame}
 
@@ -283,11 +299,20 @@ ggplot(data.frame(chirps=chirps, temperature=temp), aes(temp, chirps)) +
 
 Let 
 \[ y = X\beta + \epsilon, \quad \epsilon \sim N(\sigma^2 \I). \]
-If we choose the conjugate prior $\beta \sim N(b_0, \sigma^2 B_0)$, we still need to choose $b_0$ and $B_0$. \pause It seems natural to set $b_0=0$ which will shrink the estimates for $\beta$ toward zero, i.e. toward no effect. \pause But how should we choose $B_0$?
+If we choose the conjugate prior $\beta \sim N(b_0, \sigma^2 B_0)$ 
+(independent of $\epsilon$), 
+we still need to choose $b_0$ and $B_0$. 
+\pause 
+It seems natural to set $b_0=0$ which will shrink the estimates 
+for $\beta$ toward zero, i.e. toward no effect. 
+\pause 
+But how should we choose $B_0$?
 
 \vspace{0.1in} \pause 
 
-One option is \alert{Zellner's $g$-prior} where $B_0 = g[X^\top X]^{-1}$ \pause where $g$ is either set or learned.
+One option is \alert{Zellner's $g$-prior} where $B_0 = g[X^\top X]^{-1}$ 
+\pause 
+where $g$ is either set or learned.
 
 \end{frame}
 
@@ -319,7 +344,7 @@ The posterior is then
 
 In Zellner's g-prior, 
 \[ \beta \sim N(b_0, g\sigma^2 (X'X)^{-1}), p(\sigma^2)\propto 1/\sigma^2 \]
-we need to determine how to set g.
+we need to determine how to set or learn $g$.
 
 \vspace{0.1in} \pause
 
@@ -350,22 +375,43 @@ where $R^2$ is the coefficient of determination.
 
 \vspace{0.1in} \pause
 
-We use the marginal likelihood as evidence in favor of the model, i.e. when comparing models those with higher marginal likelihoods should be preferred over the rest.
+We use the marginal likelihood as evidence in favor of the model, i.e. when comparing models those with higher marginal likelihoods should be preferred over the others
 \end{frame}
-
-
-
 
 
 \begin{frame}
 \frametitle{Why the marginal likelihood?}
 
+By Bayes' rule, the \alert{posterior model probability} is 
+\[ 
+p(M|y) 
+\pause 
+= \frac{p(y|M)p(M)}{p(y)} 
+\pause
+= \frac{p(y|M)p(M)}{\sum_{j=1}^J p(y|M_j)p(M_j)} 
+\]
+where all quantities are scalars. 
+\pause
+The denominator simply renormalizes so that the posterior model probability
+sums to 1. 
+
+\vspace{0.1in} \pause
+
+Thus higher marginal likelihood, $p(y|M)$, results in higher 
+posterior model probability, $p(M|y)$. 
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Compared to other model selection criterion}
+
 By Bayes' rule, we have 
-\[ p(\theta|y,M) = p(y|\theta,M)p(\theta|M)/p(y|M) \]
+\[ p(\theta|y, M) = p(y|\theta,M)p(\theta|M) / p(y|M) \]
 \pause
 Rearranging yields
 \[ 
-p(y|M) = p(y|\theta,M)p(\theta|M)/p(\theta|y,M)
+p(y|M) = p(y|\theta,M)p(\theta|M) / p(\theta|y,M)
 \]
 \pause
 Taking logarithms yields
@@ -397,7 +443,7 @@ the prior evaluated at the MLE.
 If $\beta$ is a vector of length $p$, let $\gamma$ be a vector with binary elements that indicate whether that component of $\beta$ is non-zero, i.e. that explanatory variable is included. \pause For example, 
 \[ \gamma = (1,0,1,1,0,0,0,1) \]
 indicates that $\beta$ is of length 8 and that the first, third, fourth, and eighth elements are non-zero. \pause
-Then we have $X_\gamma$ which indicates the design matrix that only has columns corresponding to those columns in $\gamma$ that are non-zero \pause and $\beta_\gamma$ is the subset of $\beta$ including elements of $\beta$ where $\gamma$ is 1. \pause
+Then we have $X_\gamma$ which indicates the model matrix that only has columns corresponding to those columns in $\gamma$ that are non-zero \pause and $\beta_\gamma$ is the subset of $\beta$ including elements of $\beta$ where $\gamma$ is 1. \pause
 
 \vspace{0.1in} \pause
 
@@ -439,9 +485,9 @@ If the base model is the null model, then the common parameters amongst the mode
 \frametitle{Zellner's g-prior in R}
 <<echo=TRUE, warning=FALSE, message=FALSE>>=
 library(BMS)
-m0 = zlm(chirps~1   , g='UIP') # g=n
-m1 = zlm(chirps~scale(temp), g='UIP') # g=n
-(bf = exp(m1$marg.lik-m0$marg.lik))
+m0 = zlm(chirps ~ 1,           data = d, g = 'UIP') # g=n
+m1 = zlm(chirps ~ scale(temp), data = d, g = 'UIP') # g=n
+(bf = exp(m1$marg.lik - m0$marg.lik))               # Bayes factor
 summary(m1)
 @
 \end{frame}
@@ -452,7 +498,7 @@ summary(m1)
 \frametitle{Zellner's g-prior in R}
 <<echo=TRUE, warning=FALSE, message=FALSE>>=
 library(bayess)
-m = BayesReg(chirps, temp, g=length(chirps)) # explanatory variables are scaled
+m = BayesReg(d$chirps, d$temp, g = nrow(d)) # explanatory variables are scaled
 @
 \end{frame}
 
@@ -499,10 +545,16 @@ F_\gamma = \frac{R_\gamma^2/p_\gamma}{(1-R_\gamma^2)/(n-p_\gamma-1)}.
 \pause
 Plugging this back into the expression for the Bayes Factor, we find that 
 \[ 
-BF^{EB}(M_\gamma:M_{null}) \to \infty
+BF^{EB}(M_\gamma:M_{null}) \to \infty 
+\quad \mbox{as} \quad 
+R_\gamma \to 1.
 \]
 \pause
-as $R_\gamma \to 1$ and thus the empirical Bayes approach does not suffer from either paradox. \pause This empirical Bayes approach is model selection consistent if the true model is not the null model, but is inconsistent if it is.
+Thus the empirical Bayes approach does not suffer from either paradox. 
+\pause 
+This empirical Bayes approach is model selection consistent 
+if the true model is not the null model, 
+but is inconsistent if it is.
 \end{frame}
 
 
@@ -516,7 +568,12 @@ Alternatively, we can perform a fully Bayes analysis by putting a prior on $g$. 
 
 \vspace{0.1in} \pause
 
-For this prior, we have $BF^{EB}(M_\gamma:M_{null}) \to \infty$ as $R_\gamma^2 \to 1$ and thus do not suffer from any paradoxes \pause and we have model selection consistency, i.e. $BF(M^*:M_\gamma) \stackrel{a.s.}{\longrightarrow} \infty$ for true model $M^*$ compared to any other model $M_\gamma$. 
+For this prior, we have $BF^{FB}(M_\gamma:M_{null}) \to \infty$ as 
+$R_\gamma^2 \to 1$ and thus does not suffer from the previous paradoxes 
+\pause 
+and we have model selection consistency, 
+i.e. $BF(M^*:M_\gamma) \stackrel{a.s.}{\longrightarrow} \infty$ 
+for true model $M^*$ compared to any other model $M_\gamma$. 
 
 \vspace{0.1in} \pause
 
