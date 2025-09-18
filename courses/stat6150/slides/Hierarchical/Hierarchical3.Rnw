@@ -1,4 +1,4 @@
-\documentclass[handout, aspectratio=169]{beamer}
+\documentclass[handout,aspectratio=169]{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -393,7 +393,7 @@ p(M_k|y)
 \pause
 = \frac{p(y|M_k)p(M_k)}{\sum_{j=1}^J p(y|M_j)p(M_j)} 
 \pause 
-= \left[1 + \sum_{j=2}^J \frac{p(y|M_j)p(M_j)}{p(y|M_1)p(M_1)}\right]^{-1}
+= \left[1 + \sum_{j\ne k} \frac{p(y|M_j)p(M_j)}{p(y|M_k)p(M_k)}\right]^{-1}
 \]
 \pause
 
@@ -406,9 +406,9 @@ p(y|M_k) = \int p(y|\theta, M_k) p(\theta|M_k) p\theta
 \]
 for the observed value of $y$ 
 \pause
-and the \alert{Bayes factor for model $M_k$ over $M_1$} is 
+and the \alert{Bayes factor for model $M_k$ over $M_{k'}$} is 
 \[
-BF(M_k:M_1) = \frac{p(y|M_k)}{p(y|M_1)}.
+BF(M_k:M_1) = \frac{p(y|M_k)}{p(y|M_{k'})}.
 \]
 \pause
 For equal prior probability, 
