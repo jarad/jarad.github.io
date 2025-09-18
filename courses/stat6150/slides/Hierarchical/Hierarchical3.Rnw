@@ -325,14 +325,15 @@ Suppose
 \[ y \sim N(X\beta,\sigma^2\I) \]
 where $X$ is $n\times p$ \pause 
 and you use Zellner's g-prior
-\[ \beta \sim N(b_0, g\sigma^2 (X'X)^{-1}) \]
+\[ \beta \sim N(b_0, g\sigma^2 [X\top X]^{-1}) \]
 and assume $p(\sigma^2) \propto 1/\sigma^2$. 
 
 \vspace{0.1in} \pause
 
 The posterior is then 
 \[ 
-\beta|\sigma^2,y \sim N\left(\frac{1}{1+g}b_0 + \frac{g}{1+g}\hat{\beta}_{MLE}, \frac{\sigma^2 g}{g+1}(X'X)^{-1} \right) 
+\beta|\sigma^2,y \sim 
+N\left(\frac{1}{1+g}b_0 + \frac{g}{1+g}\hat{\beta}_{MLE}, \frac{\sigma^2 g}{g+1}[X^\top X]^{-1} \right) 
  \]
 
 \end{frame}
@@ -343,7 +344,7 @@ The posterior is then
 \frametitle{Setting $g$}
 
 In Zellner's g-prior, 
-\[ \beta \sim N(b_0, g\sigma^2 (X'X)^{-1}), p(\sigma^2)\propto 1/\sigma^2 \]
+\[ \beta \sim N(b_0, g\sigma^2 [X^\top X]^{-1}), p(\sigma^2)\propto 1/\sigma^2 \]
 we need to determine how to set or learn $g$.
 
 \vspace{0.1in} \pause
@@ -375,7 +376,9 @@ where $R^2$ is the coefficient of determination.
 
 \vspace{0.1in} \pause
 
-We use the marginal likelihood as evidence in favor of the model, i.e. when comparing models those with higher marginal likelihoods should be preferred over the others
+We use the marginal likelihood as evidence in favor of the model, 
+i.e. when comparing models those with higher marginal likelihoods should be 
+preferred over the others.
 \end{frame}
 
 
@@ -384,21 +387,33 @@ We use the marginal likelihood as evidence in favor of the model, i.e. when comp
 
 By Bayes' rule, the \alert{posterior model probability} is 
 \[ 
-p(M|y) 
+p(M_k|y) 
 \pause 
-= \frac{p(y|M)p(M)}{p(y)} 
+= \frac{p(y|M_k)p(M_k)}{p(y)} 
 \pause
-= \frac{p(y|M)p(M)}{\sum_{j=1}^J p(y|M_j)p(M_j)} 
+= \frac{p(y|M_k)p(M_k)}{\sum_{j=1}^J p(y|M_j)p(M_j)} 
+\pause 
+= \left[1 + \sum_{j=2}^J \frac{p(y|M_j)p(M_j)}{p(y|M_1)p(M_1)}\right]^{-1}
 \]
-where all quantities are scalars. 
 \pause
-The denominator simply renormalizes so that the posterior model probability
-sums to 1. 
+
 
 \vspace{0.1in} \pause
 
-Thus higher marginal likelihood, $p(y|M)$, results in higher 
-posterior model probability, $p(M|y)$. 
+The \alert{marginal likelihood} is 
+\[
+p(y|M_k) = \int p(y|\theta, M_k) p(\theta|M_k) p\theta
+\]
+for the observed value of $y$ 
+\pause
+and the \alert{Bayes factor for model $M_k$ over $M_1$} is 
+\[
+BF(M_k:M_1) = \frac{p(y|M_k)}{p(y|M_1)}.
+\]
+\pause
+For equal prior probability, 
+higher marginal likelihood, $p(y|M)$,
+results in higher posterior model probability, $p(M|y)$. 
 
 \end{frame}
 
@@ -420,7 +435,7 @@ Taking logarithms yields
 \]
 \pause
 To compare with other model selection criterion, 
-multiply by -2 and plug in $\theta = \hat\theta_{MLE}$:
+multiply by -2 and plugging in $\theta = \hat\theta_{MLE}$:
 \[
 -2 \log p(y|M) = -2 \log(y|\hat\theta_{MLE},M) + 
 2 \left[ \log p(\hat\theta_{MLE}|y,M) - \log p(\hat\theta_{MLE}|M) \right]
@@ -431,6 +446,20 @@ the prior evaluated at the MLE.
 \end{frame}
 
 
+% \begin{frame}
+% \frametitle{Model selection criteria}
+% 
+% \begin{tabular}{cc}
+% Criteria & $2\times$ Penalty \\
+% \hline
+% AIC & k \\
+% BIC & \log(n) k / 2 \\
+% % DIC* & \\
+% ML  & \log\left(\frac{p(\hat\theta_{MLE}|y,M) }{p(\hat\theta_{MLE}|M) }\right) \\
+% WAIC & 
+% \end{tabular}
+% \end{frame}
+
 
 
 
@@ -440,7 +469,12 @@ the prior evaluated at the MLE.
 \begin{frame}
 \frametitle{Model selection}
 
-If $\beta$ is a vector of length $p$, let $\gamma$ be a vector with binary elements that indicate whether that component of $\beta$ is non-zero, i.e. that explanatory variable is included. \pause For example, 
+If $\beta$ is a vector of length $p$, 
+let $\gamma$ be a vector with binary elements that indicate whether that 
+component of $\beta$ is non-zero, 
+i.e. that explanatory variable is included. 
+\pause 
+For example, 
 \[ \gamma = (1,0,1,1,0,0,0,1) \]
 indicates that $\beta$ is of length 8 and that the first, third, fourth, and eighth elements are non-zero. \pause
 Then we have $X_\gamma$ which indicates the model matrix that only has columns corresponding to those columns in $\gamma$ that are non-zero \pause and $\beta_\gamma$ is the subset of $\beta$ including elements of $\beta$ where $\gamma$ is 1. \pause
@@ -461,7 +495,8 @@ where $\epsilon \sim N(0,\sigma^2\I)$. \pause Two special cases are
 \begin{frame}
 \frametitle{Model selection (cont.)}
 
-If we want to compare $M_\gamma$ to $M_{null}$ using a common $g$, we can use the Bayes Factor 
+If we want to compare $M_\gamma$ to $M_{null}$ using a common $g$ (from Zellner's $g$-prior), 
+we can use the Bayes Factor 
 \[ 
 BF(M_\gamma:M_{null}) = \frac{p(y|M_\gamma,g)}{p(y|M_{null},g)} = \frac{(1+g)^{\frac{n-p_{\gamma}-1}{2}}}{(1+g[1-R_\gamma^2])^{\frac{n-1}{2}}}
 \] 
@@ -476,7 +511,15 @@ BF(M_\gamma:M_{\gamma'})
 \]
 }
 \pause
-If the base model is the null model, then the common parameters amongst the models are $\sigma^2$ and possibly an intercept $\alpha$. \pause We can place an improper prior on these parameters, typically $p(\alpha,\sigma^2)\propto 1/\sigma^2$, and not affect the Bayes Factors.
+Generally, we cannot perform model selection or comparison with improper
+priors on model parameters. 
+\pause
+But, it turns out that if there are parameters common to all models, 
+we can use improper priors on those parameters. 
+\pause
+For example, if $\sigma^2$ is the error variance and suppose there is an intercept $\alpha$,
+we can place an improper prior on these parameters, 
+typically $p(\alpha,\sigma^2)\propto 1/\sigma^2$, and not affect the Bayes Factors.
 \end{frame}
 
 
