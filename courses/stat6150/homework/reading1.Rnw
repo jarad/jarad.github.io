@@ -15,7 +15,7 @@
 
 \begin{document}
 \lhead{Reading 1}
-\chead{STAT 615 - Advanced Bayesian Methods}
+\chead{STAT 6150 - Advanced Bayesian Methods}
 \rhead{Page \thepage\ of \pageref{LastPage}}
 
 Please read \href{http://machinelearning.wustl.edu/mlpapers/paper_files/AISTATS09_CarvalhoPS.pdf}{Carvalho et al. (2009) Handling Sparsity via the Horseshoe}. On one page, please provide a summary of the article. The idea is to convince me that you have read and, ideally, that you understood the article. Feel free to use mathematical notation. Also feel free to use the Rnw (tex) version of this pdf as a template. 
