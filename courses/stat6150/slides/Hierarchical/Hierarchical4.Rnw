@@ -1,4 +1,4 @@
-\documentclass{beamer}
+\documentclass[handout]{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -54,7 +54,12 @@ set.seed(2)
 \begin{frame}
 \frametitle{Bayesian model averaging}
 
-Let $\{M_\gamma: \gamma \in \mG\}$ indicate a set of models for a particular data set $y$. \pause If $\Delta$ is a quantity of interest, e.g. effect size, a future observable, or the utility of a course of action, \pause then its posterior distribution is 
+Let $\{M_\gamma: \gamma \in \mG\}$ indicate a set of models for a particular data set $y$. 
+\pause 
+If $\Delta$ is a quantity of interest, e.g. effect size, a future observable, 
+or the utility of a course of action, 
+\pause 
+then its posterior distribution is 
 \[ 
 p(\Delta|y) = \sum_{\gamma\in\mG} p(\Delta|M_\gamma, y) p(M_\gamma|y)  
 \]
@@ -176,7 +181,9 @@ and otherwise set $M^{(i+1)} = M^{(i)}$. \pause This Markov chain converges to d
 
 \small
 
-Recall that as the sample size $n$ increases, the posterior converges to a normal distribution. \pause Let 
+Recall that as the sample size $n$ increases, the posterior converges to a normal distribution (Bernstein von Mises Theorem). 
+\pause 
+Let 
 \[ 
 g(\theta) = \log(p(y|\theta,M)p(\theta|M)) \pause = \log p(y|\theta,M) + \log p(\theta|M)
 \]
@@ -263,7 +270,7 @@ p(\mbox{including explanatory variable }i|y) = \sum_{\gamma\in\mG} p(M_\gamma|y)
 which provides an overall assessment of whether explanatory variable $i$ is important or not. \pause
 \item Posterior distributions, means, and variances for ``parameters'', e.g. 
 \[ 
-E(\theta_i|y) = \sum_{\gamma\in\mG} p(M_\gamma|y) E[\theta_{\gamma,i}|y] 
+E[\theta_i|y] = \sum_{\gamma\in\mG}  E[\theta_{\gamma,i}|y] p(M_\gamma|y)
 \]
 \pause
 But does this make any sense? What happened to $\theta_\gamma$? \pause
@@ -288,7 +295,7 @@ There are two main packages for Bayesian model average in R \pause
 
 \vspace{0.2in} \pause
 
-Until recently there was another package
+Back up on CRAN is
 \begin{itemize}
 \item \href{https://cran.r-project.org/web/packages/BAS/index.html}{BAS}: lm model averaging with a variety of priors and (possibly) MCMC (additionally performed sampling without replacement)
 \end{itemize}
@@ -347,21 +354,23 @@ imageplot.bma(lma)
 \frametitle{BMA for GLMs in R}
 
 <<BMA_glm, message=FALSE, echo=TRUE>>=
-# Set up data
-y <- MASS::birthwt$low                  # 1 indicates birthweight < 2.5 kg
-
-x <- MASS::birthwt %>%
-  dplyr::select(-low,-bwt) %>%
-  mutate(race  = factor(race),    # mother's race (1 = white, 2 = black, 3 = other)
-         smoke = factor(smoke),   # smoking status during pregnancy.
-         ptl   = factor(ptl),     # number of previous premature labours
-         ht    = factor(ht>=1),   # history of hypertension
-         ui    = factor(ui))      # presence of uterine irritability
-
 # Use BIC-based BMA
-lma <- BMA::bic.glm(x, y, strict = TRUE, OR = 20, 
-                     glm.family="binomial", 
-                     factor.type=TRUE) # include/exclude factor levels as a group
+lma <- BMA::bic.glm(
+  
+  x = MASS::birthwt |>
+    dplyr::select(-low,-bwt) |>
+    mutate(race  = factor(race),    # mother's race (1 = white, 2 = black, 3 = other)
+           smoke = factor(smoke),   # smoking status during pregnancy.
+           ptl   = factor(ptl),     # number of previous premature labours
+           ht    = factor(ht>=1),   # history of hypertension
+           ui    = factor(ui)),     # presence of uterine irritability, 
+  
+  y           = MASS::birthwt$low,  # 1 indicates birthweight < 2.5 kg, 
+  strict      = TRUE,               # remove models with more likely submodels
+  OR          = 20,                 # maximum ratio for excluding models
+                     
+  glm.family  = "binomial", 
+  factor.type = TRUE)               # include/exclude factor levels as a group
 @
 \end{frame}
 
@@ -386,7 +395,7 @@ imageplot.bma(lma)
 \frametitle{Predictions}
 
 <<npkBMA, echo=TRUE>>=
-npkBMA = bicreg( x = npk[, c("block","N","P","K")], y = npk$yield)
+npkBMA = bicreg(x = npk[, c("block","N","P","K")], y = npk$yield)
 summary(npkBMA)
 @
 \end{frame}
@@ -397,8 +406,8 @@ summary(npkBMA)
 \frametitle{Predictions}
 
 <<BMA_predictions, echo=TRUE>>=
-p = predict( npkBMA, newdata = npk, quantiles = c(.5,.05,.95))
-bind_cols(npk, as.data.frame(p$quantiles)) %>% head(20)
+p = predict(npkBMA, newdata = npk, quantiles = c(.5,.05,.95))
+bind_cols(npk, as.data.frame(p$quantiles)) |> head(20)
 @
 \end{frame}
 
@@ -445,7 +454,7 @@ For probit and ordinal regression, we can augment the model with parameters $\ze
 \[ 
 y_i = \I(\zeta_i>0) \mbox{ and } \zeta_i \ind N(\theta_i,\psi).
 \]
-There is a similar augmentation for logistic regression, see the {\tt BayesLogit} and references therein. 
+There is a similar augmentation for logistic regression, see the \texttt{BayesLogit} R package and references therein. 
 \pause
 For these models and linear regression, we can construct an MCMC entirely using Gibbs steps. 
 \pause
@@ -463,12 +472,14 @@ For other models, e.g. Poisson regression, sampling $\phi_j$ results in a non-Gi
 library(BMS) # Bayesian model sampling
 data(datafls)
 dim(datafls)
-bma1 = bms(datafls,
-           burn=1000, 
-           iter=2000, 
-           g="EBL",          # Local empirical Bayes 
-           mprior="uniform", # model over priors (extremely flexible)
-           user.int = interactive()) 
+
+bma1 = bms(
+  X.data   = datafls,
+  burn     = 1000, 
+  iter     = 10000, 
+  g        = "EBL",         # Model specific empirical Bayes estimate
+  mprior   = "uniform",     # model over priors (extremely flexible)
+  user.int = interactive()) 
 @
 \end{frame}
 
@@ -507,7 +518,7 @@ image(bma1)
 
 \begin{frame}[fragile]
 <<BMS5,echo=TRUE>>=
-p1 = predict(bma1)             # fitted values based on MCMM frequencies
+p1 = predict(bma1)             # fitted values based on MCMC frequencies
 p2 = predict(bma1, exact=TRUE) # fitted values based on best models
 plot(p1,p2); abline(0,1)
 @
@@ -543,7 +554,7 @@ plot(p1,p2); abline(0,1)
 % \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Model averaging of regression coefficients}
+\frametitle{Model averaging of regression coefficients?}
 
 <<echo = TRUE>>=
 set.seed(20171007)
