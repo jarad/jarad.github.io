@@ -16,7 +16,7 @@
 
 \begin{document}
 \lhead{Homework 1}
-\chead{STAT 615 - Advanced Bayesian Methods}
+\chead{STAT 6150 - Advanced Bayesian Methods}
 \rhead{Page \thepage\ of \pageref{LastPage}}
 
 \begin{enumerate}
@@ -37,11 +37,12 @@ State the form of the prior distribution whose MAP corresponds to this estimator
 State how $\lambda_1$ and $\lambda_2$ relate to this prior.
   \end{enumerate}
   
-% \item Consider the model $y_{ij} \stackrel{ind}{\sim} N(\theta_i, \sigma^2)$. 
-%   \begin{enumerate}
-%   \item Let $\theta_i\stackrel{ind}{\sim} Ho(0,\tau^2)$ be the horseshoe prior described in Carvalho et al. (2009). Describe an MCMC algorithm to sample from this model including the steps for the algorithm as well as the full conditionals (when available) or the method you are using to sample from each step.
-%   \item Construct a simulated data set and compare the results of the Horseshoe prior to results from using a point-mass prior.
-%   \end{enumerate}
+\item Consider the model $y_{i,g} \stackrel{ind}{\sim} N(\theta_g, \sigma^2)$.
+  \begin{enumerate}
+  \item Let $\theta_g\stackrel{ind}{\sim} Ho(0,\tau^2)$ be the horseshoe prior described in Carvalho et al. (2009). Describe an MCMC algorithm to sample from this model including the steps for the algorithm as well as the full conditionals (when available) or the method you are using to sample from each step.
+  \item Construct a simulated data set (you get to decide the number of groups, at least 5, and number of observations in each group).
+  \item Compare the results of the Horseshoe prior to results from using a point-mass prior.
+  \end{enumerate}
   
 \end{enumerate}
 
