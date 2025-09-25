@@ -37,11 +37,21 @@ State the form of the prior distribution whose MAP corresponds to this estimator
 State how $\lambda_1$ and $\lambda_2$ relate to this prior.
   \end{enumerate}
   
-\item Consider the model $y_{i,g} \stackrel{ind}{\sim} N(\theta_g, \sigma^2)$.
+\item Consider the model 
+\[
+y_{i,g} \stackrel{ind}{\sim} N(\theta_g, \sigma^2),
+\, g=1,\ldots,G, \, i = 1,\ldots,n_g \] 
+with the following two possible hierarchical distributions for the $\theta_g$:
+\[ 
+\theta_g\stackrel{ind}{\sim} Ho(0,\tau^2) 
+\quad \mbox{or} \quad
+\theta_g \stackrel{ind}{\sim} \pi \delta_0 + (1-\pi) t_v(0,\tau^2)
+\]
+where $Ho(0,\tau^2)$ is the horseshoe prior described in Carvalho et al. (2009).
   \begin{enumerate}
-  \item Let $\theta_g\stackrel{ind}{\sim} Ho(0,\tau^2)$ be the horseshoe prior described in Carvalho et al. (2009). Describe an MCMC algorithm to sample from this model including the steps for the algorithm as well as the full conditionals (when available) or the method you are using to sample from each step.
-  \item Construct a simulated data set (you get to decide the number of groups, at least 5, and number of observations in each group).
-  \item Compare the results of the Horseshoe prior to results from using a point-mass prior.
+  \item Simulate data with at least 4 groups and at least 2 observations per group. These data need not come from any of the real model proposed above (but, as described below, you will need to know the true group means...so no simulating from Cauchy distributions). 
+  \item Fit both models. The choice of how to fit is up to you, but you need to provide enough details so I understand how you fit the models. Some options are JAGS, Stan, writing your own Gibbs sampler, etc. 
+  \item Compare the estimated posteriors for the group specific means of the Horseshoe prior to those obtained from using the discrete mixture of a point mass at 0 and the t-distribution (you get to choose the degrees of freedom) to the true group means used in your simulation.
   \end{enumerate}
   
 \end{enumerate}
