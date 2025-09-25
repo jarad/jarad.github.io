@@ -44,7 +44,7 @@ options(width=100)
 <<libraries, echo=FALSE, message=FALSE, warning=FALSE>>=
 library(animation)
 library(plyr)
-library(ggplot2)
+library(ggplot2); theme_set(theme_bw())
 library(reshape2)
 @
 
@@ -53,7 +53,7 @@ set.seed(2)
 @
 
 \frame{\maketitle
-Adapted from \href{https://arxiv.org/abs/1206.1901}{Radford Neal's MCMC Using Hamltonian Dynamics} in Handbook of Markov Chain Monte Carlo (2011).}
+Adapted from \href{https://arxiv.org/abs/1206.1901}{Radford Neal's MCMC Using Hamiltonian Dynamics} in Handbook of Markov Chain Monte Carlo (2011).}
 
 \section{Hamiltonian dynamics}
 \begin{frame}
@@ -107,26 +107,28 @@ H(\theta,\omega) = U(\theta) + K(\omega)
 \pause
 where 
 \begin{itemize}
-\item $U(\theta)$ is called the potential energy and will be defined to be minus the log probability density of the distribution for $\theta$ (plus any constant that is 
-convenient) and 
+\item $U(\theta)$ is called the potential energy and will be defined to be the 
+negative log probability density of the distribution for $\theta$ 
+(plus any constant that is convenient) and 
 \item $K(\omega)$ is called the kinetic energy and is usually defined as 
 \[ 
-K(\omega) = \omega^\top M^{-1} \omega / 2
+K(\omega) = \omega^\top M^{-1} \omega / 2 
+\pause
+= m\, \omega^\top \mathrm{I}\, \omega / 2
 \]
 where $M$ is a symmetric, positive-definite ``mass matrix'', 
 \pause which is 
 typically diagonal, and is often a scalar multiple of the identity matrix.
-This form for $K(\omega)$ corresponds to minus the log probability density 
+This form for $K(\omega)$ corresponds to the negative log probability density 
 (plus a constant) of the zero-mean Gaussian distribution with covariance
 matrix $M$.
 \end{itemize}
-
 \pause
-
-The resulting Hamilton's equations are 
+The resulting equations are 
 \[ 
 \frac{d\theta_i}{dt} = [M^{-1}\omega]_i, \qquad
-\frac{d\omega_i}{dt} = -\frac{\partial U}{\partial \theta_i}.
+\frac{d\omega_i}{dt} = - \frac{U(\theta)}{\partial \theta_i}
+= \frac{\partial \log p(\theta|y)}{\partial \theta_i}.
 \]
 \end{frame}
 
@@ -138,7 +140,10 @@ The resulting Hamilton's equations are
 
 Suppose 
 \[ 
-H(\theta,\omega) = U(\theta) + K(\omega), \quad U(\theta) = \theta^2/2, \quad K(\omega) = \omega^2/2
+H(\theta,\omega) 
+= U(\theta) + K(\omega), \quad 
+U(\theta) = \theta^2/2, \quad 
+K(\omega) = \omega^2/2
 \]
 \pause
 The dynamics resulting from this Hamiltonian are
@@ -178,6 +183,18 @@ for (i in 1:length(tt)) {
 \end{frame}
 
 
+\subsection{Properties of the Hamiltonian}
+\begin{frame}
+\frametitle{Properties of the Hamiltonian}
+
+\begin{itemize}
+\item Conservation of the Hamiltonian, i.e. $H(\theta,\omega)$ is constant
+\item Reversibility 
+\item Volume preservation
+\end{itemize}
+\end{frame}
+
+
 \subsection{Conservation of the Hamiltonian}
 \begin{frame}
 \frametitle{Conservation of the Hamiltonian}
@@ -185,7 +202,7 @@ for (i in 1:length(tt)) {
 This simple model clearly conserves the Hamiltonian:
 \[ \begin{array}{rl}
 H(\theta,\omega) &= U(\theta) + K(\omega) \pause \\
-&= \frac{\theta^2}{2} + \frac{\omega^2}{2} \pause \\
+&= \frac{\theta^2}{2} + \frac{\omega^2}{2} \pause  \\
 &= \frac{[r\, cos(a+t)]^2}{2} + \frac{[-r\, sin(a+t)]^2}{2} \pause \\
 &= \frac{r^2}{2} \left[ cos^2(a+t) + sin^2(a+t) \right] \pause \\
 &= r^2/2 
@@ -235,13 +252,19 @@ we can only make $H$ approximately conserved.
 \begin{frame}
 \frametitle{Reversibility}
 Hamiltonian dynamics is reversible, 
-i.e. the mapping $T_s$ from the state at time $t$, $(\theta(t),\omega(t))$, to the state 
-at time $t+s$, $(\theta(t+s),p(t+s))$, is one-to-one, and hence as an inverse,
-$T_{-s}$.
-\pause
+i.e. the mapping $T_s$ from the state at time $t$, 
+$(\theta(t),\omega(t))$, 
+to the state at time $t + s$, 
+$(\theta(t + s),\omega(t + s))$, 
+is one-to-one, and hence as an inverse, $T_{-s}$.
+
+\vspace{0.1in} \pause
+
 Under our usual assumptions for HMC, the inverse mapping can be obtained by
 negating $\omega$, applying $T_s$, and then negating $\omega$ again.
-\pause
+
+\vspace{0.1in} \pause
+
 The reversibility of Hamiltonian dynamics is important for showing convergence
 of HMC.
 \end{frame}
@@ -253,12 +276,29 @@ of HMC.
 \begin{frame}
 \frametitle{Volume preservation}
 
-If we apply the mapping $T_s$ to points in some region $R$ in $(\theta,\omega)$ space with
-volume $V$, the image of $R$ under $T_s$ will also have volume $V$. 
+If we apply the mapping $T_s$ to points in some region $R$ in 
+$(\theta, \omega)$ space with
+volume $V$, 
+the image of $R$ under $T_s$ will also have volume $V$. 
+
 \pause 
+
+\begin{center}
+\includegraphics[width=0.4\textwidth]{hamiltonian-volume-preservation}
+\end{center}
+
+{\tiny
+Oltean, Marius \& Bonetti, Luca \& Spallicci di Filottrano, Alessandro D.A.M. \& F Sopuerta, Carlos. (2016). Entropy theorems in classical mechanics, general relativity, and the gravitational two-body problem. Physical Review D. 94. 10.1103/PhysRevD.94.064049.
+}
+
+\pause
+
 This feature simplifies calculation of the acceptance probability for 
 Metropolis updates.
+\end{frame}
 
+\begin{frame}
+Approximating Hamiltonian Dynamics
 \end{frame}
 
 
@@ -269,7 +309,9 @@ Metropolis updates.
 
 For simplicity, assume 
 \[ 
-H(\theta,\omega) = U(\theta) + K(\omega), \qquad K(\omega) = \sum_{i=1}^d \frac{\omega_i^2}{2m_i}.
+H(\theta,\omega) = U(\theta) + K(\omega), 
+\qquad 
+K(\omega) = \sum_{i=1}^d \frac{\omega_i^2}{2m_i}.
 \]
 \pause
 One way to simulate Hamiltonian dynamics is to discretize time into increments
@@ -283,6 +325,9 @@ of $e$, \pause i.e.
 &= \theta_i(t) + e\frac{\omega_i(t)}{m_i}
 \end{array}\]
 
+\pause
+
+This approximation does not preserve volume.
 \end{frame}
 
 
@@ -300,6 +345,9 @@ updates:
 \end{array} \]
 \pause
 The leapfrog method is reversible and preserves volume exactly.
+\pause
+But the leapfrog method is still an approximation to the continuous-time
+Hamiltonian dynamics.
 \end{frame}
 
 
@@ -360,7 +408,7 @@ for (i in 1:n_steps) {
 
 \vspace{-0.5in}
 
-<<leapfrog-volume, fig.show='animate', interval=.1, fig.asp=1, fig.width=5, out.width='.6\\linewidth'>>=
+<<leapfrog-volume, fig.show='animate', interval=.1, fig.asp=1, fig.width=5, out.width='.5\\linewidth'>>=
 r = sqrt(theta[1]^2 + omega[1]^2)
 n = 1001
 d = data.frame(x = c(seq(-r,r,length=n), seq(r, -r, length=n)))
@@ -403,6 +451,10 @@ for (i in 1:length(theta)) {
 % 
 % \end{frame}
 
+\begin{frame}
+Hamiltonian Monte Caro
+\end{frame}
+
 \section{Hamiltonian Monte Carlo}
 \begin{frame}
 \frametitle{Probability distributions}
@@ -416,8 +468,7 @@ p(\theta,\omega) = \frac{1}{Z} \exp\left(-H(\theta,\omega)\right)
 \]
 where $Z$ is the normalizing constant.
 \pause
-
-If $H(\theta,\omega) = U(\theta)+K(\omega)$, the joint density is 
+If $H(\theta,\omega) = U(\theta) + K(\omega)$, the joint density is 
 \[
 p(\theta,\omega) = \frac{1}{Z} \exp\left(-U(\theta)\right)\exp\left(-K(\omega)\right).
 \]
@@ -503,7 +554,7 @@ Reversibility for the leapfrog means that
 \item if you simulate from $(\theta^*,-\omega^*)$ for the same $e$ and $L$, you will end up at $(\theta,-\omega)$.
 \end{itemize}
 \pause
-If we use $q$ to denote our simulation ``density'', then reversibility means
+If we use $q$ to denote our proposal density, then reversibility means
 \[
 q(\theta^*,\omega^*|\theta,\omega) = q(\theta,-\omega|\theta^*,-\omega^*)
 \]
@@ -626,7 +677,7 @@ There are three tuning parameters:
 
 \vspace{0.2in} \pause
 
-Let $\mySigma=V(\theta|y)$, then an optimal normal distribution for $\omega$ is $N(0,\mySigma^{-1})$. 
+Let $\mySigma=Var[\theta|y]$, then an optimal normal distribution for $\omega$ is $N(0,\mySigma^{-1})$. 
 \pause
 Typically, we do not know $\mySigma$, but we can estimate it using posterior samples. 
 \pause
@@ -653,7 +704,7 @@ r = ddply(d, .(e,L), function(xx) {
 <<dependson='tuning'>>=
 ggplot(r, aes(iteration,theta)) + 
   geom_line() + 
-  facet_grid(L~e) +
+  facet_grid(L ~ e, labeller = label_both) +
   theme_bw() +
   labs(title = "Traceplots for HMC runs",
        y = expression(theta))
@@ -663,10 +714,17 @@ ggplot(r, aes(iteration,theta)) +
 \begin{frame}
 <<dependson='tuning'>>=
 ggplot(r, aes(theta)) + 
-  geom_histogram(aes(y=..density..), binwidth=.1) + 
-  facet_grid(L~e, scales='free_y') + 
-  stat_function(fun = dnorm, colour = "red") +
-  theme_bw()
+  geom_histogram(
+    aes(
+      y = after_stat(density)), 
+    binwidth = .1) + 
+  facet_grid(
+    L ~ e, 
+    scales   = 'free_y', 
+    labeller = label_both) + 
+  stat_function(
+    fun    = dnorm, 
+    colour = "red") 
 @
 \end{frame}
 
@@ -679,8 +737,7 @@ m = melt(s, id.var=c('e','L'), variable.name='statistic')
 ggplot(m, aes(e, value, color=L, shape=as.factor(L))) + 
   geom_point() + 
   facet_wrap(~statistic) +
-  scale_x_log10() +
-  theme_bw()
+  scale_x_log10()
 @
 \end{frame}
 
