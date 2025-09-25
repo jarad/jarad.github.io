@@ -12,7 +12,7 @@
 \setbeamertemplate{enumerate subsubitem}{\roman{enumiii}.}
 \setkeys{Gin}{width=0.6\textwidth}
 
-\title{Bayesian model averaging}
+\title{Bayesian Model Averaging}
 \author[Jarad Niemi]{Dr. Jarad Niemi}
 \institute[Iowa State]{Iowa State University}
 \date{\today}
@@ -175,29 +175,129 @@ and otherwise set $M^{(i+1)} = M^{(i)}$. \pause This Markov chain converges to d
 \end{frame}
 
 
-\subsection{Evaluating integrals}
+\subsection{Marginal likelihoods}
 \begin{frame}
-\frametitle{Evaluating the marginal likelihoods}
+\frametitle{Marginal likelihoods}
+
+Some data model and prior combinations have closed form marginal likelihoods,
+e.g. 
+\[ \begin{array}{rll}
+Y|\theta &\sim Bin(n,\theta), \\
+\theta &\sim Be(a,b) & \implies \pause \\
+Y &\sim BetaBin(n,a,b)
+\end{array} \]
+\pause
+and
+\[ \begin{array}{rll}
+Y|\mu,\sigma^2 &\sim N_n(\mu \mathrm{1}, \sigma^2 \mathrm{I}), \\
+\mu|\sigma^2 &\sim N(m, \sigma^2v), \\
+\sigma^2 &\sim IG(a,b) &\implies \pause \\
+\pause
+Y &\sim t_{2a}(m, b[v\mathrm{1}\mathrm{1}^\top + \mathrm{I}]/a),
+\end{array} \]
+i.e. a multivariate, location-scale t-distribution.
+
+\vspace{0.1in} \pause
+
+Unfortunately, the vast majority of marginal likelihoods are not available
+in closed form. 
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Estimating the marginal likelihood}
+Recall the marginal likelihood is 
+\[ \begin{array}{rl}
+p(y) 
+&= \int p(y|\theta) p(\theta) d\theta 
+\pause \\
+& = E_{p(\theta)}[p(y|\theta)]
+\pause \\
+& \approx \frac{1}{M} \sum_{m=1}^M p\left(y|\theta^{(m)}\right), \quad
+\theta^{(m)} \stackrel{ind}{\sim} p(\theta)
+\end{array} \]
+which is a Monte Carlo approach.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Estimating the marginal likelihood}
+Alternatively, 
+\[ \begin{array}{rl}
+p(y) 
+&= \int p(y|\theta) \frac{p(\theta)}{q(\theta)} q(\theta) d\theta 
+\pause \\
+&= E_{q(\theta)}\left[ \frac{p(\theta)}{q(\theta)} p(y|\theta)\right]
+\pause \\
+& \approx \frac{1}{M} \sum_{m=1}^M \frac{p\left(\theta^{(m)}\right)}{q\left(\theta^{(m)}\right)} 
+p\left(y|\theta^{(m)}\right), \quad
+\theta^{(m)} \stackrel{ind}{\sim} q(\theta)
+\end{array} \]
+\pause
+which is an importance sampling approach.
+\pause
+An alternative estimator is 
+\[ \begin{array}{rl}
+p(y) 
+&\approx \frac{\sum_{m=1}^M \frac{p\left(\theta^{(m)}\right)}{q\left(\theta^{(m)}\right)} p\left(y|\theta^{(m)}\right) }{\sum_{m=1}^M \frac{p\left(\theta^{(m)}\right)}{q\left(\theta^{(m)}\right)}}
+\end{array} \]
+\pause
+which is biased but generally has lower variance
+(see Robert and Casella, pg 94).
+\end{frame}
+
+
+
+
+% \subsection{Laplace approximation to the marginal likelihood}
+% \begin{frame}
+% Recall $p(y,\theta) = p(\theta|y)p(y)$
+% \pause
+% Laplace's approximation 
+% (based on a Taylor series expansion around $\hat\theta_{MAP}$) 
+% is 
+% \[ 
+% p(y,\theta) 
+% \approx p(y,\hat\theta_{MAP}) \exp\left(-\frac{1}{2}(\theta-\hat\theta_{MAP}) A^{-1} (\theta-\hat\theta_{MAP}) \right)
+% \pause
+% = \frac{p(y,\hat\theta_{MAP})}{(2\pi)^{p/2} |A|^{1/2}} N(\theta; \hat\theta_{MAP, A)
+% \]
+% where $A^{-1}$ is the negative Hessian evaluated at $\hat\theta_{MAP}$ and $p$ is the dimension of $\theta$. 
+% \pause
+% Thus, we have 
+% \[
+% \theta|y \stackrel{\cdot}{\sim} N(\hat\theta_{MAP}, A)
+% \]
+% and 
+% \[
+% p(y) \approx 
+% \]
+% 
+% \end{frame}
+
+
+\begin{frame}
+\frametitle{Evaluating the marginal likelihood}
 
 \small
 
-Recall that as the sample size $n$ increases, the posterior converges to a normal distribution (Bernstein von Mises Theorem). 
-\pause 
-Let 
-\[ 
+Recall that as the sample size $n$ increases, the posterior converges to a normal distribution (Bernstein von Mises Theorem).
+\pause
+Let
+\[
 g(\theta) = \log(p(y|\theta,M)p(\theta|M)) \pause = \log p(y|\theta,M) + \log p(\theta|M)
 \]
 \pause
-Let $\hat{\theta}_{MAP}$ be the MAP for $\theta$ in model $M$. \pause Taking a Taylor series expansion of $g(\theta)$ around $\hat{\theta}_{MAP}$, we have 
-\[ 
+Let $\hat{\theta}_{MAP}$ be the MAP for $\theta$ in model $M$. \pause Taking a Taylor series expansion of $g(\theta)$ around $\hat{\theta}_{MAP}$, we have
+\[
 g(\theta) \approx g(\hat{\theta}_{MAP}) - \frac{1}{2}(\theta-\hat{\theta}_{MAP}) A (\theta-\hat{\theta}_{MAP})^\top
 \]
-where $A$ is the negative Hession of $g(\theta)$ evaluated at $\hat{\theta}_{MAP}$. \pause Combining this with the first equation and exponentiating, \pause we have 
-\[ 
+where $A$ is the negative Hession of $g(\theta)$ evaluated at $\hat{\theta}_{MAP}$. \pause Combining this with the first equation and exponentiating, \pause we have
+\[
 p(y|\theta,M)p(\theta|M) \approx p(y|\hat{\theta}_{MAP},M)p(\hat{\theta}_{MAP}) \exp\left( - \frac{1}{2}(\theta-\hat{\theta}_{MAP}) A (\theta-\hat{\theta}_{MAP})^\top  \right)
 \]
 \pause
-Hence, the approximation to $p(\theta|y,M) \propto p(y|\theta,M)p(\theta|M)$ is normal. 
+Hence, the approximation to $p(\theta|y,M) \propto p(y|\theta,M)p(\theta|M)$ is normal.
 
 \end{frame}
 
@@ -208,11 +308,11 @@ Hence, the approximation to $p(\theta|y,M) \propto p(y|\theta,M)p(\theta|M)$ is 
 
 \small
 
-If we take the integral over $\theta$ of both sides and take the logarithm, we have 
-\[ 
+If we take the integral over $\theta$ of both sides and take the logarithm, we have
+\[
 \log p(y|M) \approx \log p(y|\hat{\theta}_{MAP},M) + \log p(\hat{\theta}_{MAP}|M) + \frac{p}{2} \log(2\pi) - \frac{1}{2} \log|A|
 \]
-where $p$ is the dimension of $\theta$, i.e. the number of parameters. \pause We call this approximation the \alert{Laplace approximation}. 
+where $p$ is the dimension of $\theta$, i.e. the number of parameters. \pause We call this approximation the \alert{Laplace approximation}.
 
 \vspace{0.2in} \pause
 
@@ -221,8 +321,8 @@ Another approximation that is more computationally efficient but less accurate i
 \item $\log p(y|\hat{\theta},M)$ increases linearly with $n$ \pause
 \item $\log |A|$ increases as $p\log n$ \pause
 \end{itemize}
-As $n$ gets large $\hat{\theta}_{MAP} \to \hat{\theta}_{MLE}$. \pause Taking these two together we have 
-\[ 
+As $n$ gets large $\hat{\theta}_{MAP} \to \hat{\theta}_{MLE}$. \pause Taking these two together we have
+\[
 \log p(y|M) \approx \log p(y|\hat{\theta}_{MLE},M) - \frac{p}{2} \log n
 \]
 \pause
@@ -249,7 +349,7 @@ where the last equality is a reminder that priors over parameters still matter.
 
 For model averaging, you need to calculate posterior model probabilities which require specification of the prior probabability of each model. \pause One possible prior for regression models is 
 \[
-p(M_\gamma) = \prod_{i=1}^p w_i^{1-\gamma_i} (1-w_i)^{\gamma_i}
+p(M_\gamma) = \prod_{i=1}^p w_i^{\gamma_i} (1-w_i)^{1-\gamma_i}
 \]
 \pause
 Setting $w_i = 0.5$ corresponds to a uniform prior over the model space. 
