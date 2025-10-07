@@ -6,7 +6,7 @@
 \graphicspath{{figures/}{../StateSpaceModels/figures/}}
 
 
-\title{Dynamic linear models}
+\title{Dynamic Linear Models}
 
 \begin{document}
 
@@ -41,11 +41,12 @@ set.seed(2)
 
 \subsection{Structure, notation, and terminology}
 \frame{\frametitle{Structure}
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= F_t\theta_t + v_t &v_t\sim N_m(0,V_t) \\
- \theta_t &= G_t\theta_{t-1}+w_t & w_t\sim N_p(0,W_t) \\
- \theta_0 &\sim N_p(m_0,C_0)
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
  \end{array} \] \pause
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
 
  \vspace{0.1in}
  
@@ -58,10 +59,10 @@ set.seed(2)
 \subsection{Local level model}
 \frame{\frametitle{Local level model}
 \setkeys{Gin}{width=\textwidth}
-  \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N_1(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N_1(0,W) \\
- \theta_0 &\sim N_1(m_0,C_0)
+  \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= \theta_t + v_t &v_t &\ind N_1(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t &\ind N_1(0,W) \\
+ &&\theta_0 &\sim N_1(m_0,C_0)
  \end{array} \]
 
  \vspace{0.1in} \pause
@@ -77,10 +78,10 @@ set.seed(2)
 
 \frame{\frametitle{Local level model}
 \setkeys{Gin}{width=\textwidth}
-  \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N(0,W) \\
- p(\theta_0) &= N(m_0,C_0)
+  \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= \theta_t + v_t & v_t &\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t &\ind N(0,W) \\
+ && \theta_0 &\sim N(m_0,C_0)
  \end{array} \]
 
  \vspace{0.1in}
@@ -147,7 +148,8 @@ set.seed(2)
 
  \vspace{0.5in} \pause
 
- Evolution equation: $\theta_t = G_t\theta_{t-1}+w_t$ where $w_t\sim N_p(0,W_t)$. \pause
+ Evolution equation: $\theta_t = G_t\theta_{t-1}+w_t$ where $w_t\ind N_p(0,W_t)$
+ (independent of $p(\theta_{t-1}|y_{1:t-1})$. \pause
 
  \vspace{0.2in}
 
@@ -164,7 +166,7 @@ set.seed(2)
 
  \vspace{0.5in} \pause
 
- Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\sim N_m(0,V_t)$. \pause
+ Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\ind N_m(0,V_t)$ (independent of $p(\theta_t|y_{1:t-1})$. \pause
 
  \vspace{0.2in}
 
@@ -181,7 +183,8 @@ set.seed(2)
 
  \vspace{0.5in} \pause
 
- Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\sim N_m(0,V_t)$. \pause
+ Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\ind N_m(0,V_t)$
+ (independent of $p(\theta_t|y_{1:t-1})$. \pause
 
  \vspace{0.2in}
 
@@ -212,7 +215,7 @@ set.seed(2)
 }
 
 \frame{\frametitle{Kalman filter}
- \begin{itemize}
+ \begin{enumerate}
  \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
  \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
  \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
@@ -223,16 +226,17 @@ set.seed(2)
  m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
  e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
  \end{array} \]
- \end{itemize} \pause
- $K_t$ is the \alert{Kalman gain} or \alert{adaptive coefficient}.
+ \end{enumerate} \pause
+ $K_t$ is the \alert{Kalman gain} or \alert{adaptive coefficient}
+ (high values have more weight on the current observation while low values have more weight on the prior information).
 }
 
 \subsection{Kalman filter example}
 \frame{\frametitle{Local level model}
 \setkeys{Gin}{width=\textwidth}
   \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N(0,W) \\
+ Y_t &= \theta_t + v_t &v_t\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t\ind N(0,W) \\
  p(\theta_0) &= N(m_0,C_0)
  \end{array} \]
 
@@ -250,8 +254,8 @@ set.seed(2)
 \frame{\frametitle{Local level model}
 \setkeys{Gin}{width=\textwidth}
   \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N(0,W) \\
+ Y_t &= \theta_t + v_t &v_t\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t\ind N(0,W) \\
  p(\theta_0) &= N(m_0,C_0)
  \end{array} \]
 
@@ -275,20 +279,20 @@ set.seed(2)
 }
 
 \subsection{Missing observations}
-\frame{\frametitle{Kalman filter}
- \begin{itemize}
- \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
- \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
- \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
- \item Obtain one step ahead predictive $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$ where
- \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
- \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
- \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
- m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
- e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
- \end{array} \]
- \end{itemize}
-}
+% \frame{\frametitle{Kalman filter (with missing observations)}
+%  \begin{itemize}
+%  \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
+%  \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
+%  \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
+%  \item Obtain one step ahead predictive $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$ where
+%  \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
+%  \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
+%  \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
+%  m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
+%  e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
+%  \end{array} \]
+%  \end{itemize}
+% }
 
 \frame{\frametitle{Kalman filter \alert{with missing data}}
  \begin{itemize}
@@ -299,12 +303,12 @@ set.seed(2)
  \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
  \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
   \begin{itemize}
-  \item \alert{If $y_t$ is not observed, $m_t=a_t$ and $C_t=R_t$.}
   \item If $y_t$ is observed,
  \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
  m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
  e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
  \end{array} \]
+  \item<2-> \alert{If $y_t$ is not observed, $m_t=a_t$ and $C_t=R_t$.}
   \end{itemize}
  \end{itemize}
 }
@@ -444,7 +448,7 @@ Recall
 &= \left[ \begin{array}{c} G_{1,t}\theta_{1,t-1} \\ \vdots \\ G_{h,t}\theta_{h,t-1} \end{array} \right] + w_t \pause
 &= G_t\theta_{t-1}+w_t \pause
 \end{eqnarray*} 
-where $w_t\sim N(0,W_t)$ and
+where $w_t\ind N(0,W_t)$ and
 \[ W_t = \left[ \begin{array}{ccc} W_{1,t} \\ & \ddots \\ && W_{h,t} \end{array}\right]  \qquad G_t = \left[ \begin{array}{ccc} G_{1,t} \\ & \ddots \\ && G_{h,t} \end{array} \right] \pause
  \]
 }
@@ -452,8 +456,8 @@ where $w_t\sim N(0,W_t)$ and
 \frame{\frametitle{Combining model components}
 Consider 
 \[ \begin{array}{rl@{\qquad}l}
-Y_{t} &= F_{t}\theta_{t}+v_{t} & v_{t} \sim N(0,V_{t}) \\
-\theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\sim N(0,W_{t})
+Y_{t} &= F_{t}\theta_{t}+v_{t} & v_{t} \ind N(0,V_{t}) \\
+\theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\ind N(0,W_{t})
 \end{array} \] \pause
 where $V_t = \sum_{i=1}^h V_{i,t}$, 
 
@@ -484,10 +488,10 @@ In practice we use,
 
 \subsection{Local level model}
 \frame{\frametitle{Local level model}
-  \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N(0,W) \\
- p(\theta_0) &= N(m_0,C_0)
+  \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N(0,W) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
  \end{array} \]
 
  \vspace{0.2in} \pause
@@ -521,11 +525,11 @@ In practice we use,
 
 \subsection{Linear trend model}
 \frame{\frametitle{Linear trend model}
-  \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \mu_t + v_t &v_t\sim N(0,V) \\
- \mu_t &= \mu_{t-1}+\beta_{t-1}+w_{t,1} & w_{t,1}\sim N(0,\sigma^2_\mu) \\
- \beta_t &= \beta_{t-1}+w_{t,2} & w_{t,2}\sim N(0,\sigma^2_\beta) \\
- p(\theta_0) &= N(m_0,C_0)
+  \[ \begin{array}{rl@{\qquad}lll}
+ Y_t &= \mu_t + v_t &v_t&\ind N(0,V) \\
+ \mu_t &= \mu_{t-1}+\beta_{t-1}+w_{t,1} & w_{t,1}&\ind N(0,\sigma^2_\mu) \\
+ \beta_t &= \beta_{t-1}+w_{t,2} & w_{t,2}&\ind N(0,\sigma^2_\beta) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
  \end{array} \]
  
  \vspace{0.1in} \pause
@@ -545,10 +549,10 @@ In practice we use,
 }
 
 \frame{\frametitle{Polynomial trend models}
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= F_t\theta_t + v_t &v_t\sim N_m(0,V_t) \\
- \theta_t &= G_t\theta_{t-1}+w_t & w_t\sim N_p(0,W_t) \\
- p(\theta_0) &= N(m_0,C_0)
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
  \end{array} \]
  
  \vspace{0.1in} \pause
@@ -570,7 +574,7 @@ In practice we use,
 \begin{frame}[fragile]
 \frametitle{Specifying a local level model in R}
 
-<<eval=FALSE>>=
+<<eval=FALSE,echo=TRUE>>=
 library("dlm")
 local.level = dlmModPoly(order=1) # ?dlmModPoly
 
@@ -2051,8 +2055,8 @@ V &= \sigma^2I_m
 
 \subsection{Dynamic factor models}
 \frame{\frametitle{Dynamic factor model}
-\[ \begin{array}{rl@{\qquad}l}
-Y_t &= A\mu_t+v_t, & v_t\sim N_m(0,V) \\
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= A\mu_t+v_t, & v_t&\ind N_m(0,V) \\
 \mu_t &= \mu_{t-1}+w_t, & w_t \sim N_p(0,W)
 \end{array} \]
 
@@ -2063,8 +2067,8 @@ where $A$ is a fixed $m\times p$ matrix of factor loadings with $p<m$.
 \vspace{0.2in} \pause
 
 Identifiability of $A$. Suppose $H$ is a $p\times p$ invertible matrix. Then 
-\[ \begin{array}{rl@{\qquad}l}
-Y_t &= \tilde{A}\tilde{\mu}_t+v_t, & v_t\sim N_m(0,V) \\
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= \tilde{A}\tilde{\mu}_t+v_t, & v_t&\ind N_m(0,V) \\
 \tilde{\mu}_t &= \tilde{\mu}_{t-1}+\tilde{w}_t, & \tilde{w}_t \sim N_p(0,HWH^\top )
 \end{array} \]\pause
 with $\tilde{\mu}_t = H\mu_t$ and $\tilde{A}=AH^{-1}$. 
@@ -2210,7 +2214,7 @@ What do we know? \pause
 \begin{eqnarray*}
 p(y_t|\theta_t,V) &\pause =& N(y_t;F_t \theta_t, V) \\ \pause
 p(\theta_t|\theta_{t-1},W) &\pause =& N(\theta_t; G_t \theta_{t-1}, W) \\ \pause
-p(\theta_0) &\pause=& N(m_0,C_0) \\ \pause
+p(\theta_0) &\pause=& N_p(m_0,C_0) \\ \pause
 \\
 p(\theta_t|y_{1:t-1},\psi) &\pause = & N(a_t, R_t) \\ \pause
 p(y_t|y_{1:t-1},\psi) &\pause = & N(f_t, Q_t) \\ \pause
@@ -2311,10 +2315,10 @@ This only happens in simple examples. Today, we will discuss
 
 \subsection{common $\phi^{-1}$}
 \frame{\frametitle{common $\phi^{-1}$}
-\[ \begin{array}{rl@{\qquad}l}
-Y_t &= F_t\theta_t + v_t &v_t\sim N_m(0,\phi^{-1}\tilde{V}_t) \\
-\theta_t &= G_t\theta_{t-1}+w_t & w_t\sim N_p(0,\phi^{-1}\tilde{W}_t) \\
-p(\theta_0) &= N(m_0,\phi^{-1}\tilde{C}_0) \\
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,\phi^{-1}\tilde{V}_t) \\
+\theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,\phi^{-1}\tilde{W}_t) \\
+&&\theta_0 &\sim N_p(m_0,\phi^{-1}\tilde{C}_0) \\
 \phi &\sim  Ga(\alpha_0, \beta_0)
 \end{array} \]
 
@@ -2549,10 +2553,10 @@ Suppose our goal is to draw from $p(\theta_{0:T}|y_{1:T})$ using univariate Gibb
 
 \vspace{-0.1in}
 
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= F_t\theta_t + v_t &v_t\sim N_m(0,V_t) \\
- \theta_t &= G_t\theta_{t-1}+w_t & w_t\sim N_p(0,W_t) \\
- p(\theta_0) &= N(m_0,C_0)
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
  \end{array} \]
 
  \vspace{0.4in}
@@ -2695,10 +2699,10 @@ s_t &=& m_t+C_tG_{t+1}^\top R_{t+1}^{-1}(s_{t+1}-a_{t+1})
 \subsection{MCMC in DLMs}
 \frame{\frametitle{}
 Let $\psi$ represent any unknown, non-dynamic model parameters such that the data follows a DLM conditional on $\psi$.\pause
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= F_t(\psi)\theta_t + v_t &v_t\sim N_m(0,V_t(\psi)) \\
- \theta_t &= G_t(\psi)\theta_{t-1}+w_t & w_t\sim N_p(0,W_t(\psi)) \\
- p(\theta_0) &= N(m_0(\psi),C_0(\psi))
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t(\psi)\theta_t + v_t &v_t&\ind N_m(0,V_t(\psi)) \\
+ \theta_t &= G_t(\psi)\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t(\psi)) \\
+ p(\theta_0) &= N_p(m_0(\psi),C_0(\psi))
  \end{array} \]\pause
 For example, $\psi = (V,W)$ where $V_t(\psi)=V$ and $W_t(\psi)=W$ \pause while $F_t(\psi)=F$ and $G_t(\psi)=G$ are known, \pause as in polynomial trend, seasonal factor, and dynamic regression models.
 
@@ -2800,9 +2804,9 @@ h_t &=& H_t(C_t^{-1}m_t+G_{t+1}^\top W_{t+1}^{-1}\theta_{t+1})
 }
 
 \frame{\frametitle{Local level model - unknown variances}
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N_m(0,V) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N_p(0,W) \\
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N_m(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N_p(0,W) \\
  p(\theta_0) &= N(m_0,C_0)
  \end{array} \]
  
@@ -2872,9 +2876,9 @@ The samples $(\theta^{(i)},\psi^{(i)})$ converge to samples from $p(\theta_{0:n}
 
 Let's look at an example: local level model.
 
- \[ \begin{array}{rl@{\qquad}l}
- Y_t &= \theta_t + v_t &v_t\sim N(0,2) \\
- \theta_t &= \theta_{t-1}+w_t & w_t\sim N(0,0.5) \\
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N(0,2) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N(0,0.5) \\
  p(\theta_0) &= N(0,1)
  \end{array} \]
  
