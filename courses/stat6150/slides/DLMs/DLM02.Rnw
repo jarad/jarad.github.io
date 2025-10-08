@@ -1,0 +1,547 @@
+\documentclass[handout]{beamer}
+
+\input{../frontmatter}
+\input{../commands}
+
+\graphicspath{{figures/}{../StateSpaceModels/figures/}}
+
+
+\title{Polynomial Trend Models}
+
+\begin{document}
+
+%\section{Temp??} \begin{comment}
+
+
+<<options, results='hide', echo=FALSE, purl=FALSE>>=
+opts_chunk$set(fig.width=7, 
+               fig.height=5, 
+               out.width='.8\\linewidth', 
+               fig.align='center', 
+               size='tiny',
+               cache=TRUE,
+               echo=FALSE)
+options(width=100)
+@
+
+<<libraries, message=FALSE, warning=FALSE,cache=FALSE>>=
+library("tidyverse"); theme_set(theme_bw())
+library("dlm")
+@
+
+<<set_seed, echo=FALSE>>=
+set.seed(2)
+@
+
+<<graphics_colors>>=
+type_colors <- c(
+  "filter" = "#C8102E",
+  "smooth" = "#524727",
+  "forecast-state" = "#9B945F",
+  "forecast-observation" = "#F1BE48"
+)
+@
+
+\frame{\maketitle}
+
+\frame{\frametitle{Dynamic Linear Models}
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \] 
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
+
+ \vspace{0.1in}
+ 
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+}
+
+\section{Model components}
+\frame{\frametitle{Decomposition of time series}
+Consider a univariate series $Y_t$. Think of this series has being the sum of \alert{independent} components
+\[ Y_t = Y_{1,t}+\cdots + Y_{h,t} = \sum_{i=1}^h Y_{i,t} \]
+
+\vspace{0.1in} \pause
+
+where each component has its own independent DLM (dynamic linear model),
+\[ \begin{array}{rl@{\qquad}l}
+Y_{i,t} &= F_{i,t}\theta_{i,t}+v_{i,t} & v_{i,t} \sim N(0,V_{i,t}) \\
+\theta_{i,t} &= G_{i,t}\theta_{i,t-1}+w_{i,t} & w_{i,t}\sim N(0,W_{i,t})
+\end{array} \]
+
+\vspace{0.1in}\pause
+
+Then
+\[ \begin{array}{rl@{\qquad}l}
+Y_{t} &= F_{t}\theta_{t}+v_{t} & v_{t} \sim N(0,V_{t}) \\
+\theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\sim N(0,W_{t})
+\end{array} \]
+}
+
+
+\frame{\frametitle{Observation equation}
+Recall
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= Y_{1,t}+\cdots + Y_{h,t} \\
+\\
+Y_{i,t} &= F_{i,t}\theta_{i,t}+v_{i,t} & v_{i,t} \sim N(0,V_{i,t}) \\
+\end{array} \]
+
+\vspace{0.1in}\pause
+
+\[ \begin{array}{rlll}
+Y_t &= \sum_{i=1}^h Y_{i,t}  \\ \pause
+ &= \sum_{i=1}^h \big[ F_{i,t}\theta_{i,t}+v_{i,t} \big] \\ \pause
+ &= \sum_{i=1}^h F_{i,t}\theta_{i,t}+\sum_{i=1}^h v_{i,t} \\ \pause
+ &= \sum_{i=1}^h F_{i,t}\theta_{i,t}+v_t & v_t\sim N(0,V_t) \quad V_t = \sum_{i=1}^h V_{i,t} \\ \pause
+ &= F_t\theta_t + v_t
+\end{array} \]
+where
+\[ \theta_t = \left[ \begin{array}{c} \theta_{1,t} \\ \vdots \\ \theta_{h,t} \end{array} \right] \qquad \pause
+F_t = [F_{1,t}|\cdots |F_{h,t}] \]
+}
+
+\frame{\frametitle{Evolution equation}
+Recall
+\begin{eqnarray*}
+\theta_t &= \left[ \begin{array}{c} \theta_{1,t} \\ \vdots \\ \theta_{h,t} \end{array} \right] \pause
+= \left[ \begin{array}{c} G_{1,t}\theta_{1,t-1}+w_{1,t} \\ \vdots \\ G_{h,t}\theta_{h,t-1}+w_{h,t} \end{array} \right]  \pause
+&= \left[ \begin{array}{c} G_{1,t}\theta_{1,t-1} \\ \vdots \\ G_{h,t}\theta_{h,t-1} \end{array} \right]+\left[ \begin{array}{c} w_{1,t} \\ \vdots \\ w_{h,t} \end{array} \right] \\ \\ \pause
+&= \left[ \begin{array}{c} G_{1,t}\theta_{1,t-1} \\ \vdots \\ G_{h,t}\theta_{h,t-1} \end{array} \right] + w_t \pause
+&= G_t\theta_{t-1}+w_t \pause
+\end{eqnarray*} 
+where $w_t\ind N(0,W_t)$ and
+\[ W_t = \left[ \begin{array}{ccc} W_{1,t} \\ & \ddots \\ && W_{h,t} \end{array}\right]  \qquad G_t = \left[ \begin{array}{ccc} G_{1,t} \\ & \ddots \\ && G_{h,t} \end{array} \right] \pause
+ \]
+}
+
+\frame{\frametitle{Combining model components}
+Consider 
+\[ \begin{array}{rl@{\qquad}l}
+Y_{t} &= F_{t}\theta_{t}+v_{t} & v_{t} \ind N(0,V_{t}) \\
+\theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\ind N(0,W_{t})
+\end{array} \] \pause
+where $V_t = \sum_{i=1}^h V_{i,t}$, 
+
+\[ \theta_t = \left[ \begin{array}{c} \theta_{1,t} \\ \vdots \\ \theta_{h,t} \end{array} \right] \qquad 
+F_t = [F_{1,t}|\cdots |F_{h,t}] \]
+and
+\[ W_t = \left[ \begin{array}{ccc} W_{1,t} \\ & \ddots \\ && W_{h,t} \end{array}\right]  \qquad G_t = \left[ \begin{array}{ccc} G_{1,t} \\ & \ddots \\ && G_{h,t} \end{array} \right] \]
+}
+
+\section{Polynomial trend models}
+\subsection{Introduction}
+\frame{\frametitle{Polynomial trend model definition}
+\begin{quote}
+A polynomial model of order $n$ is a DLM with constant [and specified] matrices $F_t=F$ and $G_t=G$, and a forecast function of the form 
+\[ f_t(k) = E(Y_{t+k}|y_{1:t}) = a_{t,0}+a_{t,1}k+\cdots+a_{t,n-1}k^{n-1}, \, k\ge 0 \]
+where $a_{t,0},\ldots,a_{t,n-1}$ are linear functions of $m_t=E(\theta_t|y_{1:t})$ and are independent of $k$. Thus, the forecast function is a polynomial or order $n-1$ in $k$.
+\end{quote}
+
+\vspace{0.2in} \pause
+
+In practice we use, 
+\begin{itemize}
+\item Local level model ($n=1$).
+\item Linear trend model ($n=2$).
+\item Exponential trends are accommodated by taking logs and then using a linear trend model.
+\end{itemize}
+}
+
+\subsection{Local level model}
+\frame{\frametitle{Local level model}
+  \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N(0,W) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.2in} \pause
+
+ where $F_t=F=1$, $G_t=G=1$, $V_t=V$, and $W_t=W$.
+
+ \vspace{0.2in} \pause
+
+ What is the forecast function? $f_t(k) = E(Y_{t+k}|y_{1:t}) \pause = m_t$.
+}
+
+\begin{frame}[fragile]
+\frametitle{Lake Superior Data}
+<<lake-superior-data, echo=FALSE>>=
+# loc     <- "https://robjhyndman.com/tsdldata/roberts/plsuper.dat"
+# lakeSup <- data.frame(
+#   year  = 1900:1986,
+#   `level` = read.table(loc, skip = 3, colClasses = "numeric", col.names = "level")
+# )
+# dput(lakeSup)
+
+lakeSup <- structure(list(year = 1900:1986, level = c(28.55, 27.37, 25.6, 
+29.93, 27.61, 29.04, 27.26, 26.21, 27.71, 27.67, 22.79, 32.2, 
+25.96, 29.65, 24.67, 29.82, 32.42, 23.99, 27.83, 27.34, 27.07, 
+27.57, 28.43, 24.9, 27.1, 24.73, 34.67, 30.01, 31.55, 28.07, 
+26.58, 29.39, 31.51, 30.68, 29.88, 32.54, 26.97, 33.39, 33.46, 
+29.73, 28.2, 35.27, 31.94, 30.56, 33.55, 31.83, 30.8, 28.72, 
+27.57, 33.62, 35.68, 35.25, 28.25, 32.35, 29.93, 32.74, 26.3, 
+28.35, 28.96, 31.73, 30.12, 28.58, 27.19, 25.3, 34.18, 34.24, 
+30.09, 28.42, 37.96, 27.73, 33.84, 33.45, 32.22, 30.84, 23.85, 
+29.81, 25.97, 39.93, 30.99, 35.69, 29.59, 28.37, 35.82, 32.27, 
+29.09, 38.25, 32.77)), class = "data.frame", row.names = c(NA, 
+-87L)) |>
+  rename(`level (in)` = level) |>
+  mutate(type = "data")
+
+ggplot(lakeSup,
+       aes(
+         x = year,
+         y = `level (in)`
+       )) +
+  geom_point() +
+  geom_line() +
+  
+  labs(title = 'Lake Superior Water Level')
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Fit a local level DLM}
+<<lake-superior-local-level-model,echo=TRUE,dependson="lake-superior-data">>=
+# Obtain MLEs for V and W
+build_ll_model <- function(theta, ...) {
+  dlmModPoly(order = 1, 
+             dV = exp(theta[1]), 
+             dW = exp(theta[2]), 
+             ...)
+}
+
+lakeSup_MLEs <- dlmMLE(lakeSup$`level (in)`, rep(0, 2), build_ll_model)
+stopifnot(!lakeSup_MLEs$convergence) # 0 is converged
+
+exp(lakeSup_MLEs$par) # estimated V and W
+
+# Estimate state (assuming these values for V and W)
+model_local_level <- build_ll_model(lakeSup_MLEs$par, m0 = 30, C0 = 10) 
+
+lSupFilt <- dlmFilter(lakeSup$`level (in)`, model_local_level)
+lSupSmoo <- dlmSmooth(lSupFilt)
+lSupFore <- dlmForecast(lSupFilt, nAhead = 10)
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<lake-superior-ll-df-plot,echo=TRUE,dependson=c("lake-superior-data","lake-superior-local-level-model")>>=
+# Construct data.frame for plotting
+lakeSup_plot <- 
+  bind_rows(
+    lakeSup |>
+      mutate(
+        type = "filter",
+        mean = lSupFilt$m[-1],
+        sd   = sqrt(unlist(dlmSvd2var(lSupFilt$U.C, lSupFilt$D.C)))[-1]),
+    
+    lakeSup |>
+      mutate(
+        type = "smooth",
+        mean = lSupSmoo$s[-1],
+        sd   = sqrt(unlist(dlmSvd2var(lSupSmoo$U.S, lSupSmoo$D.S)))[-1]),
+    
+    data.frame(
+      type = "forecast-state",
+      year = max(lakeSup$year) + 1:nrow(lSupFore$a),
+      mean = as.numeric(lSupFore$a),
+      sd   = sqrt(unlist(lSupFore$R))
+    ),
+    
+    data.frame(
+      type = "forecast-observation",
+      year = max(lakeSup$year) + 1:nrow(lSupFore$a),
+      mean = as.numeric(lSupFore$f),
+      sd   = sqrt(unlist(lSupFore$Q))
+    )
+  ) |>
+  mutate(
+    lb = mean - 2 * sd,
+    ub = mean + 2 * sd
+  )
+@
+\end{frame}
+
+\begin{frame}
+\frametitle{Lake Superior - Local Level Model}
+<<lake-superior-local-level-filtering-plot, echo=FALSE, dependson="lake-superior-ll-df-plot">>=
+ggplot(lakeSup_plot |> filter(type == "filter"),
+       aes(
+         x = year,
+         y = `level (in)`,
+         color = type
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Filtering")
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Lake Superior - Local Level Model}
+<<lake-superior-local-level-smoothing, echo=FALSE, dependson="lake-superior-ll-df-plot">>=
+ggplot(lakeSup_plot |> filter(type == "smooth"),
+       aes(
+         x = year,
+         y = `level (in)`
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Smoothing")
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Lake Superior - Local Level Model}
+<<lake-superior-local-level-forecasting-plot, echo=FALSE, dependson="lake-superior-ll-df-plot",warning=FALSE>>=
+ggplot(lakeSup_plot |> filter(type != "filter"),
+       aes(
+         x = year,
+         y = `level (in)`,
+         color = type
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Forecasting")
+@
+\end{frame}
+
+
+
+
+
+\subsection{Linear trend model}
+\frame{\frametitle{Linear trend model}
+  \[ \begin{array}{rl@{\qquad}lll}
+ Y_t &= \mu_t + v_t &v_t&\ind N(0,V) \\
+ \mu_t &= \mu_{t-1}+\beta_{t-1}+w_{t,1} & w_{t,1}&\ind N(0,\sigma^2_\mu) \\
+ \beta_t &= \beta_{t-1}+w_{t,2} & w_{t,2}&\ind N(0,\sigma^2_\beta) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \]
+ 
+ \vspace{0.1in} \pause
+ 
+ \begin{itemize}
+ \item $F_t \pause = F= (1,0)$ \pause
+ \item $\theta_t \pause = (\mu_t,\beta_t)^\top $ \pause
+ \item \[ G_t \pause = \left[ \begin{array}{cc} 1 & 1 \\ 0 & 1 \end{array} \right] \] \pause
+ \item Forecast function $f_t(k)=E[Y_{t+k}|y_{1:t}]\pause = \hat{\mu}_t+k\hat{\beta}_t$ 
+ \end{itemize}
+}
+
+% \frame{\frametitle{Spain?}
+%  \begin{center}
+%  \includegraphics{spain}
+%  \end{center}
+% }
+
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Fit a local level DLM}
+<<lake-superior-linear-trend-model,echo=TRUE,dependson="lake-superior-data">>=
+# Obtain MLEs for V, W[1,1], and W[2,2]
+build_lt_model <- function(theta, ...) {
+  dlmModPoly(order = 2, 
+             dV = exp(theta[1]), 
+             dW = exp(theta[2:3]), 
+             ...)
+}
+
+lakeSup_lt_MLEs <- dlmMLE(lakeSup$`level (in)`, rep(0, 3), build_lt_model)
+stopifnot(!lakeSup_lt_MLEs$convergence) # 0 is converged
+
+exp(lakeSup_lt_MLEs$par) # estimated V, W[1,1], and W[2,2]
+
+# Estimate state (assuming these values for V and W)
+model_linear_trend <- build_lt_model(lakeSup_lt_MLEs$par, m0 = c(30,0), C0 = diag(10, 2, 2)) 
+
+ltSupFilt <- dlmFilter(lakeSup$`level (in)`, model_linear_trend)
+ltSupSmoo <- dlmSmooth(ltSupFilt)
+ltSupFore <- dlmForecast(ltSupFilt, nAhead = 10)
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<lake-superior-lt-df-plot,echo=TRUE,dependson=c("lake-superior-data","lake-superior-linear-trend-model")>>=
+# Construct data.frame for plotting
+lakeSup_lt_plot <- 
+  bind_rows(
+    lakeSup |>
+      mutate(
+        type = "filter",
+        mean = ltSupFilt$m[-1,1],
+        sd   = sqrt(unlist(lapply(dlmSvd2var(ltSupFilt$U.C, 
+                                             ltSupFilt$D.C), 
+                                  function(x) x[1]))[-1])),
+    
+    lakeSup |>
+      mutate(
+        type = "smooth",
+        mean = ltSupSmoo$s[-1,1],
+        sd   = sqrt(unlist(lapply(dlmSvd2var(ltSupSmoo$U.S, 
+                                             ltSupSmoo$D.S), 
+                                  function(x) x[1]))[-1])),
+    
+    data.frame(
+      type = "forecast-state",
+      year = max(lakeSup$year) + 1:nrow(ltSupFore$a),
+      mean = as.numeric(ltSupFore$a[,1]),
+      sd   = sqrt(unlist(lapply(ltSupFore$R, function(x) x[1])))
+    ),
+    
+    data.frame(
+      type = "forecast-observation",
+      year = max(lakeSup$year) + 1:nrow(ltSupFore$a),
+      mean = as.numeric(ltSupFore$f[,1]),
+      sd   = sqrt(unlist(lapply(ltSupFore$Q, function(x) x[1])))
+    )
+  ) |>
+  mutate(lb = mean - 2 * sd, ub = mean + 2 * sd)
+@
+\end{frame}
+
+\begin{frame}
+\frametitle{Lake Superior - Linear Trend Model}
+<<lake-superior-linear-trend-filtering-plot, echo=FALSE, dependson="lake-superior-lt-df-plot">>=
+ggplot(lakeSup_lt_plot |> filter(type == "filter"),
+       aes(
+         x = year,
+         y = `level (in)`,
+         color = type
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Linear Trend - Filtering")
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Lake Superior - Linear Trend Model}
+<<lake-superior-linear-trend-smoothing, echo=FALSE, dependson="lake-superior-lt-df-plot">>=
+ggplot(lakeSup_lt_plot |> filter(type == "smooth"),
+       aes(
+         x = year,
+         y = `level (in)`,
+         color = type
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Linear Trend - Smoothing")
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Lake Superior - Linear Trend Model}
+<<lake-superior-linear-trend-forecasting-plot, echo=FALSE, dependson="lake-superior-lt-df-plot",warning=FALSE>>=
+ggplot(lakeSup_lt_plot |> filter(type != "filter"),
+       aes(
+         x = year,
+         y = `level (in)`,
+         color = type
+       )) +
+  geom_point(color = 'gray') + 
+  geom_line( color = 'gray') +
+  
+  geom_line(aes(y = mean), linetype = 2) +
+  geom_line(aes(y = lb  )) +
+  geom_line(aes(y = ub  )) +
+  
+  scale_color_manual(values = type_colors) +
+  
+  labs(
+    title = "Lake Superior Water Level",
+    subtitle = "Linear Trend - Forecasting")
+@
+\end{frame}
+
+
+
+
+
+
+\frame{\frametitle{Polynomial trend models}
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \]
+ 
+ \vspace{0.1in} \pause
+ 
+ \begin{itemize}
+ \item $F_t=F=(1,0,\ldots,0)$ \pause
+ \item 
+ \[ G_t = G =\left[ \begin{array}{cccccc} 1 & 1 & 0 & 0 & \cdots & 0 \\
+ 0 & 1 & 1 & 0 & \cdots & 0 \\
+ \vdots &&&&\ddots & \vdots \\
+ 0 & & \cdots & 0 & 1 & 1 \\
+ 0 & & \cdots & & 0 & 1 \end{array} \right] \] \pause
+ \item $W_t = W=\mbox{diag}(W_1,\ldots,W_n)$
+ \end{itemize}
+}
+
+
+
+
+
+
+\end{document}
+

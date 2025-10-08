@@ -1,0 +1,398 @@
+\documentclass{beamer}
+
+\input{../frontmatter}
+\input{../commands}
+
+\graphicspath{{figures/}{../StateSpaceModels/figures/}}
+
+
+\title{Kalman Filter and Smoother}
+
+\begin{document}
+
+%\section{Temp??} \begin{comment}
+
+
+<<options, results='hide', echo=FALSE, purl=FALSE>>=
+opts_chunk$set(fig.width=7, 
+               fig.height=5, 
+               out.width='.8\\linewidth', 
+               fig.align='center', 
+               size='tiny',
+               echo=FALSE)
+options(width=100)
+@
+
+<<libraries, message=FALSE, warning=FALSE>>=
+library("ggplot2")
+library(plyr)
+library("dplyr")
+library(reshape2)
+library("dlm")
+@
+
+<<set_seed, echo=FALSE>>=
+set.seed(2)
+@
+
+\frame{\maketitle}
+
+\section{Dynamic linear models}
+
+\subsection{Structure, notation, and terminology}
+\frame{\frametitle{Structure}
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \] \pause
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
+
+ \vspace{0.1in}
+ 
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+}
+
+
+\subsection{Local level model}
+\frame{\frametitle{Local level model}
+\setkeys{Gin}{width=\textwidth}
+  \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= \theta_t + v_t &v_t &\ind N_1(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t &\ind N_1(0,W) \\
+ &&\theta_0 &\sim N_1(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.1in} \pause
+
+ Signal-to-noise, $r=W/V$.
+
+ \vspace{0.1in} \pause
+
+ \begin{center}
+ \includegraphics{signalToNoise1}
+ \end{center}
+}
+
+\frame{\frametitle{Local level model}
+\setkeys{Gin}{width=\textwidth}
+  \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= \theta_t + v_t & v_t &\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t &\ind N(0,W) \\
+ && \theta_0 &\sim N(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.1in}
+
+ Signal-to-noise, $r=W/V$.
+
+ \vspace{0.1in}
+
+ \begin{center}
+ \includegraphics{signalToNoise2}
+ \end{center}
+}
+
+\section{Kalman filtering}
+\subsection{Idea}
+\frame{\frametitle{Kalman filter idea}
+ {\small
+ Goal: obtain $p(\theta_t|y_{1:t})$  \pause
+
+ \vspace{0.1in}
+
+ Recursive procedure: \pause
+ \begin{itemize}
+ \item Assume $p(\theta_{t-1}|y_{1:t-1})$ \pause \uncover<10->{$\qquad p(\theta_{t-1}|y_{1:t-1}) = N(m_{t-1},C_{t-1})$}
+ \item Prior for $\theta_t$ \pause
+ \begin{eqnarray*} p(\theta_t|y_{1:t-1}) = \int p(\theta_t|\theta_{t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1}
+ \end{eqnarray*} \pause
+ \item One-step ahead predictive distribution for $y_t$ \pause
+ \begin{eqnarray*} p(y_t|y_{1:t-1}) = \int p(y_t|\theta_t)p(\theta_t|y_{1:t-1})d\theta_t
+ \end{eqnarray*} \pause
+ \item Filtered distribution for $\theta_t$ \pause
+ \[ p(\theta_t|y_{1:t}) = \frac{p(y_t|\theta_t)p(\theta_t|y_{1:t-1})}{p(y_t|y_{1:t-1})}\] \pause
+ \end{itemize}
+ }
+}
+
+\subsection{The hard way}
+\frame{\frametitle{}
+{\tiny
+ \begin{itemize}
+ \item Prior for $\theta_t$ \pause
+ \begin{eqnarray*} p(\theta_t|y_{1:t-1}) &=& \int N(\theta_t;G_t\theta_{t-1},W_t) N(\theta_{t-1};m_{t-1},C_{t-1}) d\theta_{t-1} \\
+ &=& \int \frac{1}{(2\pi)^{p/2}|W_t|^{1/2}}\exp\left(-\frac{1}{2}(\theta_t-G_t\theta_{t-1})^\top W_t^{-1}(\theta_t-G_t\theta_{t-1})\right) \\ && \quad \frac{1}{(2\pi)^{p/2}|C_{t-1}|^{1/2}}\exp\left(-\frac{1}{2}(\theta_{t-1}-m_{t-1})^\top C_{t-1}^{-1}(\theta_{t-1}-m_{t-1})\right) d\theta_{t-1} \\ \pause
+ &=& N(a_t,R_t)
+ \end{eqnarray*} \pause
+ \item One-step ahead predictive distribution for $y_t$ \pause
+ \begin{eqnarray*} p(y_t|y_{1:t-1}) &=& \int p(y_t|\theta_t)p(\theta_t|y_{1:t-1})d\theta_t \\
+ &=& \int N(y_t;F_t\theta_t,V_t)N(\theta_t;a_t,R_t)d\theta_t \\
+ &=& \int \frac{1}{(2\pi)^{m/2}|V_t|^{1/2}}\exp\left(-\frac{1}{2}(y_t-F_t\theta_t)^\top V_t^{-1}(y_t-F_t\theta_t)\right) \\
+ && \quad \frac{1}{(2\pi)^{p/2}|R_t|^{1/2}}\exp\left(-\frac{1}{2}(\theta_t-a_t)^\top R_t^{-1}(\theta_t-a_t)\right) d\theta_t \\ \pause
+ &=& N(f_t,Q_t)
+ \end{eqnarray*} \pause
+ \item Filtered distribution for $\theta_t$ \pause
+ \begin{eqnarray*} p(\theta_t|y_{1:t}) &=& \frac{p(y_t|\theta_t)p(\theta_t|y_{1:t-1})}{p(y_t|y_{1:t-1})}
+  = \frac{N(y_t;F_t\theta_t,V_t)N(\theta_t;a_t,R_t)}{N(y_t;f_t,Q_t)} \\ \pause
+ &=& N(m_t,C_t) \end{eqnarray*}
+ \end{itemize}
+}
+}
+
+\subsection{Kalman filter}
+\frame{\frametitle{Latent state prior}
+ Assume $p(\theta_{t-1}|y_{1:t-1}) = N(m_{t-1},C_{t-1})$. Find $p(\theta_t|y_{1:t-1})$.
+
+ \vspace{0.5in} \pause
+
+ Evolution equation: $\theta_t = G_t\theta_{t-1}+w_t$ where $w_t\ind N_p(0,W_t)$
+ (independent of $p(\theta_{t-1}|y_{1:t-1})$. \pause
+
+ \vspace{0.2in}
+
+ \begin{itemize}
+ \item CONAN $\implies \theta_t|y_{1:t-1}$ is normal \pause
+ \item $E[\theta_t|y_{1:t-1}] \pause = G_tm_{t-1} \pause = a_t$ \pause
+ \item $Var[\theta_t|y_{1:t-1}] \pause = G_tC_{t-1}G_t^\top +W_t \pause = R_t$ \pause
+ \item $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$.
+ \end{itemize}
+}
+
+\frame{\frametitle{One-step ahead prediction}
+ Prior is $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$. Find $p(y_t|y_{1:t-1})$.
+
+ \vspace{0.5in} \pause
+
+ Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\ind N_m(0,V_t)$ (independent of $p(\theta_t|y_{1:t-1})$. \pause
+
+ \vspace{0.2in}
+
+ \begin{itemize}
+ \item CONAN $\implies y_t|y_{1:t-1}$ is normal \pause
+ \item $E[y_t|y_{1:t-1}] \pause = F_ta_t \pause = f_t$ \pause
+ \item $Var[y_t|y_{1:t-1}] \pause = F_tR_tF_t^\top +V_t \pause = Q_t$ \pause
+ \item $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$.
+ \end{itemize}
+}
+
+\frame{\frametitle{Latent state posterior - linear regression approach}
+ We have $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$. Find $p(\theta_t|y_{1:t})$.
+
+ \vspace{0.5in} \pause
+
+ Observation equation: $y_t = F_t\theta_t+v_t$ where $v_t\ind N_m(0,V_t)$
+ (independent of $p(\theta_t|y_{1:t-1})$. \pause
+
+ \vspace{0.2in}
+
+ \begin{itemize}
+ \item Linear regression $\implies \theta_t|y_{1:t}$ is normal \pause
+ \item $Var[\theta_t|y_{1:t}] \pause = (R_t^{-1}+F_t^\top V_t^{-1}F_t)^{-1} \pause = C_t$ \pause
+ \item $E[\theta_t|y_{1:t}] \pause = C_t(R_t^{-1}a_t+F_t^\top V_t^{-1}y_t) \pause = m_t$ \pause
+ \item $p(\theta_t|y_{1:t}) = N(m_t,C_t)$.
+ \end{itemize}
+}
+
+\frame{\frametitle{Latent state posterior - multivariate normal approach}
+ Prior is $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ and $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$. Find $p(\theta_t|y_{1:t})$.
+
+ \vspace{0.5in} \pause
+
+ Consider \[ p\left(\left. \left[ \begin{array}{c} y_t \\ \theta_t \end{array} \right] \right|y_{1:t-1}\right)\pause = N\left(\left[\begin{array}{c} f_t \\ a_t \end{array}\right], \left[\begin{array}{cc} Q_t & \uncover<4->{F_tR_t} \\ \uncover<4->{R_tF_t^\top } & R_t \end{array} \right]\right) \]
+
+ \vspace{0.2in} \pause \pause
+
+ \begin{itemize}
+ \item MVN theory $\implies \theta_t|y_{1:t-1},y_t$ is normal \pause
+ \item $E[\theta_t|y_{1:t}] \pause = a_t+R_tF_t^\top Q_t^{-1}(y_t-f_t)
+  \pause = m_t$ \pause
+ \item $Var[\theta_t|y_{1:t}] \pause = R_t-R_tF_t^\top Q_t^{-1}F_tR_t \pause = C_t$ \pause
+ \item $p(\theta_t|y_{1:t}) = N(m_t,C_t)$.
+ \end{itemize}
+}
+
+\frame{\frametitle{Kalman filter}
+ \begin{enumerate}
+ \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
+ \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
+ \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
+ \item Obtain one step ahead predictive $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$ where
+ \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
+ \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
+ \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
+ m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
+ e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
+ \end{array} \]
+ \end{enumerate} \pause
+ $K_t$ is the \alert{Kalman gain} or \alert{adaptive coefficient}
+ (high values have more weight on the current observation while low values have more weight on the prior information).
+}
+
+\subsection{Kalman filter example}
+\frame{\frametitle{Local level model}
+\setkeys{Gin}{width=\textwidth}
+  \[ \begin{array}{rl@{\qquad}l}
+ Y_t &= \theta_t + v_t &v_t\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t\ind N(0,W) \\
+ p(\theta_0) &= N(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.1in}
+
+ Signal-to-noise, $r=W/V$.
+
+ \vspace{0.1in}
+
+ \begin{center}
+ \includegraphics{signalToNoise}
+ \end{center}
+}
+
+\frame{\frametitle{Local level model}
+\setkeys{Gin}{width=\textwidth}
+  \[ \begin{array}{rl@{\qquad}l}
+ Y_t &= \theta_t + v_t &v_t\ind N(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t\ind N(0,W) \\
+ p(\theta_0) &= N(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.1in}
+
+ Signal-to-noise, $r=W/V$.
+
+ \vspace{0.1in}
+
+ \begin{center}
+ \includegraphics{kalmanFilter}
+ \end{center}
+}
+
+\frame{\frametitle{Kalman gain (adaptive coefficient)}
+\setkeys{Gin}{width=\textwidth}
+\vspace{-0.2in}
+ \begin{center}
+ \includegraphics{kalmanFilter2}
+ \end{center}
+}
+
+\subsection{Missing observations}
+% \frame{\frametitle{Kalman filter (with missing observations)}
+%  \begin{itemize}
+%  \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
+%  \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
+%  \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
+%  \item Obtain one step ahead predictive $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$ where
+%  \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
+%  \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
+%  \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
+%  m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
+%  e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
+%  \end{array} \]
+%  \end{itemize}
+% }
+
+\frame{\frametitle{Kalman filter \alert{with missing data}}
+ \begin{itemize}
+ \item Assume $p(\theta_{t-1}|y_{1:t-1})=N(m_{t-1},C_{t-1})$.
+ \item Obtain prior $p(\theta_t|y_{1:t-1}) = N(a_t,R_t)$ where
+ \[ a_t = G_tm_{t-1} \quad \mbox{and} \quad R_t =G_tC_{t-1}G_t^\top +W_t.\]
+ \item Obtain one step ahead predictive $p(y_t|y_{1:t-1}) = N(f_t,Q_t)$ where
+ \[ f_t = F_ta_t \quad \mbox{and} \quad Q_t = F_tR_tF_t^\top +V_t.\]
+ \item Obtain posterior $p(\theta_t|y_{1:t}) = N(m_t,C_t)$ where
+  \begin{itemize}
+  \item If $y_t$ is observed,
+ \[ \begin{array}{rcl@{\quad \mbox{and} \quad}rcl}
+ m_t &=& a_t+K_te_t & C_t &=& R_t-K_tQ_tK_t^\top  \\
+ e_t &=& y_t-f_t  & K_t &=& R_tF_t^\top Q_t^{-1}
+ \end{array} \]
+  \item<2-> \alert{If $y_t$ is not observed, $m_t=a_t$ and $C_t=R_t$.}
+  \end{itemize}
+ \end{itemize}
+}
+
+\subsection{Forecasting}
+\begin{frame}
+\frametitle{Forecasting}
+
+Forecasting is simply the Kalman filter with missing observations.
+\pause
+So, 
+\[ \begin{array}{rl}
+\left( \begin{array}{c} \theta_{t+k} \\ Y_{t+k} \end{array} \right) \sim
+N\left( \left[ \begin{array}{c} a_t(k) \\ f_t(k) \end{array}\right], 
+\left[ \begin{array}{cc} R_t(k) & F_{t+k}R_t(k) \\ R_t(k)F_{t+k}^\top & Q_t(k) \end{array} \right]\right)
+\end{array} \]
+\pause 
+where 
+\[ \begin{array}{rl}
+a_t(k) &= G_{t+k}a_t(k-1) \\
+R_t(k) &= G_{t+k} R_{t}(k-1)G_{t+k}^\top +W_{t+k} \\
+f_t(k) &= F_{t+k}a_t(k) \\
+Q_t(k) &= F_{t+k}R_t(k)R_{t+k}^\top + V_t
+\end{array} \]
+\pause 
+with $a_t(0) = m_t$ and $R_t(0) = C_t$.
+
+\end{frame}
+
+\subsection{Kalman Smoother}
+\begin{frame}
+\frametitle{Kalman Smoother}
+
+Smoothing can be accomplished in a manner similar to the Kalman filter via
+the Kalman smoother.
+\pause
+If we have $\theta_{t+1}|y_{1:T} \sim N(s_{t+1},S_{t+1})$, 
+then $\theta_t|y_{1:T} \sim N(s_t,S_t)$ where
+\[ \begin{array}{rl}
+s_t &= m_t + C_tG_{t+1}^\top R_{t+1}^{-1}(s_{t+1}-a_{t+1}) \\
+S_t &= C_t - C_tG_{t+1}^\top R_{t+1}^{-1}(R_{t+1}-S_{t+1})R_{t+1}^{-1}G_{t+1}C_t.
+\end{array} \]
+
+\end{frame}
+
+
+\subsection{Backward sampling}
+\begin{frame}
+\frametitle{Backward sampling}
+Recall
+\begin{itemize}
+\item $p(\theta_t|y_{1:t})=N(m_t,C_t)$ is available for all $t$ from filtering \pause  and 
+\item $p(\theta_t|\theta_{t+1},y_{1:T})=N(h_t,H_T)$ \pause with
+\end{itemize}
+
+\begin{eqnarray*}
+H_t &=& (C_t^{-1}+G_{t+1}^\top W_{t+1}^{-1}G_{t+1})^{-1} \\
+h_t &=& H_t(C_t^{-1}m_t+G_{t+1}^\top W_{t+1}^{-1}\theta_{t+1})
+\end{eqnarray*}
+
+\pause
+
+The algorithm is then 
+\begin{itemize}
+\item Forward filter to obtain $p(\theta_t|y_{1:t})=N(m_t,C_t)$ for all $t$. \pause
+\item Sample $\theta_T \sim N(m_T,C_T)$. \pause
+\item For $t=T-1,T-2,\ldots,1,0$, \pause 
+ \begin{itemize}
+ \item Calculate $h_t$ and $H_t$ based on $\theta_{t+1}$. \pause
+ \item Draw $\theta_t\sim N(h_t,H_t)$. \pause
+ \end{itemize}
+\end{itemize}
+This is then a joint draw of 
+$\theta_{0:T} \sim p(\theta_0,\ldots,\theta_T|y_{1:T})$.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Inference questions?}
+
+Any questions on performing inference on the latent states in a DLM?
+
+\end{frame}
+
+
+\end{document}
+
