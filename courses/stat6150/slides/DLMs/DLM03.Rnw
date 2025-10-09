@@ -1,0 +1,648 @@
+\documentclass[handout]{beamer}
+
+\input{../frontmatter}
+\input{../commands}
+
+\graphicspath{{figures/}{../StateSpaceModels/figures/}}
+
+
+\title{Seasonal Models}
+
+\begin{document}
+
+%\section{Temp??} \begin{comment}
+
+
+<<options, results='hide', echo=FALSE, purl=FALSE>>=
+opts_chunk$set(fig.width=7, 
+               fig.height=5, 
+               out.width='.8\\linewidth', 
+               fig.align='center', 
+               size='tiny',
+               cache=TRUE,
+               echo=FALSE)
+options(width=100)
+@
+
+<<libraries, message=FALSE, warning=FALSE,cache=FALSE>>=
+library(plyr)
+library("tidyverse"); theme_set(theme_bw())
+library(reshape2)
+library("dlm")
+library("emmeans")
+@
+
+\frame{\maketitle}
+
+\begin{frame}
+\frametitle{Dynamic Linear Models}
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \] \pause
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
+
+ \vspace{0.1in}
+ 
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+\end{frame}
+
+
+
+\section{Seasonal data}
+\subsection{Nottem}
+\begin{frame}
+\frametitle{Nottem Data}
+<<nottem-data, echo=FALSE>>=
+time_vals <- time(nottem)
+years     <- floor(time_vals)
+months    <- round(12 * (time_vals - years)) + 1
+
+# Create data.frame
+nottem_d <- data.frame(
+  Year        = as.numeric(years),
+  Month       = as.numeric(months),
+  Temperature = as.numeric(nottem)
+) |>
+  mutate(
+    Date = Year + Month / 12,
+    Temperature0 = Temperature - mean(Temperature)
+  )
+@
+
+<<nottem-plot, dependson="nottem-data", echo=FALSE>>=
+ggplot(nottem_d, 
+       aes(
+         x = Date,
+         y = Temperature
+       )) +
+  geom_line() +
+  labs(
+    title = 'Nottingham Average Monthly Temperature'
+  )
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Regress - air temp on month}
+<<nottem-regression,dependson="nottem-data">>=
+m <- lm(Temperature ~ as.factor(Month), data = nottem_d)
+summary(m)
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Estimated Monthly Means}
+<<nottem-emmeans, dependson="nottem-regression", echo=TRUE>>=
+em <- emmeans(m, ~ Month); em
+@
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Time Series Decomposition}
+<<nottem-decomposition>>=
+plot(decompose(nottem))
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Nottem Data - Zero Mean}
+<<nottem-zero-plot, dependson="nottem-data", echo=FALSE>>=
+ggplot(nottem_d, 
+       aes(
+         x = Date,
+         y = Temperature0
+       )) +
+  geom_line() +
+  labs(
+    title = 'Nottingham Average Monthly Temperature',
+    subtitle = "Zero Mean"
+  )
+@
+\end{frame}
+
+
+
+\section{Seasonal factor models}
+\frame{\frametitle{Seasonal factors}
+Suppose all $s$ seasons have a factor $\alpha_i$. Then
+{\small
+\begin{columns}
+\column{0.5\textwidth}
+\begin{eqnarray*}
+Y_1 &=& \alpha_1 + v_1 \\
+Y_2 &=& \alpha_2 + v_2 \\
+&\vdots & \\
+Y_s &=& \alpha_s +v_s \\ \pause
+Y_{s+1} &=& \alpha_1 + v_{s+1} \\ \pause
+Y_{s+2} &=& \alpha_2 + v_{s+2} \\
+&\vdots & \\
+Y_{2s} &=& \alpha_s +v_{2s} \\ \pause
+Y_{2s+1} &=& \alpha_1 + v_{2s+1} \\
+Y_{2s+2} &=& \alpha_2 + v_{2s+2} \\
+&\vdots &
+\end{eqnarray*} \pause
+\column{0.5\textwidth}
+\begin{eqnarray*}
+Y_t &=& F_t\theta_t + v_t \\
+\theta_t &=& G_t\theta_{t-1} + w_t
+\end{eqnarray*} \pause
+where
+\begin{eqnarray*}
+\theta_1 &=& \pause (\alpha_1,\alpha_2,\ldots,\alpha_s)^\top  \\
+F_t &=& F = \pause (1,0,0,\ldots,0) \\ \pause
+G_t &=& G= \pause \left[ \begin{array}{ccccc}
+0 & 1 & 0 & \cdots & 0 \\
+0 & 0 & 1 & \cdots & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & 0 & \cdots & 1 \\
+1 & 0 & 0 & \vdots & 0
+\end{array} \right] \\ \pause
+W_t &=& W = \pause 0 \quad \pause \mbox{(maybe)}
+\end{eqnarray*}
+\end{columns}
+}
+}
+
+\frame{\frametitle{Rotating factors}
+If $\theta_1 = (\alpha_1,\alpha_2,\ldots,\alpha_s)^\top $ and $W_t=0$, what is $\theta_t$?
+
+\vspace{0.1in} \pause
+
+\begin{eqnarray*}
+\theta_2 &=& G\theta_1 = \pause (\alpha_2,\alpha_3,\alpha_4,\ldots,\alpha_s,\alpha_1)^\top  \\ \pause
+\theta_3 &=& G\theta_2 = \pause (\alpha_3,\alpha_4,\ldots,\alpha_s,\alpha_1,\alpha_2)^\top  \\ \pause
+&\vdots & \\ \pause
+\theta_t &=& G\theta_{t-1} = \pause (\alpha_{j},\alpha_{j+1},\ldots,\alpha_s,\alpha_1,\ldots,\alpha_{j-1})^\top  \\ \pause
+\end{eqnarray*}
+where $j=t \mbox{ mod } s$ ($j\%\%s$ in R).
+}
+
+\frame{\frametitle{Alternative DLM for seasonal factors}
+Suppose all $s$ seasons have a factor $\alpha_i$. Then
+{\small
+\begin{columns}
+\column{0.5\textwidth}
+\begin{eqnarray*}
+Y_1 &=& \alpha_1 + v_1 \\
+Y_2 &=& \alpha_2 + v_2 \\
+&\vdots & \\
+Y_s &=& \alpha_s +v_s \\
+Y_{s+1} &=& \alpha_1 + v_{s+1} \\
+Y_{s+2} &=& \alpha_2 + v_{s+2} \\
+&\vdots & \\
+Y_{2s} &=& \alpha_s +v_{2s} \\
+Y_{2s+1} &=& \alpha_1 + v_{2s+1} \\
+Y_{2s+2} &=& \alpha_2 + v_{2s+2} \\
+&\vdots &
+\end{eqnarray*}
+\column{0.5\textwidth}
+\begin{eqnarray*}
+Y_t &=& F_t\theta_t + v_t \\
+\theta_t &=& G_t\theta_{t-1} + w_t
+\end{eqnarray*} \pause
+where
+\begin{eqnarray*}
+\theta_1 &=&  (\alpha_1,\alpha_s,\alpha_{s-1},\ldots,\alpha_2)^\top  \\
+F_t &=& F =  (1,0,0,\ldots,0) \\
+G_t &=& G=  \left[ \begin{array}{ccccc}
+0 & 0 & \cdots & 0 & 1 \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & 0 \\
+0 & 0 & \vdots & 1& 0
+\end{array} \right] \\
+W_t &=& W =  0 \quad  \mbox{(maybe)}
+\end{eqnarray*}
+\end{columns}
+}
+}
+
+\frame{\frametitle{Identifiability in seasonal factor models}
+\begin{itemize}
+\item Modeling mean separately
+\item Looking at deviations from the mean \pause
+ \begin{itemize}
+ \item[$\implies$] parameter identifiability issue
+ \end{itemize}
+
+\vspace{0.2in} \pause
+
+\item Identifiability constraints: \pause
+ \begin{itemize}
+ \item Set $\alpha_j=0$ for some $j\in\{1,2,\ldots,s\}$. \pause
+ \item Sum-to-zero constraint, i.e. $\sum_{i=1}^s \alpha_i=0$.
+ \end{itemize}
+\end{itemize}
+}
+
+\frame{\frametitle{Parsimonious seasonal factor model}
+{\tiny
+\begin{columns}
+\column{0.5\textwidth}
+\begin{eqnarray*}
+Y_t &=& F_t\theta_t + v_t \\
+\theta_t &=& G_t\theta_{t-1} + w_t
+\end{eqnarray*} \pause
+where
+\begin{eqnarray*}
+\theta_1 &=&  (\alpha_1,\alpha_s,\alpha_{s-1},\ldots,\alpha_3)^\top  \\
+F_t &=& F =  (1,0,\ldots,0) \\
+G_t &=& G=  \left[ \begin{array}{ccccc}
+-1 & -1 & \cdots & -1 & -1 \\
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & 0 \\
+0 & 0 & \vdots & 1& 0
+\end{array} \right] \\
+W_t &=& W =  0 \quad  \mbox{(maybe)}
+\end{eqnarray*} \pause
+\column{0.5\textwidth}
+What is $\theta_2$ if $W=0$?
+\begin{eqnarray*}
+\theta_2 &=& G\theta_1 = \pause (\alpha_2,\alpha_1,\alpha_s,\alpha_{s-1},\ldots,\alpha_4)^\top  \\ \pause
+\theta_3 &=& G\theta_2 = \pause (\alpha_3,\alpha_2,\alpha_1,\alpha_s,\alpha_{s-1},\ldots,\alpha_5)^\top  \\ \pause
+&\vdots & \\ \pause
+\theta_t &=& G\theta_{t-1} \\
+&=& \pause (\alpha_{j},\alpha_{j-1},\ldots,\alpha_1,\alpha_s,\alpha_{s-1},\ldots,\alpha_{j+2})^\top  \\ \pause
+\end{eqnarray*}
+where $j=t \mbox{ mod } s$.
+\end{columns}
+}
+}
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Seasonal factor model in R}
+<<nottem-sf-model, dependson='lm_model', echo=TRUE>>=
+build_sf_model <- function(theta, ...) {
+  dlmModSeas(frequency = 12, 
+             dV = exp(theta), 
+             dW = rep(0,11),  # seasonality is constant
+             ...)
+}
+
+nottem_MLEs <- dlmMLE(nottem_d$Temperature0, 0, build_sf_model)
+stopifnot(!nottem_MLEs$convergence) # 0 is converged
+exp(nottem_MLEs$par) # estimated V
+
+# Fit seasonal factor model
+nottem_sf_model <- dlmModSeas(12, dV = exp(nottem_MLEs$par), dW = rep(0,11))
+nottemFilt      <- dlmFilter(nottem_d$Temperature0, nottem_sf_model)
+
+# Extract filtered distribution means at time T
+m_T <- c(-sum(nottemFilt$m[241,]), rev(nottemFilt$m[241,]))
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Compare estimates to lm}
+<<dependson="nottem-sf-model",echo=TRUE>>=
+m0 <- lm(Temperature0 ~ as.factor(Month) + 0, data = nottem_d)
+cbind("lm" = coef(m0), 
+      "dlm" = m_T)
+@
+
+<<>>=
+# V = unlist(dlmSvd2var(nottem.filter$U.C[[n]], nottem.filter$D.C[n,]))
+@
+\end{frame}
+
+
+
+\section{Fourier form seasonal models}
+\subsection{Basis}
+\frame{\frametitle{Canonical basis}
+Suppose all $s$ seasons have a factor $\alpha_i$.
+Then, think of $\alpha$
+as a linear combination of basis vectors
+\[ \alpha= (\alpha_1,\ldots,\alpha_s) = \sum_{i=1}^s \alpha_i u_i \]
+where the $u_i$ form the canonical basis, 
+i.e. $u_i$ is the $s$-dimensional vector having the $i$th component equal to
+1 and all other elements 0
+
+\vspace{0.2in} \pause
+
+\begin{itemize}
+\item This representation lacks
+ \begin{itemize}
+ \item Smoothness differentiation
+ \item Parsimony
+ \item Interpretation (perhaps)
+ \end{itemize}
+\end{itemize}
+}
+
+\frame{\frametitle{Fourier frequencies}
+Let
+\[ \omega_j = 2\pi \frac{j}{s}, \quad j=0,1,\ldots,\frac{s}{2}\]
+where $s$ is the length of the period.
+
+\vspace{0.1in} \pause
+
+Consider
+{\scriptsize
+\[ \begin{array}{rl}
+e_0 &= (1,1,\ldots,1)^\top  \pause \\
+c_1 &= (\cos \omega_1, \cos 2\omega_1, \ldots \cos s\omega_1)^\top  \\
+s_1 &= (\sin \omega_1, \sin 2\omega_1, \ldots \sin s\omega_1)^\top  \pause \\
+&\vdots \\
+c_j &= (\cos \omega_j, \cos 2\omega_j, \ldots \cos s\omega_j)^\top  \\
+s_j &= (\sin \omega_j, \sin 2\omega_j, \ldots \sin s\omega_j)^\top  \pause \\
+&\vdots \\
+c_{s/2} &= (\cos \omega_{s/2}, \cos 2\omega_{s/2}, \ldots \cos s\omega_{s/2})^\top
+\end{array} \]
+}
+
+\pause
+
+$s_{s/2}$ is all zeros.
+}
+
+
+
+\begin{frame}
+\frametitle{Trigonometric basis functions}
+<<trig-basis,echo=FALSE>>=
+get_basis <- function(season, frequency) {
+  data.frame(s         = seq(0, season, length = season * 10 + 1),
+             frequency = frequency) |>
+    mutate(
+      sin = sin(2 * pi * frequency * s / season),
+      cos = cos(2 * pi * frequency * s / season)
+    ) |>
+    rename(season = s)
+}
+
+season <- 12
+b_list <- list()
+for (f in 1:(season %/% 2)) {
+  b_list[[f]] <- get_basis(season, f)
+}
+trig_basis <- bind_rows(b_list) |>
+  pivot_longer(cols      = sin:cos, 
+               names_to  = "trig function",
+               values_to = "y") |>
+  arrange(frequency, `trig function`)
+
+ggplot(trig_basis,
+       aes(x = season,
+           y = y)) +
+  geom_vline(xintercept = 1:12, color = 'grey') +
+  geom_line() +
+  # geom_point(data = trig_basis |> filter(season == round(season))) +
+  facet_grid(frequency ~ `trig function`) +
+  scale_x_continuous(breaks = 1:12) 
+@
+\end{frame}
+
+
+\frame{\frametitle{Plotting Fourier basis}
+
+\vspace{-0.1in}
+
+\setkeys{Gin}{width=0.6\textwidth}
+\begin{center}
+\includegraphics{trigBasisFunctions}
+\end{center}
+}
+
+
+
+
+\begin{frame}
+\frametitle{Fourier basis}
+Basis for $\mathbb{R}^s$
+
+\[ \alpha = a_0e_0+\sum_{j=1}^{s/2-1} (a_jc_j+b_js_j)+a_{s/2}c_{s/2}. \]
+
+
+\vspace{0.2in} \pause
+
+Assume $a_0=0$ since the mean will be modeled separately, e.g. through a
+polynomial trend model.
+\pause
+For $j=1,2,\ldots,s/2$, the $j$th \alert{harmonic} is
+\[ \begin{array}{rl}
+S_j(t) &= a_j \cos(t \omega_j) + b_j \sin (t \omega_j) \\
+&= A_j \cos (t \omega_j+ \gamma_j)
+\end{array} \]
+where $b_{s/2}=0$, \pause
+$A_j = \sqrt{a_j^2+b_j^2}$ is the amplitude,
+and $\gamma_j = \mbox{arctan}(-b_j/a_j)$ is the phase.
+
+% \item Naturally periodic, e.g. $s_j(t+ks)=s_j(t)$ for $k=1,2,\ldots$ \pause since
+% \[ \sin \frac{2\pi(t+ks)j}{s} = \sin\left( \frac{2\pi tj}{s} + 2\pi kj\right) = \sin \frac{2\pi tj}{s}.\]
+\end{frame}
+
+
+
+
+
+
+
+
+
+\subsection{Building a DLM}
+\begin{frame}
+\frametitle{Evolving a harmonic}
+For $j=1,2,\ldots,s/2$, the $j$th \alert{harmonic} is
+\[
+S_j(t) = a_j \cos(t \omega_j) + b_j \sin (t \omega_j)
+\]
+\pause
+\alert{What is $S_j(t+1)$?}
+\pause
+It is
+\[
+S_j(t+1) = a_j \cos([t+1] \omega_j) + b_j \sin ([t+1] \omega_j).
+\]
+\pause
+For $j<s/2$,
+if we only know the value of $S_j(t)$,
+i.e. we don't know the value of $a_j$ and $b_j$ individual,
+we cannot determine $S_j(t+1)$.
+\pause
+But we can find that
+\[ \begin{array}{rl}
+S_j(t+1) =& a_j \cos([t+1] \omega_j) + b_j \sin ([t+1] \omega_j) \\
+&\vdots \\
+=& (a_j \cos(t \omega_j) + b_j \sin (t \omega_j)) \cos(\omega_j) + \\
+&+ (-a_j \sin(t \omega_j) + b_j \cos(t \omega_j)) \sin(\omega_j) \\ \\
+=& S_j(t) \cos(\omega_j) + S_j^*(t) \sin(\omega_j)
+\end{array} \]
+
+\end{frame}
+
+\frame{\frametitle{Building a DLM - constructing G}
+For $j=1,2,\ldots,s/2$, the $j$th \alert{harmonic} is
+\[
+S_j(t) = a_j \cos(t \omega_j) + b_j \sin (t \omega_j)
+\]
+\pause
+% Then
+% \[ g_t = \sum_{j=1}^{s/2} S_j(t).\]
+% \pause
+The \alert{conjugate harmonic} is
+\[ S_j^*(t) = -a_j \sin(t \omega_j) + b_j \cos (t \omega_j).\]
+\pause
+And the $j$th harmonic evolves in time according to
+\[
+\left[ \begin{array}{c} S_j(t+1) \\ S_j^*(t+1) \end{array}\right] =
+\left[ \begin{array}{cc} \phantom{-}\cos \omega_j & \phantom{-}\sin \omega_j \\ -\sin \omega_j & \phantom{-}\cos \omega_j \end{array} \right]
+\left[ \begin{array}{c} S_j(t) \\ S_j^*(t) \end{array}\right]
+\]
+and
+\[ S_{s/2}(t+1) = -S_{s/2}(t) \]
+}
+
+
+
+
+
+
+\frame{\frametitle{Period $j$ DLMs}
+Consider DLMs containing only seasonality of frequency $j<s/2$.
+\[ \left[\begin{array}{c} S_j(t+1) \\ S_j^*(t+1) \end{array} \right] = \left[ \begin{array}{rr} \cos \omega_j & \sin \omega_j \\ -\sin \omega_j & \cos \omega_j \end{array} \right] \left[\begin{array}{c} S_j(t) \\ S_j^*(t) \end{array} \right].\] \pause
+So this is a DLM with evolution matrix
+\[ H_j = \left[ \begin{array}{rr} \cos \omega_j & \sin \omega_j \\ -\sin \omega_j & \cos \omega_j \end{array} \right], \]
+state vector $(S_j(t),S_j^*(t))^\top $, and observation matrix $F=[1\, 0]$.
+
+\vspace{0.1in} \pause
+
+If $j=s/2$, we have
+\[ S_{s/2}(t+1) = \cos((t+1)\pi)=-\cos(t\pi)=-S_{s/2}(t) \] \pause
+which is a DLM with state vector $S_{s/2}(t)$, evolution matrix $H_{s/2}=[-1]$, and observation matrix $F=[1]$.
+}
+
+\frame{\frametitle{Fourier form seasonal DLM}
+Combine these period $j$ DLMs using our combining rules:
+\[ \theta_t = (S_1(t),S_1^*(t),\ldots,S_{\frac{s}{2}-1}(t),S_{\frac{s}{2}-1}^*(t),S_{\frac{s}{2}}(t))^\top  \]
+with evolution matrix
+\[ G = \mbox{blockdiag}(H_1,\ldots,H_{\frac{s}{2}}) \]
+and observation matrix
+\[ F=[1\, 0\, 1\, 0\, \ldots\, 0\, 1]\]
+and initial vector
+\[ \theta_0 = (a_1,b_1,\ldots,a_{\frac{s}{2}-1},b_{\frac{s}{2}-1},a_{\frac{s}{2}})^\top . \]
+\pause
+The seasonal process can be made more smooth by dropping higher harmonics.
+}
+
+
+% \begin{frame}[fragile]
+% <<nottem-ffs-model,dependson="nottem-data">>=
+% 
+% @
+% \end{frame}
+% 
+% \begin{frame}[fragile]
+% \frametitle{Nottingham data}
+% <<echo=TRUE>>=
+% fit_ffs_model <- function(y, season, harmonics) {
+%   build_ffs_model <- function(theta) {
+%     dlmModTrig(s = season, q = harmonics, dV = exp(theta), 
+%                dW = rep(0, min(2 * harmonics, season - 1)))
+%   }
+%   
+%   mle <- dlmMLE(y, 0, build_ffs_model)
+%   stopifnot(!mle$convergence)
+%   
+%   build_ffs_model(mle$par)
+% }
+% fit_ffs_model(nottem_d$Temperature0, 12, 6)
+% 
+% d = ddply(data.frame(harmonics=1:6), .(harmonics), function(x) {
+%   nottem_ffs_model = dlmModTrig(12,x$harmonics,dV=2.315^2,dW=rep(0,11))
+%   nottem_ffs_filter = dlmFilter(nottem_d$Temperature0, nottem_ffs_model)
+%   forecast = dlmForecast(nottem.filter, 12)
+%   data.frame(month = factor(months, levels=months),
+%              effect = forecast$f)
+% })
+% @
+% \end{frame}
+% 
+% 
+% 
+% \begin{frame}[fragile]
+% \frametitle{Nottingham data}
+% <<echo=TRUE, out.width='.7\\linewidth'>>=
+% ggplot(subset(d, harmonics==6), aes(month, effect, group=1)) +
+%   geom_line() +
+%   theme_bw()
+% @
+% \end{frame}
+% 
+% 
+% \frame{\frametitle{Plotting Harmonics for Nottingham data}
+% 
+% \vspace{-0.1in}
+% 
+% \setkeys{Gin}{width=0.6\textwidth}
+% \begin{center}
+% \includegraphics{nottemHarmonics}
+% \end{center}
+% }
+% 
+% 
+% \begin{frame}[fragile]
+% \frametitle{Nottingham data - fewer harmonics}
+% <<echo=TRUE,out.width='.7\\linewidth'>>=
+% d$harmonics_f = factor(d$harmonics)
+% ggplot(d, aes(month, effect, color=harmonics_f, shape=harmonics_f, group=harmonics_f)) +
+%   geom_point() +
+%   geom_line() +
+%   theme_bw()
+% @
+% \end{frame}
+% 
+% 
+
+
+% \subsection{General periodic components}
+% \begin{frame}[fragile]
+% \frametitle{Sunspots}
+% 
+% The previous development works for even period $s$ and odd period $s$ with the 
+% slight change that $j=0,\ldots,(s-1)/2$. 
+% \pause
+% A similar development can be constructed for periodic observations with a 
+% non-integer period. 
+% \pause
+% In this example, the period for sunspots was estimated to be 130.51 months.
+% This quantity and the variances were estimated via MLEs.
+% 
+% <<sunspots, cache=TRUE, echo=TRUE>>=
+% mod <- dlmModTrig(q = 2, tau = 130.51, dV = 0,
+%                   dW = rep(c(1765e-2, 3102e-4), each = 2)) +
+%         dlmModPoly(1, dV = 0.7452, dW = 0.1606)
+% 
+% sspots <- sqrt(sunspots)
+% sspots.smooth <- dlmSmooth(sspots, mod)
+% y <- cbind(sspots,
+%            tcrossprod(dropFirst(sspots.smooth$s[, c(1, 3, 5)]),
+%                       matrix(c(0, 0, 1, 1, 1, 0), nr = 2,
+%                              byrow = TRUE)))
+% colnames(y) <- c("Sunspots", "Level", "Periodic")
+% @
+% \end{frame}
+% 
+% \begin{frame}[fragile]
+% \frametitle{Sunspots}
+% <<sunspots_plot, dependson='sunspots', echo=TRUE>>=
+% plot(y, yax.flip = TRUE, oma.multi = c(2, 0, 1, 0))
+% @
+% \end{frame}
+% 
+% 
+
+\end{document}
+

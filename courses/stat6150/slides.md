@@ -23,6 +23,7 @@ The Rnw files can be found [here](https://github.com/jarad/jarad.github.io/tree/
 - [Dynamic linear models](slides/DLMs/DLMs.pdf)
     - [Kalman Filter and Smoother](slides/DLMs/DLM01.pdf)
     - [Polynomial Trend Models](slides/DLMs/DLM02.pdf)
+    - [Seasonal Models](slides/DLMs/DLM03.pdf)
 - [Hidden Markov models](slides/StateSpaceModels/StateSpaceModels.pdf)
 - [Sequential Monte Carlo](slides/SMC/SMC.pdf)
 
