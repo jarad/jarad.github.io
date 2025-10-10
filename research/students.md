@@ -12,9 +12,8 @@ Here are some [resources](resources.html) for current graduate students.
 ## All advisees
 
 - [Alexander "AJ" Phillips](https://www.stat.iastate.edu/people/alexander-phillips) (PhD)
-- [Payton Miloser](https://www.stat.iastate.edu/people/payton-miloser) (PhD)
 - [Aditya Ranade](https://www.stat.iastate.edu/people/aditya-ranade) (PhD)
-- [Spencer Wadsworth](https://www.stat.iastate.edu/people/spencer-wadsworth) ([MS](https://dr.lib.iastate.edu/entities/publication/424fa6d4-f6cb-4eec-8e07-c32cd1eb601d), PhD)
+- [Spencer Wadsworth](https://www.stat.iastate.edu/people/spencer-wadsworth) ([MS](https://dr.lib.iastate.edu/entities/publication/424fa6d4-f6cb-4eec-8e07-c32cd1eb601d), [PhD](thesis/SpencerWadsworth_PhDthesis.pdf))
 - [Fredrick Osei](https://www.stat.iastate.edu/people/fredrick-osei) ([MS](thesis/FredrickOsei_CC.pdf)) co-advised with Danica Ommen
 - [Luis Damiano](https://luisdamiano.github.io/) ([MS](https://dr.lib.iastate.edu/entities/publication/f94a1bd4-07f5-410b-907c-5bedd7d2b3fe) & [PhD](https://dr.lib.iastate.edu/entities/publication/7567604c-1a0f-47e8-b60c-728f6c404461)) (Sandia National Labs)
 - Nate Garton ([MS](https://lib.dr.iastate.edu/stat_las_pubs/222/) & [PhD](https://lib.dr.iastate.edu/etd/17938/), ISU) (GA-CCRi)
