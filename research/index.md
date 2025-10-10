@@ -39,7 +39,7 @@ Journal of Agricultural, Biological, and Environmental Statistics.
 ## Recent presentations ([All Presentations](presentations.html))
 
 - [UNMC 2025](presentations/JaradNiemi_UNMC2025.pptx)
-- [MCW 2025](presentations/JaradNiemi_MCWs2025.pptx)
+- [MCW 2025](presentations/JaradNiemi_MCW2025.pptx)
 
 ## Some software ([Additional software](software.html))
 

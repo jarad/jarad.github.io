@@ -13,6 +13,14 @@ I received a PhD in [Statistical Science](https://stat.duke.edu/ "Stats @ Duke")
 I worked in a [Drosophila genetics lab](https://cbs.umn.edu/contacts/michael-simmons-phd "Michael Simmons") from 2001-2003 and before that at [Proctor & Gamble](https://www.pg.com/ "P&G") in [Cincinnati, Ohio](https://www.cincinnati-oh.gov/cityofcincinnati/ "Cincinnati, Ohio") as a Research Engineer from 1999-2001. 
 Originally, I am from [Duluth, Minnesota](https://duluthmn.gov/ "Duluth, Minnesota") and attended [Marshall School](https://www.marshallschool.org/). I now live in [Ames, Iowa](http://www.cityofames.org/ "Ames, Iowa"). Go [Clones](https://cyclones.com/ "ISU Cyclones")!
 
+## Recent Presentations
+
+- [UNMC 2025](research/presentations/JaradNiemi_UNMC2025.pptx)
+- [MCW 2025](research/presentations/JaradNiemi_MCW2025.pptx)
+
+
+<!--
+
 ## Latest Posts
 
 <ul class="posts">
@@ -20,6 +28,8 @@ Originally, I am from [Duluth, Minnesota](https://duluthmn.gov/ "Duluth, Minneso
     <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ BASE_PATH }}{{ post.url }}">{{ post.title }}</a></li>
   {% endfor %}
 </ul>
+
+-->
 
 ## Fall 2025 Courses ([all courses](courses/))
 

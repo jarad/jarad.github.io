@@ -10,6 +10,9 @@ I've started archiving my talks and posters here for ease of access to those
 who might be interested in looking at the material after the conference. 
 If there is a talk/poster that is missing, please email me <niemi@iastate.edu>.
 
+- 2025
+  - [UNMC 2025](presentations/JaradNiemi_UNMC2025.pptx)
+  - [MCW 2025](presentations/JaradNiemi_MCW2025.pptx)
 - 2023
   - [NCCC-170](presentations/JaradNiemi_NCCC170_2023.html)
 - 2022
