@@ -79,8 +79,8 @@ m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} \\
 \frame{\frametitle{Individual univariate DLMs}
 Suppose for each unit $i=1,\ldots,m$, we can write down a univariate DLM:
 \[ \begin{array}{rl@{\qquad}l}
-Y_{i,t} &= F\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
-\theta_t^{(i)} &= G\theta_{t-1}^{(i)}+w_t^{(i)}, & w_t^{(i)}\sim N_p(0,W_i)
+Y_{i,t} &= F\theta_t^{(i)}+v_{i,t}, &v_{i,t}\ind N(0,V_i) \\
+\theta_t^{(i)} &= G\theta_{t-1}^{(i)}+w_t^{(i)}, & w_t^{(i)}\ind N_p(0,W_i)
 \end{array} \]
 
 \vspace{0.2in} \pause
@@ -92,6 +92,10 @@ Y_{i,t} &= F\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
 \item Is there a relationship between $V_i$ and $V_j$ or $W_i$ and $W_j$ for $i\ne j$?
 \item How about $Cov(v_{i,t},v_{j,t})$ or $Cov(w_t^{(i)},w_t^{(j)})$ for $i\ne j$?
 \end{itemize}
+
+\pause
+
+Seemingly unrelated time series (SUTSE)
 }
 
 
@@ -103,8 +107,8 @@ Y_{i,t} &= F\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
 \frame{\frametitle{Linear trend models}
 Suppose you have a linear trend model for each unit $i$:
  \[ \begin{array}{rl@{\qquad}l}
- Y_{i,t} &= F_{i,t}\theta_t^{(i)} + v_{i,t} &v_{i,t}\sim N_m(0,V_{i,t}) \\
- \theta_{i,t} &= G_{i,t}\theta_{t-1}^{(i)}+w_{t}^{(i)} & w_t^{(i)}\sim N_p(0,W_{i,t})
+ Y_{i,t} &= F_{i,t}\theta_t^{(i)} + v_{i,t} &v_{i,t}\ind N_m(0,V_{i,t}) \\
+ \theta_{i,t} &= G_{i,t}\theta_{t-1}^{(i)}+w_{t}^{(i)} & w_t^{(i)}\ind N_p(0,W_{i,t})
  \end{array} \]
 
  \vspace{0.2in} \pause
@@ -118,12 +122,12 @@ Suppose you have a linear trend model for each unit $i$:
  \end{itemize}
 }
 
-\frame{\frametitle{Linear trend models}
+\frame{\frametitle{}
 {\small
 Combine these into a DLM with $m=2$:
  \[ \begin{array}{rl@{\qquad}l}
- Y_{t} &= F_{t}\theta_{t} + v_{t} &v_{t}\sim N_m(0,V_{t}) \\
- \theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\sim N_p(0,W_{t})
+ Y_{t} &= F_{t}\theta_{t} + v_{t} &v_{t}\ind N_m(0,V_{t}) \\
+ \theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\ind N_p(0,W_{t})
  \end{array} \]
 
  \vspace{0.1in} \pause
@@ -163,8 +167,8 @@ a_{m,1} B & \cdots & a_{m,n} B
 
 \frame{\frametitle{SUTSE model}
 \[ \begin{array}{rl@{\qquad}l}
- Y_{t} &= (F\otimes I_m) \theta_{t} + v_{t} &v_{t}\sim N_m(0,V) \\
- \theta_{t} &= (G\otimes I_m)\theta_{t-1}+w_{t} & w_{t}\sim N_p(0,W)
+ Y_{t} &= (F\otimes I_m) \theta_{t} + v_{t} &v_{t}\ind N_m(0,V) \\
+ \theta_{t} &= (G\otimes I_m)\theta_{t-1}+w_{t} & w_{t}\ind N_p(0,W)
  \end{array} \]
 
  \vspace{0.1in} \pause
@@ -228,7 +232,7 @@ Often
 \end{verbatim}
 }
 
-\frame{\frametitle{The data}
+\frame{\frametitle{Filtering }
 \begin{center}
 \includegraphics{invest-filter}
 \end{center}
@@ -259,8 +263,8 @@ Often
 \frame{\frametitle{Individual univariate dynamic regressions}
 Suppose for each unit $i$, we have a univariate dynamic regression model:
 \[ \begin{array}{rl@{\qquad}l}
-Y_{i,t} &= F_t^{(i)}\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
-\theta_t^{(i)} &= G_{i,t}\theta_{t-1}^{(i)}+w_t^{(i)}, & w_{t}^{(i)}\sim N_p(0,W_i)
+Y_{i,t} &= F_t^{(i)}\theta_t^{(i)}+v_{i,t}, &v_{i,t}\ind N(0,V_i) \\
+\theta_t^{(i)} &= G_{i,t}\theta_{t-1}^{(i)}+w_t^{(i)}, & w_{t}^{(i)}\ind N_p(0,W_i)
 \end{array} \]
 
  \vspace{0.2in} \pause
@@ -358,7 +362,7 @@ m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} \\
 
 \subsection{Hierarchical DLMs}
 \frame{\frametitle{Individual DLMs}
-\[ Y_{i,t} = F_{i,t}\theta_{i,t}+v_{i,t}, \quad v_{i,t} \sim N(0,\sigma_{i,t}^2) \]
+\[ Y_{i,t} = F_{i,t}\theta_{i,t}+v_{i,t}, \quad v_{i,t} \ind N(0,\sigma_{i,t}^2) \]
 
 \vspace{0.1in}
 
@@ -368,8 +372,8 @@ SUTSE: Necessary to estimate blocks of $m\times m$ matrices in the covariance ma
 \uncover<3->{
 Instead:
 \[ \begin{array}{rl@{\qquad}l}
-\theta_{i,t} &= \lambda_t +\epsilon_{i,t}, & \epsilon_{i,t}\sim N_k(0,\Sigma_t) \\
-\uncover<4->{\lambda_t &= G\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)}
+\theta_{i,t} &= \lambda_t +\epsilon_{i,t}, & \epsilon_{i,t}\ind N_k(0,\Sigma_t) \\
+\uncover<4->{\lambda_t &= G\lambda_{t-1} + w_t, & w_t \ind N_k(0,W_t)}
 \end{array} \]
 
 \vspace{0.1in}
@@ -377,9 +381,9 @@ Instead:
 \uncover<5->{
 Hierarchical DLM:
 \[ \begin{array}{rl@{\qquad}l}
-Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \sim N_m(0,V_{y,t}) \\
-\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\sim N_P(0,V_{\theta,t}) \\
-\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \ind N_m(0,V_{y,t}) \\
+\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\ind N_P(0,V_{\theta,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \ind N_k(0,W_t)
 \end{array} \]
 }
 }
@@ -388,9 +392,9 @@ Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \sim N_m(0,V_{y,t}) \\
 \frame{\frametitle{Hierarchical DLMs}
 Hierarchical DLM:
 \[ \begin{array}{rl@{\qquad}l}
-Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \sim N_m(0,V_{y,t}) \\
-\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\sim N_P(0,V_{\theta,t}) \\
-\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \ind N_m(0,V_{y,t}) \\
+\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\ind N_P(0,V_{\theta,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \ind N_k(0,W_t)
 \end{array} \]
 
 \vspace{0.1in}
@@ -412,8 +416,8 @@ Let's write this as a standard DLM \pause
 \vspace{0.3in}
 
 \[ \begin{array}{rl@{\qquad}l}
-Y_{t} &= F_{y,t}F_{\theta,t}\lambda_{t}+v_{t}^*, & v_{t}^* \sim N_m(0,F_{y,t}V_{\theta,t}F_{y,t}^\top +V_{y,t}) \\
-\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+Y_{t} &= F_{y,t}F_{\theta,t}\lambda_{t}+v_{t}^*, & v_{t}^* \ind N_m(0,F_{y,t}V_{\theta,t}F_{y,t}^\top +V_{y,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \ind N_k(0,W_t)
 \end{array} \]
 }
 
@@ -448,9 +452,9 @@ where $h_j(x)$ may be, e.g.
 \mbox{cubic splines} &: h_j(x) =a_j+b_j(x-x_j)+c_j(x-x_j)^2+d_j(x-x_j)^3 \\
 \end{array}\] \pause
 Then
-\[ Y_{i,t} = \sum_{j=1}^k \beta_{j,t} h_j(x_i) +\epsilon_{i,t}, \qquad \epsilon_{i,t}\sim N(0,\sigma^2). \] \pause
+\[ Y_{i,t} = \sum_{j=1}^k \beta_{j,t} h_j(x_i) +\epsilon_{i,t}, \qquad \epsilon_{i,t}\ind N(0,\sigma^2). \] \pause
 In matrix notation,
-\[ Y_t = F\beta_t+\epsilon_t, \qquad \epsilon_t\sim N_m(0,V). \] \pause
+\[ Y_t = F\beta_t+\epsilon_t, \qquad \epsilon_t\ind N_m(0,V). \] \pause
 What are $F$ and $V$?
 }
 }
@@ -458,8 +462,8 @@ What are $F$ and $V$?
 \subsection{Dynamic nonparametric regression}
 \frame{\frametitle{Dynamic nonparametric regression}
 \[ \begin{array}{rl@{\qquad}l}
-Y_t &= F\theta_t+\epsilon_t, & \epsilon_t\sim N_m(0,V) \\
-\theta_t &= G\theta_{t-1}+w_t, & w_t \sim N_p(0,W_t)
+Y_t &= F\theta_t+\epsilon_t, & \epsilon_t\ind N_m(0,V) \\
+\theta_t &= G\theta_{t-1}+w_t, & w_t \ind N_p(0,W_t)
 \end{array} \]
 
 \vspace{0.1in}
@@ -482,7 +486,7 @@ V &= \sigma^2I_m
 \frame{\frametitle{Dynamic factor model}
 \[ \begin{array}{rl@{\qquad}ll}
 Y_t &= A\mu_t+v_t, & v_t&\ind N_m(0,V) \\
-\mu_t &= \mu_{t-1}+w_t, & w_t \sim N_p(0,W)
+\mu_t &= \mu_{t-1}+w_t, & w_t \ind N_p(0,W)
 \end{array} \]
 
 \vspace{0.1in} \pause 
@@ -494,7 +498,7 @@ where $A$ is a fixed $m\times p$ matrix of factor loadings with $p<m$.
 Identifiability of $A$. Suppose $H$ is a $p\times p$ invertible matrix. Then 
 \[ \begin{array}{rl@{\qquad}ll}
 Y_t &= \tilde{A}\tilde{\mu}_t+v_t, & v_t&\ind N_m(0,V) \\
-\tilde{\mu}_t &= \tilde{\mu}_{t-1}+\tilde{w}_t, & \tilde{w}_t \sim N_p(0,HWH^\top )
+\tilde{\mu}_t &= \tilde{\mu}_{t-1}+\tilde{w}_t, & \tilde{w}_t \ind N_p(0,HWH^\top )
 \end{array} \]\pause
 with $\tilde{\mu}_t = H\mu_t$ and $\tilde{A}=AH^{-1}$. 
 
