@@ -1,0 +1,531 @@
+\documentclass[handout]{beamer}
+
+\input{../frontmatter}
+\input{../commands}
+
+\graphicspath{{figures/}{../StateSpaceModels/figures/}}
+
+
+\title{Multivariate DLMs}
+
+\begin{document}
+
+%\section{Temp??} \begin{comment}
+
+
+<<options, results='hide', echo=FALSE, purl=FALSE>>=
+opts_chunk$set(fig.width=7, 
+               fig.height=5, 
+               out.width='.8\\linewidth', 
+               fig.align='center', 
+               size='tiny',
+               echo=FALSE)
+options(width=100)
+@
+
+<<libraries, message=FALSE, warning=FALSE>>=
+library("ggplot2")
+library(plyr)
+library("dplyr")
+library(reshape2)
+library("dlm")
+@
+
+<<set_seed, echo=FALSE>>=
+set.seed(2)
+@
+
+\frame{\maketitle}
+
+\frame{\frametitle{Dynamic Linear Models}
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \]
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
+
+ \vspace{0.1in}
+ 
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+}
+
+
+\section{DLMs for longitudinal data}
+\subsection{Longitudinal data}
+\frame{\frametitle{Longitudinal data}
+Suppose at each time point, you have observations from multiple units, 
+e.g. people, countries, stocks, etc. 
+The data can be represented as a matrix. 
+\pause
+
+\[
+\begin{array}{|c|cccc|}
+\hline
+& \multicolumn{4}{c|}{\mbox{Time}} \\
+\mbox{Item} & 1 & 2 & \cdots & T \pause \\
+\hline
+1 & Y_{1,1} & Y_{1,2} & \cdots & Y_{1,T} \pause \\
+2 & Y_{2,1} & Y_{2,2} & \cdots & Y_{2,T} \pause \\
+\vdots & \multicolumn{4}{c|}{\vdots} \\
+m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} \\
+\hline
+\end{array} \]
+}
+
+\subsection{Individual univariate DLMs}
+\frame{\frametitle{Individual univariate DLMs}
+Suppose for each unit $i=1,\ldots,m$, we can write down a univariate DLM:
+\[ \begin{array}{rl@{\qquad}l}
+Y_{i,t} &= F\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
+\theta_t^{(i)} &= G\theta_{t-1}^{(i)}+w_t^{(i)}, & w_t^{(i)}\sim N_p(0,W_i)
+\end{array} \]
+
+\vspace{0.2in} \pause
+
+\begin{itemize}[<+->]
+\item $F$ and $G$ are constant for all $i$ and $t$
+\item $V_i$ and $W_i$ are constant for all $t$
+\item $\theta_t^{(i)}$ are still vectors, thus the notation
+\item Is there a relationship between $V_i$ and $V_j$ or $W_i$ and $W_j$ for $i\ne j$?
+\item How about $Cov(v_{i,t},v_{j,t})$ or $Cov(w_t^{(i)},w_t^{(j)})$ for $i\ne j$?
+\end{itemize}
+}
+
+
+
+
+
+\section{Seemingly unrelated time series}
+\subsection{An $m=2$ example}
+\frame{\frametitle{Linear trend models}
+Suppose you have a linear trend model for each unit $i$:
+ \[ \begin{array}{rl@{\qquad}l}
+ Y_{i,t} &= F_{i,t}\theta_t^{(i)} + v_{i,t} &v_{i,t}\sim N_m(0,V_{i,t}) \\
+ \theta_{i,t} &= G_{i,t}\theta_{t-1}^{(i)}+w_{t}^{(i)} & w_t^{(i)}\sim N_p(0,W_{i,t})
+ \end{array} \]
+
+ \vspace{0.2in} \pause
+
+ \begin{itemize}
+ \item What is $F_{i,t}$? \pause $F_{i,t}=(1,0)^\top $ \pause
+ \item What is $G_{i,t}$? \pause \[ G_{i,t} = \left[ \begin{array}{cc} 1 & 1 \\ 0 & 1 \end{array} \right] \] \pause
+ \item What is $V_{i,t}$? \pause $V_{i,t} = V_i$ \pause
+ \item What is $W_{i,t}$? \pause $W_{i,t} = W_i$ \pause
+ \item What is $\theta_t^{(i)}$? \pause $\theta_t^{(i)} = (\mu_{i,t},\beta_{i,t})$
+ \end{itemize}
+}
+
+\frame{\frametitle{Linear trend models}
+{\small
+Combine these into a DLM with $m=2$:
+ \[ \begin{array}{rl@{\qquad}l}
+ Y_{t} &= F_{t}\theta_{t} + v_{t} &v_{t}\sim N_m(0,V_{t}) \\
+ \theta_{t} &= G_{t}\theta_{t-1}+w_{t} & w_{t}\sim N_p(0,W_{t})
+ \end{array} \]
+
+ \vspace{0.1in} \pause
+
+\begin{columns}
+\column{0.5\textwidth}
+ \begin{itemize}
+ \item $\theta_{t} = (\mu_{1,t},\mu_{2,t},\beta_{1,t},\beta_{2,t})$ \pause
+ \item What is $F_{t}$? \pause \[ F_t = \left[ \begin{array}{cccc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{array} \right] \] \pause
+ \item What is $G_{t}$? \pause \[ G_{t} = \left[ \begin{array}{cccc} 1 & 0 & 1 & 0 \\ 0 & 1 & 0 & 1 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{array} \right] \] \pause
+ \end{itemize}
+ \column{0.5\textwidth}
+ \begin{itemize}
+ \item What is $V_{t}$? \pause \[ V_{t} = V \pause = \left[ \begin{array}{cc} V_1 & ? \\ ? & V_2 \end{array} \right] \]  \pause
+ \item What is $W_{t}$? \pause \[ W_{t} = W \pause = \left[ \begin{array}{cc} W_\mu & 0 \\ 0 & W_\beta \end{array} \right] \] \pause
+ \item What are $W_\mu$ and $W_\beta$? \pause If diagonal?
+ \end{itemize}
+\end{columns}
+}
+}
+
+\subsection{In general}
+\frame{\frametitle{Kronecker products}
+Given two matrices $A$ and $B$, the Kronecker product $A\otimes B$ is defined as
+\[ \left[ \begin{array}{ccc}
+a_{1,1} B & \cdots & a_{1,n}B \\
+\vdots & \vdots & \vdots \\
+a_{m,1} B & \cdots & a_{m,n} B
+\end{array} \right] \]
+
+\vspace{0.2in} \pause
+
+\begin{itemize}
+\item If $A$ is 2x2, what is $A\otimes I_2$?
+\end{itemize}
+}
+
+\frame{\frametitle{SUTSE model}
+\[ \begin{array}{rl@{\qquad}l}
+ Y_{t} &= (F\otimes I_m) \theta_{t} + v_{t} &v_{t}\sim N_m(0,V) \\
+ \theta_{t} &= (G\otimes I_m)\theta_{t-1}+w_{t} & w_{t}\sim N_p(0,W)
+ \end{array} \]
+
+ \vspace{0.1in} \pause
+
+where
+
+ \vspace{0.1in}
+
+The covariance matrices $V$ and $W$ are typically somewhat sparse. 
+\pause
+Often 
+\begin{itemize}
+\item off-diagonal elements of $V$ are zero
+\item off-diagonal elements of $W$ are zero
+\item some diagonal elements of $W$ are zero
+\end{itemize}
+}
+
+\subsection{SUTSE example}
+\frame{\frametitle{The data}
+\begin{center}
+\includegraphics{invest}
+\end{center}
+}
+
+
+\frame[containsverbatim]{\frametitle{Model setup}
+
+\vspace{-0.1in}
+
+\begin{verbatim}
+> mod <- dlmModPoly(2)
+> mod$FF <- mod$FF %x% diag(2)
+> mod$GG <- mod$GG %x% diag(2)
+>
+> W1 <- matrix(0, 2, 2)
+> W2 <- diag(c(49, 437266))
+> W2[1, 2] <- W2[2, 1] <- 155
+> mod$W <- bdiag(W1, W2)
+>
+> V <- diag(c(72, 14353))
+> Var[1, 2] <- Var[2, 1] <- 1018
+> mod$V <- V
+>
+> mod$m0 <- rep(0, 4)
+> mod$C0 <- diag(4) * 1e7
+> mod <- as.dlm(mod)
+\end{verbatim}
+}
+
+\frame[containsverbatim]{\frametitle{Filtering and one-step ahead prediction errors}
+
+\vspace{-0.1in}
+
+\begin{verbatim}
+> investFilt <- dlmFilter(invest, mod)
+>
+> sdev <- residuals(investFilt)$sd
+> lwr <- investFilt$f + qnorm(0.025) * sdev
+> upr <- investFilt$f - qnorm(0.025) * sdev
+\end{verbatim}
+}
+
+\frame{\frametitle{The data}
+\begin{center}
+\includegraphics{invest-filter}
+\end{center}
+}
+
+
+\section{Seemingly unrelated regressions model}
+% \frame{\frametitle{Longitudinal data}
+% Suppose at each time point, you have observations from multiple units, e.g. people, countries, stocks, etc., with a common covariate. The data can be represented as a matrix. \pause
+% 
+% \[
+% \begin{array}{|c|cccc|}
+% \hline
+% & \multicolumn{4}{c|}{\mbox{Time}} \\
+% \mbox{Item} & 1 & 2 & \cdots & T  \\
+% \hline
+% 1 & Y_{1,1} & Y_{1,2} & \cdots & Y_{1,T}  \\
+% 2 & Y_{2,1} & Y_{2,2} & \cdots & Y_{2,T}  \\
+% \vdots & \multicolumn{4}{c|}{\vdots} \\
+% m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} \\
+% \hline
+%  & x_1 & x_2 & \vdots & x_T \\
+% \hline
+% \end{array} \]
+% }
+
+\subsection{Individual univariate dynamic regressions}
+\frame{\frametitle{Individual univariate dynamic regressions}
+Suppose for each unit $i$, we have a univariate dynamic regression model:
+\[ \begin{array}{rl@{\qquad}l}
+Y_{i,t} &= F_t^{(i)}\theta_t^{(i)}+v_{i,t}, &v_{i,t}\sim N(0,V_i) \\
+\theta_t^{(i)} &= G_{i,t}\theta_{t-1}^{(i)}+w_t^{(i)}, & w_{t}^{(i)}\sim N_p(0,W_i)
+\end{array} \]
+
+ \vspace{0.2in} \pause
+
+ \begin{itemize}
+ \item What is $F_t^{(i)}$? \pause $F_t^{(i)}=(x_{1,t},\ldots,x_{p,t})$  if covariates are common to all series, as they will be in the example to follow \pause
+ \item What is $G_{i,t}$? \pause $G_{i,t} = I_p$ \pause
+ \item What is $V_{i,t}$? \pause $V_{i,t} = V_i$ \pause
+ \item What is $W_{i,t}$? \pause $W_{i,t} = I_p$ \pause
+ \item What is $\theta_t^{(i)}$? \pause $\theta_t^{(i)} = (\beta_{1,t}^{(i)},\ldots,\beta_{p,t}^{(i)})^\top $
+ \end{itemize}
+}
+
+\subsection{Model}
+\frame{\frametitle{Simple multivariate dynamic regression}
+\[ \begin{array}{rl@{\quad}l}
+y_t &= (F_t \otimes I_m)\theta_t + v_t & v_t \ind N(0,V) \\
+\theta_t &= (G\otimes I_m)\theta_{t-1} + w_t & w_t \ind N(0,W)
+\end{array} \]
+where \pause
+\[ y_t = \left[ \begin{array}{c} y_{1,t} \\ \vdots \\ y_{m,t} \end{array} \right], \quad \pause
+\theta_t = \left[ \begin{array}{c} \alpha_{1,t} \\ \vdots \\ \alpha_{m,t} \\ \beta_{1,t} \\ \vdots \\ \beta_{m,t} \end{array} \right], \quad \pause v_t = \left[ \begin{array}{c} v_{1,t} \\ \vdots \\ v_{m,t} \end{array} \right], \quad \pause
+w_t = \left[ \begin{array}{c} w_{1,t} \\ \vdots \\ w_{m,t} \\ w_{m+1,t} \\ \vdots \\ w_{2m,t} \end{array} \right] \] \pause
+with $F_t=(1,x_t)^\top , G=I_2,$ and $W=\mbox{blockdiag}(W_\alpha,W_\beta)$.
+}
+
+\subsection{An example}
+\frame{\frametitle{Data}
+\begin{center}
+\includegraphics{returns}
+\end{center}
+}
+
+\frame[containsverbatim]{\frametitle{Model setup}
+
+\vspace{-0.1in}
+
+{\small
+\begin{verbatim}
+> CAPM <- dlmModReg(market)
+> CAPM$FF <- CAPM$FF %x% diag(m)
+> CAPM$GG <- CAPM$GG %x% diag(m)
+> CAPM$JFF <- CAPM$JFF %x% diag(m)
+> CAPM$W <- CAPM$W %x% matrix(0, m, m)
+> CAPM$W[-(1 : m), -(1 : m)] <-
++     c(8.153e-07,  -3.172e-05, -4.267e-05, -6.649e-05,
++       -3.172e-05, 0.001377,   0.001852,   0.002884,
++       -4.267e-05, 0.001852,   0.002498,   0.003884,
++       -6.649e-05, 0.002884,   0.003884,   0.006057)
+> CAPM$V <- CAPM$V %x% matrix(0, m, m)
+> CAPM$Var[] <- c(41.06,     0.01571, -0.9504, -2.328,
++                0.01571, 24.23,     5.783,   3.376,
++               -0.9504,   5.783,   39.2,     8.145,
++               -2.328,    3.376,    8.145,  39.29)
+> CAPM$m0 <- rep(0, 2 * m)
+> CAPM$C0 <- diag(1e7, nr = 2 * m)
+\end{verbatim}
+}
+}
+
+\frame[containsverbatim]{\frametitle{Smoothing inference}
+
+\vspace{-0.1in}
+
+\begin{verbatim}
+> CAPMsmooth <- dlmSmooth(y, CAPM)
+\end{verbatim}
+}
+
+\frame{\frametitle{Smoothed estimates}
+\begin{center}
+\includegraphics{returns-smooth}
+\end{center}
+}
+
+
+
+\section{More DLMs for longitudinal data}
+\frame{\frametitle{Longitudinal data}
+Suppose at each time point, you have observations from multiple units, e.g. people, countries, stocks, etc. The data can be represented as a matrix.
+
+\[
+\begin{array}{|c|cccc|}
+\hline
+& \multicolumn{4}{c|}{\mbox{Time}} \\
+\mbox{Item} & 1 & 2 & \cdots & T \\
+\hline
+1 & Y_{1,1} & Y_{1,2} & \cdots & Y_{1,T} \\
+2 & Y_{2,1} & Y_{2,2} & \cdots & Y_{2,T} \\
+\vdots & \multicolumn{4}{c|}{\vdots} \\
+m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} \\
+\hline
+\end{array} \]
+}
+
+\subsection{Hierarchical DLMs}
+\frame{\frametitle{Individual DLMs}
+\[ Y_{i,t} = F_{i,t}\theta_{i,t}+v_{i,t}, \quad v_{i,t} \sim N(0,\sigma_{i,t}^2) \]
+
+\vspace{0.1in}
+
+\uncover<2>{
+SUTSE: Necessary to estimate blocks of $m\times m$ matrices in the covariance matrix $W$.
+}
+\uncover<3->{
+Instead:
+\[ \begin{array}{rl@{\qquad}l}
+\theta_{i,t} &= \lambda_t +\epsilon_{i,t}, & \epsilon_{i,t}\sim N_k(0,\Sigma_t) \\
+\uncover<4->{\lambda_t &= G\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)}
+\end{array} \]
+
+\vspace{0.1in}
+
+\uncover<5->{
+Hierarchical DLM:
+\[ \begin{array}{rl@{\qquad}l}
+Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \sim N_m(0,V_{y,t}) \\
+\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\sim N_P(0,V_{\theta,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+\end{array} \]
+}
+}
+}
+
+\frame{\frametitle{Hierarchical DLMs}
+Hierarchical DLM:
+\[ \begin{array}{rl@{\qquad}l}
+Y_{t} &= F_{y,t}\theta_{t}+v_{t}, & v_{t} \sim N_m(0,V_{y,t}) \\
+\theta_{t} &= F_{\theta,t}\lambda_t +\epsilon_{t}, & \epsilon_{t}\sim N_P(0,V_{\theta,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+\end{array} \]
+
+\vspace{0.1in}
+
+where
+\[ \begin{array}{rl@{\qquad}l}
+\theta_t &= (\theta_{1,t}^\top ,\ldots,\theta_{m,t}^\top )^\top  \\
+F_{y,t} &= \mbox{blockdiag}(F_{i,t}) \\
+F_{\theta,t} &= [I_p|\cdots|I_p]^\top  \\
+V_{y,t} &= \mbox{diag}(\sigma_{i,t}^2) \\
+V_{\theta,t} &= \mbox{blockdiag}(\Sigma_t) \\
+G_t &= G
+\end{array} \]
+}
+
+\frame{\frametitle{Integrating out $\theta_t$}
+Let's write this as a standard DLM \pause
+
+\vspace{0.3in}
+
+\[ \begin{array}{rl@{\qquad}l}
+Y_{t} &= F_{y,t}F_{\theta,t}\lambda_{t}+v_{t}^*, & v_{t}^* \sim N_m(0,F_{y,t}V_{\theta,t}F_{y,t}^\top +V_{y,t}) \\
+\lambda_t &= G_t\lambda_{t-1} + w_t, & w_t \sim N_k(0,W_t)
+\end{array} \]
+}
+
+\subsection{Dynamic nonparametric regression}
+\frame{\frametitle{Longitudinal data with common covariates}
+Suppose at each time point, you have observations from multiple units, e.g. people, countries, stocks, etc., with a common covariate. The data can be represented as a matrix. 
+
+\[
+\begin{array}{|c|cccc|c|}
+\hline
+& \multicolumn{4}{c|}{\mbox{Time}} &\\
+\mbox{Item} & 1 & 2 & \cdots & T &  Covariate  \\
+\hline
+1 & Y_{1,1} & Y_{1,2} & \cdots & Y_{1,T} & x_1 \\
+2 & Y_{2,1} & Y_{2,2} & \cdots & Y_{2,T} & x_2  \\
+\vdots & \multicolumn{4}{c|}{\vdots} & \\
+m & Y_{m,1} & Y_{m,2} & \cdots & Y_{m,T} & x_m \\
+\hline
+
+\end{array} \]
+}
+
+\subsection{Non-parametric regression}
+\frame{\frametitle{}
+{\small
+Let's allow flexibility in how $Y$ relates to $x$: \pause
+\[ E(Y_t|x) = \sum_{j=1}^k \beta_{j,t} h_j(x) \] \pause
+where $h_j(x)$ may be, e.g.
+\[ \begin{array}{ll}
+\mbox{powers} &: h_j(x) = x^j \\
+\mbox{trig functions} &: h_j(x) = a_j\sin(b_j x) \\
+\mbox{cubic splines} &: h_j(x) =a_j+b_j(x-x_j)+c_j(x-x_j)^2+d_j(x-x_j)^3 \\
+\end{array}\] \pause
+Then
+\[ Y_{i,t} = \sum_{j=1}^k \beta_{j,t} h_j(x_i) +\epsilon_{i,t}, \qquad \epsilon_{i,t}\sim N(0,\sigma^2). \] \pause
+In matrix notation,
+\[ Y_t = F\beta_t+\epsilon_t, \qquad \epsilon_t\sim N_m(0,V). \] \pause
+What are $F$ and $V$?
+}
+}
+
+\subsection{Dynamic nonparametric regression}
+\frame{\frametitle{Dynamic nonparametric regression}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F\theta_t+\epsilon_t, & \epsilon_t\sim N_m(0,V) \\
+\theta_t &= G\theta_{t-1}+w_t, & w_t \sim N_p(0,W_t)
+\end{array} \]
+
+\vspace{0.1in}
+
+where
+\[ \begin{array}{rl@{\qquad}l}
+\theta_t &= \beta_t \\
+\\
+F &= \left[ \begin{array}{ccc}
+h_1(x_1) & \cdots & h_p(x_1) \\
+\vdots && \vdots \\
+h_1(x_m) & \cdots & h_p(x_m)
+\end{array}\right] \\
+\\
+V &= \sigma^2I_m
+\end{array} \]
+}
+
+\subsection{Dynamic factor models}
+\frame{\frametitle{Dynamic factor model}
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= A\mu_t+v_t, & v_t&\ind N_m(0,V) \\
+\mu_t &= \mu_{t-1}+w_t, & w_t \sim N_p(0,W)
+\end{array} \]
+
+\vspace{0.1in} \pause 
+
+where $A$ is a fixed $m\times p$ matrix of factor loadings with $p<m$. 
+
+\vspace{0.2in} \pause
+
+Identifiability of $A$. Suppose $H$ is a $p\times p$ invertible matrix. Then 
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= \tilde{A}\tilde{\mu}_t+v_t, & v_t&\ind N_m(0,V) \\
+\tilde{\mu}_t &= \tilde{\mu}_{t-1}+\tilde{w}_t, & \tilde{w}_t \sim N_p(0,HWH^\top )
+\end{array} \]\pause
+with $\tilde{\mu}_t = H\mu_t$ and $\tilde{A}=AH^{-1}$. 
+
+\vspace{0.2in} \pause
+
+\begin{itemize}
+\item How many parameters in $A$? \pause $mp$ \pause
+\item How many parameters in $W$? \pause $\frac{1}{2}p(p+1)$ \pause
+\item Number of free parameters is $mp-\frac{1}{2}p(p-1)$. 
+\end{itemize}
+}
+
+\frame{\frametitle{Identifiable dynamic factor models}
+One method of enforcing identifiability is \pause
+\begin{itemize}
+\item Let $W=I_p$,
+\item Let $A=\left[ \begin{array}{c} L \\ B \end{array} \right]$ where $L$ is a lower triangular matrix and $B$ can be anything.
+\item Total parameters are \pause $mp-\frac{1}{2}p(p-1)$.
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+Another method is 
+\begin{itemize}
+\item Let $W$ be diagonal
+\item Let $A_{i,i}=1$ and $A_{i,j}=0$ for $j>i$.
+\end{itemize}
+}
+
+
+
+
+\end{document}
+
