@@ -26,6 +26,7 @@ The Rnw files can be found [here](https://github.com/jarad/jarad.github.io/tree/
     - [Seasonal Models](slides/DLMs/DLM03.pdf)
     - [Dynamic Regression](slides/DLMs/DLM04.pdf)
     - [Multivariate DLMs](slides/DLMs/DLM05.pdf)
+    - [Unknown fixed parameters in DLMs](slides/DLMs/DLM06.pdf)
 - [Hidden Markov models](slides/StateSpaceModels/StateSpaceModels.pdf)
 - [Sequential Monte Carlo](slides/SMC/SMC.pdf)
 

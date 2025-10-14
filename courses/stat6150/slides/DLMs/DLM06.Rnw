@@ -1,0 +1,1978 @@
+\documentclass[handout]{beamer}
+
+\input{../frontmatter}
+\input{../commands}
+
+\graphicspath{{figures/}{../StateSpaceModels/figures/}}
+
+
+\title{Unknown fixed parameters in DLMs}
+
+\begin{document}
+
+%\section{Temp??} \begin{comment}
+
+
+<<options, results='hide', echo=FALSE, purl=FALSE>>=
+opts_chunk$set(fig.width=7, 
+               fig.height=5, 
+               out.width='.8\\linewidth', 
+               fig.align='center', 
+               size='tiny',
+               echo=FALSE)
+options(width=100)
+@
+
+<<libraries, message=FALSE, warning=FALSE>>=
+library("ggplot2")
+library(plyr)
+library("dplyr")
+library(reshape2)
+library("dlm")
+@
+
+<<set_seed, echo=FALSE>>=
+set.seed(2)
+@
+
+\frame{\maketitle}
+
+\frame{\frametitle{Dynamic Linear Models}
+ \[ \begin{array}{rl@{\qquad}rl}
+ Y_t &= F_t\theta_t + v_t &v_t &\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t &\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \] 
+ where $v_t$ and $w_t$ are independent across time and all are independent of $\theta_0$. 
+
+ \vspace{0.1in}
+ 
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+}
+
+
+\section{Unknown parameters in DLMs}
+\subsection{Polynomial trend models}
+\frame{\frametitle{Unknown parameters in polynomial trend models}
+What is known? \pause
+\begin{itemize}
+\item $F_t = (1, 0, \ldots, 0)$
+\item
+\[ G_t = G =\left[ \begin{array}{cccccc} 1 & 1 & 0 & 0 & \cdots & 0 \\
+ 0 & 1 & 1 & 0 & \cdots & 0 \\
+ \vdots &&&&\ddots & \vdots \\
+ 0 & & \cdots & 0 & 1 & 1 \\
+ 0 & & \cdots & & 0 & 1 \end{array} \right] \]
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+What are the unknown parameters? \pause
+\begin{itemize}[<+->]
+\item $\theta_t$
+\item $V_t\stackrel{?}{=}V$
+\item $W_t\stackrel{?}{=}W$
+\end{itemize}
+}
+
+\subsection{Seasonal models}
+\frame{\frametitle{Unknown parameters in seasonal models}
+What is known? \pause
+\begin{itemize}
+\item $F_t$
+ \begin{itemize}
+ \item Seasonal factor: $F_t = (1, 0, \ldots, 0)$
+ \item Fourier form: $F_t = (1, 0, 1, 0, \ldots, 1, 0)$
+ \end{itemize}
+\item $G_t=G$
+ \begin{itemize}
+ \item Seasonal factor: rotation matrix
+ \item Fourier form: block diagonal with blocks $H_j$
+ \[ H_j = \left[ \begin{array}{rr} \cos \omega_j & \sin \omega_j \\ -\sin \omega_j & \cos \omega_j \end{array}\right] \]
+ \end{itemize}
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+
+What are the unknown parameters? \pause
+\begin{itemize}
+\item $\theta_t$
+\item $V_t\stackrel{?}{=}V$
+\item $W_t\stackrel{?}{=}W\stackrel{?}{=}0$
+\end{itemize}
+}
+
+\subsection{Dynamic regression models}
+\frame{\frametitle{Unknown parameters in dynamic regression models}
+What is known? \pause
+\begin{itemize}
+\item $F_t=x_t$
+\item $G_t \stackrel{?}{=} G \stackrel{?}{=} I$
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+What are the unknown parameters? \pause
+\begin{itemize}
+\item $\theta_t$
+\item $V_t\stackrel{?}{=}V \stackrel{?}{=} \sigma^2 I$ or $\sigma^2 D$
+\item $W_t\stackrel{?}{=}W\stackrel{?}{=}D$
+\end{itemize}
+}
+
+\subsection{Bottom line}
+\frame{\frametitle{The bottom line is...}
+\begin{itemize}[<+-| alert@+>]
+\item In all of these univariate models,
+ \begin{itemize}
+ \item the unknowns are $\theta_t$, $W_t$, and $V_t$,
+ \item $\theta_t$ has always been unknown
+ \item and often, $W_t=W$ and $V_t=V$.
+ \end{itemize}
+\item In our multivariate models,
+ \begin{itemize}
+ \item commonly $W_t=W$ and $V_t=V$, but now they are (block-diagonal) matrices.
+ \end{itemize}
+\end{itemize}
+}
+
+
+
+\section{Maximum likelihood estimation}
+\subsection{General MLE approach}
+\frame{\frametitle{}
+For a parameter vector $\psi$ and data vector $y$, the likelihood function \pause
+\[ L(\psi) \propto p(y|\psi).\]
+
+\vspace{0.2in} \pause
+
+The maximum likelihood estimate is  \pause
+\[ \hat{\psi}=\mbox{argmax}_\psi L(\psi) .\]
+
+\vspace{0.2in} \pause
+
+Which is equivalent to
+\[ \hat{\psi}=\mbox{argmax}_\psi \ell(\psi) \]
+where $\ell(\psi) = \log L(\psi)$.
+}
+
+\subsection{DLM likelihood function}
+\frame{\frametitle{Likelihood function for DLMs}
+If $\psi=(W, V)$, what is $L(\psi)$ for a general DLM?
+
+\vspace{0.1in} \pause
+
+What do we know? \pause
+\begin{eqnarray*}
+p(y_t|\theta_t,V) &\pause =& N(y_t;F_t \theta_t, V) \\ \pause
+p(\theta_t|\theta_{t-1},W) &\pause =& N(\theta_t; G_t \theta_{t-1}, W) \\ \pause
+p(\theta_0) &\pause=& N_p(m_0,C_0) \\ \pause
+\\
+p(\theta_t|y_{1:t-1},\psi) &\pause = & N(a_t, R_t) \\ \pause
+p(y_t|y_{1:t-1},\psi) &\pause = & N(f_t, Q_t) \\ \pause
+\\
+p(y|\psi) &\pause = & \prod_{t=1}^n p(y_t|y_{1:t-1},\psi)
+\end{eqnarray*}
+}
+
+\subsection{MLEs in DLMs}
+\frame{\frametitle{Finding MLEs for DLMs}
+If $y_t$ is multivariate, the likelihood function is \pause
+\[ L(\psi) \propto \prod_{t=1}^n \frac{1}{(2\pi)^{k/2} |Q_t|^{1/2}} \exp\left( -\frac{1}{2} (y_t-f_t)^\top Q_t^{-1}(y_t-f_t)\right).\]
+
+\vspace{0.2in} \pause
+
+Log-likelihood function \pause
+\[ \ell(\psi) = C + -\frac{1}{2}\sum_{t=1}^n \log |Q_t|-\frac{1}{2}\sum_{t=1}^n (y_t-f_t)^\top Q_t^{-1}(y_t-f_t).\]
+
+\vspace{0.2in} \pause
+
+The MLE is then
+\[ \hat{\psi}=\mbox{argmax}_\psi \ell(\psi) \]
+
+\vspace{0.2in} \pause
+
+The R function \texttt{dlmMLE} does all of this for you.
+}
+
+%\subsection{Prediction using MLEs}
+%\frame{\frametitle{Local level model}
+%Suppose our model is
+%\[ \begin{array}{rl@{\qquad}l}
+%y_t &= \theta_t +v_t & v_t \sim N(0,\sigma^2) \\
+%\theta_t &= \theta_{t-1} + w_t & w_t \sim N(0,1)
+%\end{array} \]
+%and you have observed data up to time $n$ and your job is to create a 95\% interval for $y_{n+1}$. How do you do it?
+%
+%\vspace{0.2in} \pause
+%
+%\begin{itemize}
+%\item Find $\widehat{\sigma^2}$
+%\item Find $p(y_{t+n}|y_{1:n},\widehat{\sigma^2}) = N(\widehat{f_{t+1}},\widehat{Q_{t+1}})$
+%\item Calculate 95\% intervals from this distribution.
+%\end{itemize}
+%}
+%
+%\frame{\frametitle{Local level model (cont.)}
+%
+%}
+
+\section{Conjugate Bayesian inference}
+\subsection{Review}
+\frame{\frametitle{Bayesian inference}
+What do we have to specify to perform Bayesian inference, i.e. parameter estimation, for data $y$? \pause
+\begin{itemize}
+\item A statistical model $p(y|\psi)$
+\item A prior $p(\psi)$
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+What is the objective of Bayesian inference? \pause
+\begin{itemize}
+\item The posterior $p(\psi|y) \propto p(y|\psi)p(\psi)$.
+\end{itemize}
+}
+
+\frame{\frametitle{Conjugacy}
+Conjugate Bayesian inference is one where if
+\[ \psi \sim f(\alpha) \implies \psi|y \sim f(\alpha'). \]
+
+\vspace{0.2in} \pause
+
+Remember the examples
+\begin{itemize}
+\item $y \sim N(\mu,I), \mu \sim N(\cdot, \cdot) \implies \mu|y \sim N(\cdot, \cdot)$
+\item $y \sim N(0,\phi^{-1}I), \phi \sim Ga(\cdot, \cdot) \implies \phi|y \sim Ga(\cdot, \cdot)$
+\item $y \sim N(\mu,\phi^{-1}I), \mu,\phi \sim NG(\cdot) \implies \mu, \phi|y \sim NG(\cdot)$
+\item $y \sim N(X\beta,\phi^{-1}I), \beta,\phi \sim NG(\cdot) \implies \beta, \phi|y \sim NG(\cdot)$
+\item $y \sim Bin(n,p), p\sim Be(\cdot,\cdot) \implies p|y \sim Be(\cdot,\cdot)$
+\end{itemize}
+}
+
+\subsection{Conjugate Bayesian inference in DLMs}
+\frame{\frametitle{What are the unknowns in DLMs?}
+So for $\psi = (F_{1:n}, G_{1:n}, W_{1:n}, V_{1:n})$, we are looking for
+\[ \psi \sim f(\alpha) \implies \psi|y \sim f(\alpha'). \]
+
+\vspace{0.2in} \pause
+
+This only happens in simple examples. Today, we will discuss
+\begin{itemize}[<+->]
+\item $V_t=\phi^{-1}\tilde{V}_t, W_t=\phi^{-1}\tilde{W}_t, C_0=\phi^{-1}\tilde{C}_0$
+\item $W_t$ specified by a discount factor
+\item Evolving $\phi=1/\sigma^2$
+\end{itemize}
+}
+
+\subsection{common $\phi^{-1}$}
+\frame{\frametitle{common $\phi^{-1}$}
+\[ \begin{array}{rl@{\qquad}ll}
+Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,\phi^{-1}\tilde{V}_t) \\
+\theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,\phi^{-1}\tilde{W}_t) \\
+&&\theta_0 &\sim N_p(m_0,\phi^{-1}\tilde{C}_0) \\
+\phi &\sim  Ga(\alpha_0, \beta_0)
+\end{array} \]
+
+\vspace{0.2in} \pause
+
+Everything is known except
+\begin{itemize}
+\item $\theta_t$ for all $t$
+\item $\phi$
+\end{itemize}
+}
+
+\frame{\frametitle{}
+{\footnotesize
+Starting with
+\[ \theta_{t-1},\phi|y_{1:t-1} \sim NG(m_{t-1}, \tilde{C}_{t-1}, \alpha_{t-1}, \beta_{t-1}) \]
+
+\vspace{0.1in} \pause
+
+One step ahead prior
+\[ \theta_{t},\phi|y_{1:t-1} \sim NG(a_t, \tilde{R}_{t}, \alpha_{t-1}, \beta_{t-1}) \]
+where $a_t = G_tm_{t-1}$ and $\tilde{R}_t = G_t \tilde{C}_{t-1} G_t^\top +\tilde{W}_t$.
+
+\vspace{0.1in} \pause
+
+One step ahead predictive density
+\[ Y_t|y_{1:t-1} \sim t_{2\alpha_{t-1}}(f_t, \tilde{Q}_t\beta_{t-1}/\alpha_{t-1})\]
+with $f_t=F_ta_t$ and $\tilde{Q}_t = F_t\tilde{R}_tF_t^\top +\tilde{V}_t$.
+
+\vspace{0.1in} \pause
+
+Filtering density
+\[ \theta_t,\phi|y_{1:t}  \sim NG(m_{t}, \tilde{C}_{t}, \alpha_{t}, \beta_{t}) \]
+with
+\begin{eqnarray*}
+m_t &=& a_t + \tilde{R}_tF_t \tilde{Q}_t^{-1}(y_t-f_t) \\
+\tilde{C}_t &=& \tilde{R}_t-\tilde{R}_tF_t^\top \tilde{Q}_t^{-1}\tilde{R}_t^\top  \\
+\alpha_t &=& \alpha_{t-1} +\frac{m}{2} \\
+\beta_t &=& \beta_{t-1}+\frac{1}{2}(y_t-f_t)^\top \tilde{Q}_t^{-1}(y_t-f_t)
+\end{eqnarray*}
+}
+}
+
+\subsection{$W_t$ specified by discount factor}
+\frame{\frametitle{Discount factor}
+Let's specify how adaptive we want our model to be.
+\begin{itemize}
+\item Do this by specifying $W_t$ relative to $V_t$ and $C_t$ using a discount factor $\delta\in(0,1]$.
+\item $\delta=1$ means no loss of information, i.e. $W_t=0$
+\item $\delta=0$ means no information retained
+\item Often $\delta>0.9$
+\end{itemize}
+
+\vspace{0.2in}
+
+To implement, set \[ W_t = \frac{1-\delta}{\delta} G_t^\top  C_{t-1} G_t\] or \[ \tilde{W}_t = \frac{1-\delta}{\delta} G_t^\top  \tilde{C}_{t-1} G_t\]
+if using a common $\sigma^2$.
+}
+
+\frame{\frametitle{Discount factor effect}
+\begin{center}
+\includegraphics{cdiscount}
+\end{center}
+}
+
+
+\frame[containsverbatim]{\frametitle{Choosing the discount factor}
+Specify $\delta$ based on one-step ahead prediction errors.
+
+\begin{center}
+\begin{verbatim}
+  DF MAPE  MAD   MSE sigma2
+ 1.0 0.10 3.02 21.54 12.00
+ 0.9 0.09 2.86 19.92  9.64
+ 0.8 0.10 2.87 20.29  8.94
+ 0.3 0.11 3.42 25.12  5.07
+\end{verbatim}
+
+Last column is posterior expectation for $\sigma^2$, 
+i.e. $E[\sigma^2|y_{1:187}]$.
+
+\end{center}
+}
+
+\frame{\frametitle{Inference for $\delta=0.95$ on Lake Superior Data}
+\begin{center}
+\includegraphics{wdiscount}
+\end{center}
+}
+
+
+\subsection{Evolving $\phi_t$}
+\frame{\frametitle{Evolving $\phi_t$}
+Choose $\delta^*\in(0,1)$
+\begin{itemize}
+\item $\phi_{t-1}|y_{1:t-1} \sim Ga(\alpha_{t-1},\beta_{t-1})$ \pause
+\item $\phi_t|y_{1:t-1} \sim Ga(\delta^*\alpha_{t-1},\delta^*\beta_{t-1})$
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+What is
+\begin{itemize}
+\item $E[\phi_t|y_{1:t-1}] \pause = E[\phi_{t-1}|y_{1:t-1}]$ \pause
+\item $Var[\phi_t|y_{1:t-1}] \pause = \frac{1}{\delta^*} Var[\phi_{t-1}|y_{1:t-1}]$
+\end{itemize}
+}
+
+\frame{\frametitle{Evolving $\phi_t$ for Lake Superior data}
+\begin{center}
+\includegraphics{evolve}
+\end{center}
+}
+
+\subsection{Bottom line}
+\frame{\frametitle{}
+The situations for conjugate Bayesian analysis are small, therefore we need more advanced techniques.
+}
+
+
+
+
+\section{Review}
+\subsection{Gibbs sampling}
+\frame{\frametitle{Gibbs sampling algorithm}
+Start with an initial guess for all parameters and call it $\psi^{(0)}$.
+Set $j=1$. \pause
+
+\begin{enumerate}
+\item Sample $\psi_1^{(j)}\sim p\left(\psi_1|\psi_2^{(j-1)},\ldots,\psi_K^{(j-1)},y\right)$ \pause
+\item Sample $\psi_2^{(j)}\sim p\left(\psi_2|\psi_1^{(j)},\psi_3^{(j-1)},\ldots,\psi_K^{(j-1)},y\right)$ \pause
+\item $\vdots$ \pause
+\item Sample $\psi_k^{(j)}\sim p\left(\psi_k|\psi_1^{(j)},\ldots,\psi_{k-1}^{(j)},\psi_{k+1}^{(j-1)},\ldots,\psi_K^{(j-1)},y\right)$ \pause
+\item $\vdots$ \pause
+\item Sample $\psi_{K-1}^{(j)}\sim p\left(\psi_{K-1}|\psi_1^{(j)},\ldots,\psi_{K-2}^{(j)},\psi_{K}^{(j-1)},y\right)$ \pause
+\item Sample $\psi_K^{(j)}\sim p\left(\psi_K|\psi_1^{(j)},\ldots,\psi_{K-1}^{(j)},y\right)$ \pause
+\item If $j<J$, $j=j+1$ and return to step 1.
+\end{enumerate}
+}%
+%
+%\frame{\frametitle{Bivariate normal example}
+%\setkeys{Gin}{width=0.6\textwidth}
+%Suppose we have the model
+%\[ y_i \ind p N(\mu_0, \sigma_0^2) + (1-p) N(\mu_1, \sigma_1^2). \]
+%\begin{center}
+%\includegraphics{mixdens}
+%\end{center}
+%Our goal is to estimate $\psi = (p, \mu_0, \sigma_0^2, \mu_1, \sigma_1^2)$ after observing $y_1,\ldots,y_n$.
+%}
+%
+%\frame{\frametitle{Bivariate normal priors}
+%Suppose we have the model
+%\[ y_i \ind p N(\mu_0, \sigma_0^2) + (1-p) N(\mu_1, \sigma_1^2). \]
+%
+%\vspace{0.2in}
+%
+%Priors:
+%\begin{itemize}
+%\item $p\pause \sim Be(1,1)$ \pause
+%\item $\mu_0\pause  \propto 1$ \pause
+%\item $\mu_1\pause  \propto 1$ \pause
+%\item $\sigma_0^2\pause  \propto 1/\sigma_0^2$ \pause
+%\item $\sigma_1^2\pause  \propto 1/\sigma_1^2$
+%\end{itemize}
+%}
+%
+%\frame{\frametitle{Bivariate normal example (cont.)}
+%
+%\vspace{-0.1in}
+%
+%What is $p(y|\psi)$? \pause
+%\[ p(y|\psi) = \prod_{i=1}^n \left[ p N(y_i; \mu_0, \sigma_0^2) + (1-p) N(y_i; \mu_1, \sigma_1^2)\right]. \]
+%
+%\vspace{0.2in} \pause
+%
+%What are the full conditional distributions?
+%\[ \begin{array}{rl}
+%p(p|\ldots)&\propto p(y|\psi)\phantom{\frac{1}{\sigma_0^2}} \\
+%p(\mu_0|\ldots)&\propto p(y|\psi) \\
+%p(\sigma_0^2|\ldots)&\propto p(y|\psi)\frac{1}{\sigma_0^2} \\
+%p(\mu_1|\ldots)&\propto p(y|\psi)\phantom{\frac{1}{\sigma_0^2}} \\
+%p(\sigma_1^2|\ldots)&\propto p(y|\psi)\frac{1}{\sigma_1^2}
+%\end{array} \]
+%
+%\vspace{0.2in} \pause
+%
+%\alert{None of these are available in closed form.}
+%}
+%
+%\frame{\frametitle{Data augmentation}
+%For this model, there exists a relevant latent variable, namely group membership. \pause
+%\[ z_i =\left\{ \begin{array}{ll} 1 & \mbox{if observation $i$ comes from group 1} \\ 2 & \mbox{if observation $i$ comes from group 2} \end{array} \right. \]
+%
+%\vspace{0.2in} \pause
+%
+%What is a reasonable prior for $z_i$? \pause $p(z_i=1)=p$
+%
+%\vspace{0.2in} \pause
+%
+%The model can now be written
+%\begin{eqnarray*}
+%y_i|z_i &\stackrel{ind}{\sim}& N(\mu_{z_i}, \sigma_{z_i}^2) \\
+%z_i &\ind & Ber(p)
+%\end{eqnarray*}
+%}
+%
+%\frame{\frametitle{Full data likelihood}
+%\[ \begin{array}{ll} p(y|\psi,z) &\propto \prod_{i=1}^n N(y_i; \mu_{z_i}, \sigma_{z_i}^2) p^{z_i}(1-p)^{1-z_i} \\
+%\\ \pause
+%&= \prod_{z_i=0} N(y_i; \mu_0, \sigma_0^2) \, \prod_{z_i=1} N(y_i; \mu_1, \sigma_1^2) \, p^{n\bar{z}} (1-p)^{n(1-\bar{z})} \end{array}\]
+%where $\bar{z} = \frac{1}{n} \sum_{i=1}^n z_i$.
+%}
+
+\section{Univariate Gibbs sampling}
+\subsection{for states in DLMs}
+\frame{\frametitle{What full conditionals are required?}
+Suppose our goal is to draw from $p(\theta_{0:T}|y_{1:T})$ using univariate Gibbs sampling. We will implicitly assume conditioning on any other unknown parameters. 
+
+\vspace{0.2in} \pause
+
+\begin{itemize}[<+->]
+\item What are the required full condition distributions?
+ \begin{itemize}
+ \item $p(\theta_0|\theta_{1:T},y_{1:T})$
+ \item $p(\theta_t|\theta_{-t},y_{1:T})$ where $\theta_{-t}$ is $\theta_{0:T}$ with the $t^{th}$ element removed
+ \item $p(\theta_T|\theta_{0:T-1},y_{1:T})$
+ \end{itemize}
+\end{itemize}
+}
+
+\frame{\frametitle{DLMs}
+
+\vspace{-0.1in}
+
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,V_t) \\
+ \theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t) \\
+ &&\theta_0 &\sim N_p(m_0,C_0)
+ \end{array} \]
+
+ \vspace{0.4in}
+
+ \begin{center}
+ \includegraphics{stateSpaceModel}
+ \end{center}
+}
+
+\frame{\frametitle{What are the full conditionals?}
+
+\vspace{-0.2in}
+
+{\scriptsize
+\begin{eqnarray*}
+p(\theta_0|\ldots) \pause &=& p(\theta_0|\theta_1) \\ \pause 
+&\propto & N(\theta_1; G_1\theta_0, W_1) N(\theta_0; m_0, C_0) \\ \pause
+&\propto & N(\theta_0; k_0, K_0) \\ \pause
+K_0 &=& (C_0^{-1}+G_1^\top W_1^{-1}G_1)^{-1} \\ \pause
+k_0 &=& K_0(C_0^{-1}m_0 +G_1^\top W_1^{-1}\theta_1) \\ \pause
+\\
+p(\theta_T|\ldots) \pause &=& p(\theta_T|\theta_{T-1},y_T) \\ \pause
+&\propto & N(y_T; F_T\theta_T, V_T) N(\theta_T;G_T\theta_{T-1},W_T) \\ \pause
+&\propto & N(\theta_T; k_T, K_T) \\ \pause
+K_T &=& (W_T^{-1}+F_T^\top V_T^{-1}F_T)^{-1} \\ \pause
+k_T &=& K_T(W_T^{-1}G_T\theta_{T-1} + F_T^\top V_T^{-1}y_T) \\ \pause
+\\
+p(\theta_t|\ldots) \pause &=& p(\theta_t|\theta_{t-1},\theta_{t+1},y_t) \\ \pause
+&\propto & N(y_t; F_t\theta_t, V_t) N(\theta_{t+1}; G_{t+1}\theta_t, W_t) N(\theta_t; G_t\theta_{t-1}, W_{t+1})\\ \pause
+&\propto & N(\theta_t; k_t, K_t) \\ \pause
+K_t &=& (W_t^{-1}+F_t^\top V_t^{-1}F_t+G_{t+1}^\top W_{t+1}^{-1}G_{t+1})^{-1} \\ \pause
+k_t &=& K_t(W_t^{-1}G_t\theta_{t-1}+F_t^\top V_t^{-1}y_t+G_{t+1}^\top W_{t+1}^{-1}\theta_{t+1})
+\end{eqnarray*}
+}
+}
+
+\subsection{Local level model example}
+\frame{\frametitle{Consider the local level model with $V=1$ and $W=0.01^2$.}
+\begin{center}
+\includegraphics{localLevelData}
+\end{center}
+}
+
+\frame{\frametitle{Univariate Gibbs sampling for states}
+\begin{center}
+\includegraphics{localLevelGibbs}
+\end{center}
+}
+
+\frame{\frametitle{Exact quantiles for states}
+\begin{center}
+\includegraphics{localLevelExact}
+\end{center}
+}
+
+\frame{\frametitle{True underlying state}
+\begin{center}
+\includegraphics{localLevelTruth}
+\end{center}
+}
+
+\section{Smoothing}
+\subsection{In state-space models}
+\frame{\frametitle{Filtering}
+{\tiny
+ Goal: $ p(\theta_t|y_{1:t})$ where $y_{1:t} = (y_1,y_2,\ldots,y_t)$  (filtered distribution)
+
+ \vspace{0.1in}
+
+ Recursive procedure:
+ \begin{itemize}
+ \item Assume $p(\theta_{t-1}|y_{1:t-1})$
+ \item Prior for $\theta_t$
+ \begin{eqnarray*} p(\theta_t|y_{1:t-1})  &=& \int p(\theta_t,\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\
+  &=& \int p(\theta_t|\theta_{t-1},y_{1:t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\
+  &=& \int p(\theta_t|\theta_{t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\
+ \end{eqnarray*}
+ \item One-step ahead predictive distribution for $y_t$
+ \begin{eqnarray*} p(y_t|y_{1:t-1})  &=&  \int p(y_t,\theta_t|y_{1:t-1}) d\theta_t \\
+  &=& \int p(y_t|\theta_t,y_{1:t-1})p(\theta_t|y_{1:t-1})d\theta_t \\
+  &=& \int p(y_t|\theta_t)p(\theta_t|y_{1:t-1})d\theta_t \\
+ \end{eqnarray*}
+ \item Filtered distribution for $\theta_t$
+ \[ p(\theta_t|y_{1:t})  = \frac{p(y_t|\theta_t,y_{1:t-1})p(\theta_t|y_{1:t-1})}{p(y_t|y_{1:t-1})}  = \frac{p(y_t|\theta_t)p(\theta_t|y_{1:t-1})}{p(y_t|y_{1:t-1})}\]
+ \end{itemize}
+ }
+}
+
+\frame{\frametitle{Smoothing}
+ Goal: $p(\theta_{t}|y_{1:T})$ for $t<T$
+
+ \vspace{0.1in} \pause
+{\tiny
+ \begin{itemize}
+ \item Backward transition probability $p(\theta_t|\theta_{t+1},y_{1:T})$ \pause
+ \begin{eqnarray*}
+ p(\theta_t|\theta_{t+1},y_{1:T}) \pause &=& p(\theta_t|\theta_{t+1},y_{1:t}) \\ \pause
+ &=& \frac{p(\theta_{t+1}|\theta_t,y_{1:t})p(\theta_t|y_{1:t})}{p(\theta_{t+1}|y_{1:t})} \\ \pause
+ &=& \frac{p(\theta_{t+1}|\theta_t)p(\theta_t|y_{1:t})}{p(\theta_{t+1}|y_{1:t})} \pause
+ \end{eqnarray*}
+
+ \item Recursive smoothing distributions $p(\theta_t|y_{1:T})$ assuming we know $p(\theta_{t+1}|y_{1:T})$ \pause
+ \begin{eqnarray*}
+ p(\theta_t|y_{1:T}) \pause &=& \int p(\theta_t,\theta_{t+1}|y_{1:T}) d\theta_{t+1} \\ \pause
+ &=& \int p(\theta_{t+1}|y_{1:T})\alert{p(\theta_t|\theta_{t+1},y_{1:T})}d\theta_{t+1} \\ \pause
+   &=& \int p(\theta_{t+1}|y_{1:T}) \frac{p(\theta_{t+1}|\theta_t)p(\theta_t|y_{1:t})}{p(\theta_{t+1}|y_{1:t})} d\theta_{t+1} \\ \pause
+   &=& p(\theta_t|y_{1:t}) \int \frac{p(\theta_{t+1}|\theta_t)}{p(\theta_{t+1}|y_{1:t})} p(\theta_{t+1}|y_{1:T}) d \theta_{t+1}\pause
+   \end{eqnarray*}
+   Start from $p(\theta_T|y_{1:T})$.
+ \end{itemize}
+ }
+}
+
+
+\subsection{In DLMs}
+\frame{\frametitle{Kalman smoother}
+If $p(\theta_{t+1}|y_{1:T}) = N(s_{t+1},S_{t+1})$, then
+\begin{eqnarray*}
+p(\theta_t|\theta_{t+1},y_{1:T}) &=& p(\theta_t|\theta_{t+1},y_{1:t}) \\
+&\propto & p(\theta_{t+1}|\theta_t,y_{1:t})p(\theta_t|y_{1:t}) \\
+&=& N(\theta_{t+1}; G_{t+1}\theta_t,W_{t+1}) N(\theta_t;m_t,C_t) \\
+&\propto & N(\theta_t; h_t, H_t) \\
+H_t &=& (C_t^{-1}+G_{t+1}^\top W_{t+1}^{-1}G_{t+1})^{-1} \\
+h_t &=& H_t(C_t^{-1}m_t+G_{t+1}^\top W_{t+1}^{-1}\theta_{t+1}) \\
+\\
+p(\theta_t|y_{1:T}) &=& \int p(\theta_t|\theta_{t+1},y_{1:T})p(\theta_{t+1}|y_{1:T}) d\theta_{t+1} \\ \pause
+&=& N(\theta_t; s_t, S_t) \\
+S_t &=& C_t-C_tG_{t+1}^\top R_{t+1}^{-1}(R_{t+1}-S_{t+1})R_{t+1}^{-1}G_{t+1}C_t \\
+s_t &=& m_t+C_tG_{t+1}^\top R_{t+1}^{-1}(s_{t+1}-a_{t+1})
+\end{eqnarray*}
+}
+
+\frame{\frametitle{True underlying state}
+\begin{center}
+\includegraphics{localLevelTruth}
+\end{center}
+}
+
+\section{Forward filtering backward sampling}
+\subsection{MCMC in DLMs}
+\frame{\frametitle{}
+Let $\psi$ represent any unknown, non-dynamic model parameters such that the data follows a DLM conditional on $\psi$.\pause
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= F_t(\psi)\theta_t + v_t &v_t&\ind N_m(0,V_t(\psi)) \\
+ \theta_t &= G_t(\psi)\theta_{t-1}+w_t & w_t&\ind N_p(0,W_t(\psi)) \\
+ p(\theta_0) &= N_p(m_0(\psi),C_0(\psi))
+ \end{array} \]\pause
+For example, $\psi = (V,W)$ where $V_t(\psi)=V$ and $W_t(\psi)=W$ \pause while $F_t(\psi)=F$ and $G_t(\psi)=G$ are known, \pause as in polynomial trend, seasonal factor, and dynamic regression models.
+
+\vspace{0.2in} \pause
+
+\begin{itemize}[<+->]
+\item The Bayesian inferential objective is then $p(\theta_{0:T},\psi|y_{1:T})$. 
+\item While $p(\theta_{0:T}|y_{1:T},\psi)$ is known analytically, generally $p(\theta_{0:T},\psi|y_{1:T})$ is not.
+\item So resort to numerical methods, most often MCMC
+\end{itemize}
+}
+
+\subsection{MCMC Schemes}
+\frame{\frametitle{MCMC Schemes}
+Scheme I - all univariate samples
+\begin{itemize}
+\item For $t\in\{0,1,\ldots,T\}$ sample $p(\theta_t|\ldots)$.
+\item For $j\in\{1,\ldots,J\}$ sample $p(\psi_j|\ldots)$ for $J$ parameters.
+\end{itemize}
+
+\vspace{0.2in} \pause 
+
+Scheme II - block sampling of states
+\begin{itemize}
+\item Sample $p(\theta_{0:T}|\ldots)$.
+\item For $j\in\{1,\ldots,J\}$ sample $p(\psi_j|\ldots)$ for $J$ parameters.
+\end{itemize}
+}
+
+\frame{\frametitle{MCMC Schemes (cont.)}
+Scheme III - block sampling of parameters
+\begin{itemize}
+\item Sample $p(\theta_{0:T}|\ldots)$.
+\item Sample $p(\psi|\ldots)$.
+\end{itemize}
+e.g. polynomial trend, seasonal factor, and dynamic regression models
+
+\vspace{0.2in} \pause
+
+Scheme IV - hybrid
+\begin{itemize}
+\item Sample $p(\psi_{J'}|\psi_{J\setminus J'}, y_{1:T})$ for some subset $J'$ of parameters.
+\item Sample $p(\theta_{0:T}|\ldots)$.
+\item Sample $p(\psi_{J\setminus J'}|\ldots)$.
+\end{itemize}
+}
+
+\frame{\frametitle{MCMC Schemes}
+Generally better to jointly sampling unknowns, a.k.a. block sampling.
+\begin{itemize}
+\item Scheme I has all univariate draws
+\item Scheme II samples latent state jointly
+\item Scheme III samples latent state jointly and parameters jointly
+\item Scheme IV samples some parameters $\psi_{J'}$ and all latent states jointly and then samples remaining parameters jointly
+\end{itemize}
+
+\vspace{0.2in}
+
+Bottom line: if parameters are highly correlated in the posterior, it is better to sample those parameters jointly.
+}
+
+\subsection{Algorithm}
+\frame{\frametitle{Forward filtering backward sampling (FFBS)}
+Recall
+\begin{itemize}[<+->]
+\item $p(\theta_T|y_{1:T})=N(m_T,C_T)$ is available from filtering
+\item $p(\theta_t|\theta_{t+1},y_{1:T})=N(h_t,H_T)$ is available from smoothing
+\end{itemize}
+\uncover<3>{
+\begin{eqnarray*}
+H_t &=& (C_t^{-1}+G_{t+1}^\top W_{t+1}^{-1}G_{t+1})^{-1} \\
+h_t &=& H_t(C_t^{-1}m_t+G_{t+1}^\top W_{t+1}^{-1}\theta_{t+1})
+\end{eqnarray*}
+} \pause
+\uncover<4->{The algorithm is then} \pause
+\begin{itemize}[<+->]
+\item Forward filter to obtain $p(\theta_t|y_{1:t})=N(m_t,C_t)$ for all $t$. 
+\item Sample $\theta_T \sim H(m_T,C_T)$. 
+\item For $t\in\{T-1,T-2,\ldots,1,0\}$,
+ \begin{itemize}
+ \item Calculate $h_t$ and $H_t$ based on $\theta_{t+1}$.
+ \item Draw $\theta_t\sim N(h_t,H_T)$.
+ \end{itemize}
+\end{itemize} 
+}
+
+\subsection{Examples}
+\frame{\frametitle{Local level model}
+\begin{center}
+\includegraphics{localLevelTruth}
+\end{center}
+}
+
+
+\frame{\frametitle{Local level model}
+\begin{center}
+\includegraphics{localLevelFFBS}
+\end{center}
+}
+
+\frame{\frametitle{Local level model - unknown variances}
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N_m(0,V) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N_p(0,W) \\
+ p(\theta_0) &= N(m_0,C_0)
+ \end{array} \]
+ 
+\vspace{0.2in}
+
+MCMC Scheme:
+\begin{itemize}
+\item Sample $p(\theta_{0:T}|\ldots)$ using FFBS
+\item Sample $p(V,W|\ldots)$ 
+\end{itemize}
+}
+
+\frame{\frametitle{Nile river level}
+\begin{center}
+\includegraphics{nileData}
+\end{center}
+}
+
+\frame{\frametitle{Nile river level}
+\begin{center}
+\includegraphics{nileParams}
+\end{center}
+}
+
+\frame{\frametitle{Nile river level}
+\begin{center}
+\includegraphics{nileStates}
+\end{center}
+}
+
+
+\section{MCMC}
+\subsection{DLMs}
+\frame{\frametitle{MCMC in DLMs}
+Recall the inferential objective of the Bayesian approach in DLMs:
+\[ p(\theta_{0:n},\psi|y_{1:n}) \]
+
+\vspace{0.2in} \pause
+
+Since $p(\theta_{0:n},\psi|y_{1:n})$ is not typically available analytically, we commonly use Markov chain Monte Carlo. \pause These  approaches sample from \alert{full conditional distributions}, \pause e.g.
+\begin{itemize}
+\item $p(\theta_t|\theta_{-t},\psi, y_{1:n})$ for $t=0,1,2,\ldots,n$. \pause
+\item $p(\psi_j|\theta_{0:n},\psi_{-j},y_{1:n})$ for $j=1,2,\ldots,J$.
+\end{itemize}
+\pause These draws could be Gibbs or Metropolis-Hastings.
+}
+
+\frame{\frametitle{MCMC Univariate Sampling Activity}
+Fill in \alert{?} with $i$ or $i-1$.
+\[ \begin{array}{lrcl}
+&\theta_0^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\theta_0|\theta_{1}^{\alt<1-2>{(\alert{?})}{(i-1)}},\ldots,\theta_n^{\alt<1-2>{(\alert{?})}{(i-1)}},\psi^{\alt<1-2>{(\alert{?})}{(i-1)}},y_{1:n}) \\
+\\
+\multicolumn{4}{l}{\mbox{For $t\in 1,\ldots,n-1$, sample from }} \\
+&\theta_t^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\theta_t| \theta_0^{\alt<1-2>{(\alert{?})}{(i)}},\ldots,\theta_{t-1}^{\alt<1-2>{(\alert{?})}{(i)}},\theta_{t+1}^{\alt<1-2>{(\alert{?})}{(i-1)}},\ldots,\theta_n^{\alt<1-2>{(\alert{?})}{(i-1)}},\psi^{\alt<1-2>{(\alert{?})}{(i-1)}},y_{1:n}) \\ \\
+&\theta_n^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\theta_n| \theta_0^{\alt<1-2>{(\alert{?})}{(i)}},\ldots,\theta_{n-1}^{\alt<1-2>{(\alert{?})}{(i)}},\psi^{\alt<1-2>{(\alert{?})}{(i-1)}},y_{1:n}) \\ \\ \\
+&\psi_1^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\psi_1|\theta^{\alt<1-2>{(\alert{?})}{(i)}}, \psi_{2}^{\alt<1-2>{(\alert{?})}{(i-1)}},\ldots,\psi_{J}^{\alt<1-2>{(\alert{?})}{(i-1)}},y_{1:n}) \\ \\
+\multicolumn{4}{l}{\mbox{For $j\in 2,\ldots,J-1$, sample from }} \\
+&\psi_j^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\psi_j|\theta^{\alt<1-2>{(\alert{?})}{(i)}}, \psi_{1}^{\alt<1-2>{(\alert{?})}{(i)}},\ldots,\psi_{j-1}^{\alt<1-2>{(\alert{?})}{(i)}},\psi_{j+1}^{\alt<1-2>{(\alert{?})}{(i-1)}},\ldots,\psi_{J}^{\alt<1-2>{(\alert{?})}{(i-1)}},y_{1:n}) \\
+&\psi_J^{\alt<1>{(\alert{?})}{(i)}} &\sim& p(\psi_J|\theta^{\alt<1-2>{(\alert{?})}{(i)}}, \psi_{1}^{\alt<1-2>{(\alert{?})}{(i)}},\ldots,\psi_{J-1}^{\alt<1-2>{(\alert{?})}{(i)}},y_{1:n})
+\end{array} \] \pause \pause
+}
+
+\frame{\frametitle{Convergence to stationary distribution}
+The samples $(\theta^{(i)},\psi^{(i)})$ converge to samples from $p(\theta_{0:n},\psi|y_{1:n})$, regardless of what $(\theta^{(0)},\psi^{(0)})$ was. 
+
+\vspace{0.2in} \pause
+
+Let's look at an example: local level model.
+
+ \[ \begin{array}{rl@{\qquad}ll}
+ Y_t &= \theta_t + v_t &v_t&\ind N(0,2) \\
+ \theta_t &= \theta_{t-1}+w_t & w_t&\ind N(0,0.5) \\
+ p(\theta_0) &= N(0,1)
+ \end{array} \]
+ 
+ \vspace{0.1in} \pause
+ 
+with $y_1=1$. \pause The objective is $p(\theta_0,\theta_1|y_1)$. 
+}
+
+\frame{\frametitle{Local level convergence example}
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+\only< 1   >{\includegraphics{joint0}}
+\only< 2   >{\includegraphics{joint1-2a}}
+\only< 3- 5>{\includegraphics{joint1-2b}}
+\only< 6   >{\includegraphics{joint1-2c}}
+\only< 7   >{\includegraphics{joint1-2d}}
+\only< 8   >{\includegraphics{joint2-2a}}
+\only< 9-11>{\includegraphics{joint2-2b}}
+\only<12   >{\includegraphics{joint2-2c}}
+\only<13   >{\includegraphics{joint2-2d}}
+
+\only<14   >{\includegraphics{joint1-3a}}
+\only<15-17>{\includegraphics{joint1-3b}}
+\only<18   >{\includegraphics{joint1-3c}}
+\only<19   >{\includegraphics{joint1-3d}}
+\only<20   >{\includegraphics{joint2-3a}}
+\only<21-23>{\includegraphics{joint2-3b}}
+\only<24   >{\includegraphics{joint2-3c}}
+\only<25   >{\includegraphics{joint2-3d}}
+
+\only<26   >{\includegraphics{joint1-4a}}
+\only<27-29>{\includegraphics{joint1-4b}}
+\only<30   >{\includegraphics{joint1-4c}}
+\only<31   >{\includegraphics{joint1-4d}}
+\only<32   >{\includegraphics{joint2-4a}}
+\only<33-35>{\includegraphics{joint2-4b}}
+\only<36   >{\includegraphics{joint2-4c}}
+\only<37   >{\includegraphics{joint2-4d}}
+
+\only<38   >{\includegraphics{joint1-5a}}
+\only<39-41>{\includegraphics{joint1-5b}}
+\only<42   >{\includegraphics{joint1-5c}}
+\only<43   >{\includegraphics{joint1-5d}}
+\only<44   >{\includegraphics{joint2-5a}}
+\only<45-47>{\includegraphics{joint2-5b}}
+\only<48   >{\includegraphics{joint2-5c}}
+\only<49   >{\includegraphics{joint2-5d}}
+
+\only<50   >{\includegraphics{joint1-6a}}
+\only<51-53>{\includegraphics{joint1-6b}}
+\only<54   >{\includegraphics{joint1-6c}}
+\only<55   >{\includegraphics{joint1-6d}}
+\only<56   >{\includegraphics{joint2-6a}}
+\only<57-59>{\includegraphics{joint2-6b}}
+\only<60   >{\includegraphics{joint2-6c}}
+\only<61   >{\includegraphics{joint2-6d}}
+
+\only<62   >{\includegraphics{joint1-7a}}
+\only<63-65>{\includegraphics{joint1-7b}}
+\only<66   >{\includegraphics{joint1-7c}}
+\only<67   >{\includegraphics{joint1-7d}}
+\only<68   >{\includegraphics{joint2-7a}}
+\only<69-71>{\includegraphics{joint2-7b}}
+\only<72   >{\includegraphics{joint2-7c}}
+\only<73   >{\includegraphics{joint2-7d}}
+
+\only<74   >{\includegraphics{joint1-8a}}
+\only<75-77>{\includegraphics{joint1-8b}}
+\only<78   >{\includegraphics{joint1-8c}}
+\only<79   >{\includegraphics{joint1-8d}}
+\only<80   >{\includegraphics{joint2-8a}}
+\only<81-83>{\includegraphics{joint2-8b}}
+\only<84   >{\includegraphics{joint2-8c}}
+\only<85   >{\includegraphics{joint2-8d}}
+
+\only<86   >{\includegraphics{joint1-9a}}
+\only<87-89>{\includegraphics{joint1-9b}}
+\only<90   >{\includegraphics{joint1-9c}}
+\only<91   >{\includegraphics{joint1-9d}}
+\only<92   >{\includegraphics{joint2-9a}}
+\only<93-95>{\includegraphics{joint2-9b}}
+\only<96   >{\includegraphics{joint2-9c}}
+\only<97   >{\includegraphics{joint2-9d}}
+
+\only<98   >{\includegraphics{joint1-10a}}
+\only<99-101>{\includegraphics{joint1-10b}}
+\only<102   >{\includegraphics{joint1-10c}}
+\only<103   >{\includegraphics{joint1-10d}}
+\only<104   >{\includegraphics{joint2-10a}}
+\only<105-107>{\includegraphics{joint2-10b}}
+\only<108   >{\includegraphics{joint2-10c}}
+\only<109   >{\includegraphics{joint2-10d}}
+\only<110   >{\includegraphics{joint-samples}}
+
+\column{0.5\textwidth}
+\only< 4   >{\includegraphics{cond1-2a}}
+\only< 5- 6>{\includegraphics{cond1-2b}}
+\only<10   >{\includegraphics{cond2-2a}}
+\only<11-12>{\includegraphics{cond2-2b}}
+
+\only<16   >{\includegraphics{cond1-3a}}
+\only<17-18>{\includegraphics{cond1-3b}}
+\only<22   >{\includegraphics{cond2-3a}}
+\only<23-24>{\includegraphics{cond2-3b}}
+
+\only<28   >{\includegraphics{cond1-4a}}
+\only<29-30>{\includegraphics{cond1-4b}}
+\only<34   >{\includegraphics{cond2-4a}}
+\only<35-36>{\includegraphics{cond2-4b}}
+
+\only<40   >{\includegraphics{cond1-5a}}
+\only<41-42>{\includegraphics{cond1-5b}}
+\only<46   >{\includegraphics{cond2-5a}}
+\only<47-48>{\includegraphics{cond2-5b}}
+
+\only<52   >{\includegraphics{cond1-6a}}
+\only<51-52>{\includegraphics{cond1-6b}}
+\only<58   >{\includegraphics{cond2-6a}}
+\only<59-60>{\includegraphics{cond2-6b}}
+
+\only<64   >{\includegraphics{cond1-7a}}
+\only<65-66>{\includegraphics{cond1-7b}}
+\only<70   >{\includegraphics{cond2-7a}}
+\only<71-72>{\includegraphics{cond2-7b}}
+
+\only<76   >{\includegraphics{cond1-8a}}
+\only<77-78>{\includegraphics{cond1-8b}}
+\only<82   >{\includegraphics{cond2-8a}}
+\only<83-84>{\includegraphics{cond2-8b}}
+
+\only<88   >{\includegraphics{cond1-9a}}
+\only<89-90>{\includegraphics{cond1-9b}}
+\only<94   >{\includegraphics{cond2-9a}}
+\only<95-96>{\includegraphics{cond2-9b}}
+
+\only<100   >{\includegraphics{cond1-10a}}
+\only<101-102>{\includegraphics{cond1-10b}}
+\only<106   >{\includegraphics{cond2-10a}}
+\only<107-108>{\includegraphics{cond2-10b}}
+\end{columns}
+}
+
+\frame{\frametitle{Traceplots}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics{marg1}
+\column{0.5\textwidth}
+\includegraphics{marg2}
+\end{columns}
+}
+
+\frame{\frametitle{Running average}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics{cusum1}
+\column{0.5\textwidth}
+\includegraphics{cusum2}
+\end{columns}
+}
+
+\frame{\frametitle{Auto-correlation plots}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics{acf1}
+\column{0.5\textwidth}
+\includegraphics{acf2}
+\end{columns}
+}
+
+\section{MCMC Diagnostics}
+\subsection{Overview}
+\frame{\frametitle{MCMC Convergence diagnostics}
+\begin{itemize}
+\item Graphical techniques
+ \begin{itemize}
+ \item \alert{Traceplots}
+ \item \alert{Ergodic mean}
+ \end{itemize}
+\item Non-graphical techniques
+ \begin{itemize}
+ \item Geweke diagnostic - single chain
+ \item \alert{Gelman/Rubin diagnostic} - multiple chains
+ \end{itemize}
+\end{itemize}
+}
+
+\subsection{Lack of convergence}
+\frame{\frametitle{Lack of convergence}
+We can \alert{never} know if our chain has converged. 
+
+\vspace{0.2in} \pause
+
+All convergence diagnostics detect a lack of convergence. 
+
+\vspace{0.2in} \pause
+
+So instead of saying `\alert{the chain has converged}' you should be saying `\alert{the chain shows no lack of convergence}'.
+}
+
+\subsection{Burn-in}
+\frame{\frametitle{Burn-in}
+\begin{definition}
+\alert{Burn-in} is the number of MCMC iterations before the chain shows no lack of convergence.
+\end{definition}
+
+\vspace{0.2in} \pause
+
+Burn-in is thrown-out to eliminate the bias associated with the starting point.
+
+\vspace{0.3in} 
+
+\invisible{If the starting point is crucial, why not start multiple chains in different locations? With the local level model, start chain 1 at (-2000, 3000) and start chain 2 at (3000, -2000).}
+}
+
+\frame{\frametitle{Burn-in example}
+\begin{center}
+\alt<1>{\includegraphics{burnin1}}{\includegraphics{burnin2}}
+\end{center}
+\pause
+}
+
+\frame{\frametitle{Burn-in}
+\begin{definition}
+\alert{Burn-in} is the period of time before the chain has converged.
+\end{definition}
+
+\vspace{0.2in} 
+
+Burn-in is thrown-out to eliminate the bias associated with the starting point.
+
+\vspace{0.3in}
+
+If the starting point is crucial, why not start multiple chains in different locations? With the local level model, start chain 1 at (-2000, 3000) and start chain 2 at (3000, -2000).
+}
+
+\frame{\frametitle{Multiple chains}
+\begin{center}
+\alt<1>{\includegraphics{mult1}}{\includegraphics{mult2}}
+\end{center}
+\pause
+}
+
+\subsection{Gelman-Rubin diagnostic}
+\frame{\frametitle{Gelman-Rubin diagnostic}
+\begin{itemize}
+\item Start multiple chains at locations that are overdispersed relative to the posterior. 
+\item ANOVA comparison
+ \begin{itemize}
+ \item Within-chain versus between-chain variances
+ \item Represented as a scale reduction factor such that values around 1 indicate no lack of convergence.
+ \end{itemize}
+\end{itemize}
+}
+
+\frame{\frametitle{Local level model example}
+\begin{center}
+\includegraphics{overdispersed}
+\end{center}
+}
+
+\frame[containsverbatim]{\frametitle{Local level model example - 100 iterations}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+{\small
+In package \texttt{coda}, use function \texttt{gelman.diag}.
+
+\begin{verbatim}
+Potential scale reduction factors:
+
+     Point est. 97.5% quantile
+[1,]       1.12           1.45
+[2,]       1.13           1.48
+
+Multivariate psrf
+
+1.09
+\end{verbatim}
+
+Values substantially above 1 indicate lack of convergence. 
+}
+\column{0.5\textwidth}
+\includegraphics{gelman2}
+\end{columns}
+}
+
+\frame[containsverbatim]{\frametitle{Local level model example - 1000 iterations}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.5\textwidth}
+{\small
+In package \texttt{coda}, use function \texttt{gelman.diag}.
+
+\begin{verbatim}
+Potential scale reduction factors:
+
+     Point est. 97.5% quantile
+[1,]          1           1.00
+[2,]          1           1.00
+
+Multivariate psrf
+
+1.00
+\end{verbatim}
+
+Values substantially above 1 indicate lack of convergence.
+}
+\column{0.5\textwidth}
+\includegraphics{gelman2}
+\end{columns}
+}
+
+\subsection{Length of chain}
+\frame[containsverbatim]{\frametitle{Iterations for inference}
+\setkeys{Gin}{width=\textwidth}
+Now that no lack of convergence is apparent, how long should I run my chain?
+
+\begin{itemize}
+\item The longer you run the chain, the lower your Monte Carlo error.
+\item Monte Carlo error reduces by the $\sqrt{N}$ where $N$ is the number of MCMC iterations.
+\item So, if you want a $10$-fold decrease in Monte Carlo error, you need to run $10^2$ times your current number of iterations.
+\end{itemize}
+}
+
+\frame{\frametitle{Simple Monte Carlo example}
+Consider the model $y_i \ind N(\mu,1)$ and our goal is to estimate $E[y_i]=\mu$. The Monte Carlo approximation is 
+\[ \mu \approx \mu_{MC} = \frac{1}{n} \sum_{i=1}^n y_i \]
+with the variance of this approximation given by 
+\[ \mbox{se}(\mu_{MC}) \approx \sqrt{\frac{1}{n(n-1)} \sum_{i=1}^n (y_i-\mu_{MC})^2} = \frac{1}{\sqrt{n}} sd_{y}\]
+where $sd_y$ is the standard deviation of the sample $y=(y_1,y_2,\ldots,y_n)$. Since this standard deviation converges to 1, by our model assumption above, the standard error of the Monte Carlo estimate decrease by the square root of $n$.  
+}
+
+\frame{\frametitle{Simple Monte Carlo example}
+\setkeys{Gin}{width=\textwidth}
+At 176 simulations, the standard error of $\mu_{MC}$ is $\sim 0.07$. To decrease this to $0.007$ (an order of magnitude increase in accuracy), we would need to take a total of $176\cdot 10^2=17600$ simulations.
+\begin{center}
+\includegraphics{monteCarlo}
+\end{center}
+}
+
+\frame[containsverbatim]{\frametitle{Iterations for inference}
+\setkeys{Gin}{width=\textwidth}
+\begin{columns}
+\column{0.55\textwidth}
+\begin{center}
+\includegraphics{acfs}
+\end{center}
+\column{0.45\textwidth}
+Use \texttt{effectiveSize}
+\begin{verbatim}
+    var1     var2
+169.6231 165.3914
+\end{verbatim}
+\end{columns}
+}
+
+
+\section{Bayesian analysis}
+\subsection{Work flow}
+\frame{\frametitle{Work flow}
+\begin{itemize}
+\item Exploratory data analysis
+\item Define a model with priors
+\item Fit the model using MLE techniques
+\item Inference
+ \begin{itemize}
+ \item Fit in WinBUGS
+ \item Code it up in R/C
+ 	\begin{itemize}
+	 \item Choose an MCMC scheme
+ 	\item Find the full conditional distributions (if available)
+	\end{itemize}
+ \item Monitor chain convergence
+ \item Summarize the posterior
+ \end{itemize}
+\item Model checking
+	\begin{itemize}
+	\item Diagnostic plots to evaluate model assumptions, e.g. one-step head forecasts
+	\end{itemize} 
+\end{itemize}
+}
+
+\subsection{Examples}
+\frame{\frametitle{Examples}
+\begin{itemize}
+\item Nile flow - local level model
+\item Spain/Denmark investments - SUTSE
+\end{itemize}
+}
+
+\section{Example I - Nile river level}
+
+\subsection{The data}
+\frame{\frametitle{Nile river level}
+\begin{center}
+\includegraphics{nile}
+\end{center}
+}
+\frame{\frametitle{Nile river level}
+\begin{center}
+\includegraphics{nileacf}
+\end{center}
+}
+
+\subsection{The model}
+\frame{\frametitle{Local level model}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= \theta_t + v_t & v_t \sim N(0,V) \\
+\theta_t &= \theta_{t-1} + w_t & w_t \sim N(0,W) \\ \pause
+\\
+V & \sim IG(a_V,b_V) \\
+W & \sim IG(a_W,b_W) \\
+\theta_0 & \sim N(m_0,C_0)
+\end{array} \] \pause
+where $p(V,W,\theta_0) = p(V)p(W)p(\theta_0)$ and $v_t$ and $w_t$ are independent across time and mutually independent of each other as well as independent of $\theta_0$.
+}
+\frame{\frametitle{Non-informative priors}
+\[ \begin{array}{rl@{\qquad}l}
+V & \sim IG(a_V,b_V) \\
+W & \sim IG(a_W,b_W) \\
+\theta_0 & \sim N(m_0,C_0)
+\end{array} \]
+
+\vspace{0.3in} \pause
+
+Non-informative prior
+
+
+\[ \begin{array}{rll}
+V& \propto 1/V &\implies a_V = b_V = 0 \pause \\
+W& \propto 1/W &\implies a_W = b_W = 0 \pause\\
+\theta_0 &\propto 1 &\implies m_0 = 0, C_0 = \infty
+\end{array} \]
+}
+
+\frame{\frametitle{Informative variance priors}
+Informative prior for $V$ (or $W$), $E[V]=5$ with varying accuracy\pause
+\begin{center}
+\includegraphics{vprior}
+\end{center}
+}
+
+\frame{\frametitle{Informative state prior}
+``On average, the Nile flow is around 920 $\pm$ 340.'' With what probability? \pause
+\begin{center}
+\includegraphics{theta0prior}
+\end{center}
+}
+
+\subsection{Inference}
+\frame{\frametitle{MCMC scheme}
+In DLMs, conditional on unknown parameters, we can sample from the joint state vector at all times using FFBS. \pause
+
+\begin{itemize}
+\item $p(\theta_{0:T}| V, W, y_{1:T})$ \pause (for references see page 161 of Petris et al.) \pause
+\item $p(V|\theta_{0:T}, W, y_{1:T})$
+\item $p(W|\theta_{0:T}, V, y_{1:T})$
+\end{itemize}
+}
+
+\frame{\frametitle{Full conditional distributions - the hard way}
+\[ \begin{array}{rl}
+\multicolumn{2}{l}{p(V|\theta_{0:T}, W, y_{1:T})} \\ \pause
+&\propto \prod_{t=1}^T p(y_t|\theta_t,V) p(\theta_t|\theta_{t-1},W) p(V)p(W)p(\theta_0) \\ \pause
+&\propto \prod_{t=1}^T p(y_t|\theta_t,V) p(V) \\ \pause
+&=\prod_{t=1}^T N(y_t; \theta_t, V) IG(V; a_V, b_V) \\ \pause
+&\propto V^{-T/2}\exp\left(-\frac{1}{2V} \sum_{t=1}^T (y_t-\theta_t)^2 \right) V^{-a_V-1} \exp\left(-b_V/V\right) \\ \pause
+&= V^{-(a_V+T/2)-1} \exp\left(-\left[b_V+\frac{1}{2} \sum_{t=1}^T (y_t-\theta_t)^2\right]/V \right) \\ \pause
+&\propto IG\left(a_V+T/2, b_V+\frac{1}{2} \sum_{t=1}^T (y_t-\theta_t)^2 \right)
+\end{array} \]
+}
+\frame{\frametitle{Full conditional distributions - the hard way}
+\[ \begin{array}{rl}
+\multicolumn{2}{l}{p(W|\theta_{0:T}, V, y_{1:T})} \\ \pause
+&\propto \prod_{t=1}^T p(y_t|\theta_t,V) p(\theta_t|\theta_{t-1},W) p(V)p(W)p(\theta_0) \\ \pause
+&\propto \prod_{t=1}^T p(\theta_t|\theta_{t-1},W) p(W) \\ \pause
+&=\prod_{t=1}^T N(\theta_t; \theta_{t-1}, W) IG(W; a_W, b_W) \\ \pause
+&\propto W^{-T/2}\exp\left(-\frac{1}{2W} \sum_{t=1}^T (\theta_t-\theta_{t-1})^2 \right) W^{-a_W-1} \exp\left(-b_W/W\right) \\ \pause
+&= V^{-(a_W+T/2)-1} \exp\left(-\left[b_W+\frac{1}{2} \sum_{t=1}^T (\theta_t-\theta_{t-1})^2\right]/W \right) \\ \pause
+&\propto IG\left(a_W+T/2, b_W+\frac{1}{2} \sum_{t=1}^T (\theta_t-\theta_{t-1})^2 \right)
+\end{array} \]
+}
+\frame{\frametitle{Full conditional distributions - the easy way}
+Recall from HW 1b, if $\sigma^2 \sim IG(a,b)$ and $x_i\ind N(0,\sigma^2)$, \pause then
+\[ p(\sigma^2|x_1,x_2,\ldots,x_n) = IG\left(a+n/2, b+\frac{1}{2} \sum_{t=1}^n x_t^2\right).\]
+
+\vspace{0.2in} \pause
+
+Notice
+\[ \begin{array}{rl}
+V&\sim IG(a_V,b_V) \\ \pause
+v_t = y_t-\theta_t &\ind N(0,V) \\ \pause
+p(V|y_{1:T}, \theta_{0:T}, W) &= p(V|y_{1:T},\theta_{1:T}) \\ \pause
+&= IG(a_V+T/2, b_V+\frac{1}{2} \sum_{t=1}^T v_t^2) \\ \pause
+\\
+W &\sim IG(a_W, b_W) \\ \pause
+w_t = \theta_t-\theta_{t-1} &\ind N(0,W) \\ \pause
+p(W|y_{1:T}, \theta_{0:T}, V) &= p(W|\theta_{1:T}) \\ \pause
+&= IG(a_W+T/2, b_W+\frac{1}{2} \sum_{t=1}^T w_t^2)
+\end{array} \]
+}
+
+\frame{\frametitle{MCMC scheme revisited}
+\begin{itemize}
+\item $p(\theta_{0:T}|\ldots)$ using FFBS
+\item $p(V|\ldots)=IG(a_V+T/2, b_V+\frac{1}{2} \sum_{t=1}^T v_t^2)$
+\item $p(W|\ldots)= IG(a_W+T/2, b_W+\frac{1}{2} \sum_{t=1}^T w_t^2)$
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+Notice that $p(V|\ldots)$ doesn't depend on $W$ and $p(W|\ldots)$ doesn't depend on $V$. \pause So our scheme is actually
+\begin{itemize}
+\item $p(\theta_{0:T}|\ldots)$ using FFBS
+\item $p(V,W|\ldots)=IG(a_V+T/2, b_V+\frac{1}{2} \sum_{t=1}^T v_t^2)IG(a_W+T/2, b_W+\frac{1}{2} \sum_{t=1}^T w_t^2)$
+\end{itemize}
+}
+
+\frame[containsverbatim]{\frametitle{Coding it up}
+Begin by creating a function to draw from the posterior of a conjugate inverse gamma
+\begin{verbatim}
+drawIGpost <- function(x, a=0, b=0) {
+  return(rinvgamma(1, a+length(x)/2, b+sum(x^2)/2))
+}
+\end{verbatim}
+}
+\frame[containsverbatim]{\frametitle{Coding it up}
+Begin by creating a function to draw from the posterior of a conjugate inverse gamma
+{\small
+\begin{verbatim}
+for (i in 1:n.reps) {
+  cat(i,"\n")
+  # Sample states
+  mod   <- dlmModPoly(1, dV=V, dW=W)
+  filt  <- dlmFilter(Nile, mod)
+  theta <- dlmBSample(filt)
+
+  # Sample V and W
+  V <- drawIGpost(y-theta[-1])
+  W <- drawIGpost(theta[-1]-theta[-n])
+
+  # Save iterations
+  V.reps[i] <- V
+  W.reps[i] <- W
+  theta.reps[i,] = theta
+}
+\end{verbatim}
+}
+}
+
+\frame{\frametitle{Running the MCMC}
+\begin{itemize}
+\item Run 1
+ \begin{itemize}
+ \item Run 1 chain starting from the MLEs
+ \item Check traceplots for this run
+ \item Obtain posterior summaries for model parameters
+ \item Choose initial values that are $<$ minimum and $>$ maximum for each model parameter
+ \end{itemize}
+\item Multi-runs
+ \begin{itemize}
+ \item Start multiple chains from combinations of these values
+ \item Check traceplots and Gelman-Rubin diagnostic for these chains
+ \item Discard burn-in and produce posterior summaries on remaining iterations
+ \item If more iterations are needed, initialize new chains from the last iteration of the old chains
+ \end{itemize}
+\end{itemize}
+}
+
+\frame{\frametitle{Monitoring convergence}
+Use \texttt{plot.mcmc} in \texttt{coda} package.
+\begin{center}
+\includegraphics[page=1]{Nileresults}
+\end{center}
+}
+\frame{\frametitle{Monitoring convergence}
+Use \texttt{plot.mcmc} in \texttt{coda} package.
+\begin{center}
+\includegraphics[page=2]{Nileresults}
+\end{center}
+}
+\frame{\frametitle{Monitoring convergence}
+Use \texttt{plot.mcmc} in \texttt{coda} package.
+\begin{center}
+\includegraphics[page=3]{Nileresults}
+\end{center}
+}
+
+\frame[containsverbatim]{\frametitle{Gelman-Rubin diagnostic}
+\begin{verbatim}
+> gelman.diag(window(mcmc.results,1,4000))
+Potential scale reduction factors:
+
+       Point est. 97.5% quantile
+V.reps       1.00           1.00
+W.reps       1.00           1.00
+             1.00           1.00
+             1.00           1.00
+
+             1.00           1.01
+             1.00           1.00
+
+Multivariate psrf
+
+1.01
+\end{verbatim}
+}
+
+\frame[containsverbatim]{\frametitle{Posterior summaries}
+
+\vspace{-0.1in}
+
+{\scriptsize
+\begin{verbatim}
+> summary(window(mcmc.results,4001,5000))
+
+Iterations = 4001:5000
+Thinning interval = 1
+Number of chains = 4
+Sample size per chain = 1000
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+          Mean      SD Naive SE Time-series SE
+V.reps 15642.8 3187.29  50.3955       125.8969
+W.reps  1630.4 1449.03  22.9111       100.2639
+        1107.9   73.84   1.1676         1.3148
+        1108.7   62.93   0.9951         1.1196
+
+2. Quantiles for each variable:
+
+         2.5%     25%     50%     75%   97.5%
+V.reps 9854.5 13459.2 15450.6 17640.9 22337.6
+W.reps  241.2   651.7  1183.1  2092.0  5529.9
+        964.9  1060.0  1106.7  1153.6  1261.0
+        987.1  1066.5  1107.5  1149.0  1238.8
+\end{verbatim}
+}
+}
+
+\frame{\frametitle{Posterior summaries}
+\begin{center}
+\includegraphics{VWpost}
+\end{center}
+}
+
+\frame{\frametitle{Posterior summaries}
+\begin{center}
+\includegraphics[page=1]{thetapost}
+\end{center}
+}
+
+\frame{\frametitle{Posterior summaries}
+\begin{center}
+\includegraphics[page=2]{thetapost}
+\end{center}
+}
+
+\frame{\frametitle{Summaries of functions of parameters}
+The posterior for $f(\psi)$ is available using the MCMC simulations by plugging our iterations $\psi^{(i)}$ into $f(\cdot)$ and calculating desired quantities, \pause e.g.
+\[ E[f(\psi)] \approx \frac{1}{n} \sum_{i=1}^n f(\psi^{(i)}).\]
+
+\vspace{0.2in} \pause
+
+For example,
+\begin{itemize}
+\item $f(\theta_{0:T},V,W) = \sqrt(V)$
+\item $f(\theta_{0:T},V,W) = \sqrt(W)$
+\item $f(\theta_{0:T},V,W) = W/V$ (signal-to-noise ratio)
+\item $f(\theta_{0:T},V,W) = P(W/V<1)$
+\end{itemize}
+}
+
+\frame{\frametitle{Standard deviations}
+\begin{center}
+\includegraphics{sdpost}
+\end{center}
+}
+
+\frame{\frametitle{Signal-to-noise ratio}
+
+\vspace{-0.2in}
+
+\begin{center}
+\includegraphics{rpost}
+\end{center}
+\pause
+\[ P(r<1) = 0.998.\]
+}
+
+\section{$d$ inverse gamma priors}
+\subsection{Model}
+\frame{\frametitle{The model}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F_t\theta_t + v_t & v_t \sim N(0,V) \\
+\theta_t &= G_t\theta_{t-1} + w_t & w_t \sim N_p(0,W)
+\end{array} \]
+where $V$ is scalar and $W$ is diagonal with elements $W_i$ \pause and assumed priors
+\[ \begin{array}{rl@{\qquad}l}
+p(V,W_1,\ldots,W_p, \theta_0) &= p(V)p(\theta_0) \prod_{i=1}^p p(W_i) \\
+V & \sim IG(a_V,b_V) \\
+W_i & \sim IG(a_{W_i},b_{W_i}) \\
+\theta_0 & \sim N(m_0,C_0)
+\end{array} \]
+}
+\subsection{Linear trend example}
+\frame{\frametitle{Linear trend model}
+For example
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F\theta_t + v_t & v_t \sim N(0,V) \\
+\theta_t &= G\theta_{t-1} + w_t & w_t \sim N_p(0,W)
+\end{array} \]
+where $F=(1, 0)$, $G[1,1]=G[1,2]=G[2,2]=1$, $G[2,1]=0$, and $W$ is diagonal with elements $W_i$ \pause and assumed priors
+\[ \begin{array}{rl@{\qquad}l}
+p(V,W_1,\ldots,W_p, \theta_0) &= p(V)p(\theta_0)p(W_1)p(W_2) \\
+V & \sim IG(a_V,b_V) \\
+W_1 & \sim IG(a_{W_1},b_{W_1}) \\
+W_2 & \sim IG(a_{W_2},b_{W_2}) \\
+\theta_0 & \sim N(m_0,C_0)
+\end{array} \]
+}
+\frame{\frametitle{Rewrite the linear trend model}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= \mu_t + v_t & v_t \sim N(0,\sigma^2) \\
+\mu_t &= \mu_{t-1}+\beta_t + w_{t,1} & w_{t,1} \sim N(0,\sigma_{\mu}^2) \\
+\beta_t &= \beta_{t-1} + w_{t,2} & w_{t,2} \sim N(0,\sigma_{\beta}^2)
+\end{array} \]
+where $w_{t,1}$ and $w_{t,2}$ are independent.
+
+\vspace{0.2in} \pause
+
+What are the full conditionals for $\sigma^2, \sigma_{\mu}^2,$ and $\sigma_{\beta}^2$? \pause
+\begin{itemize}
+\item $p(\sigma^2|\ldots) \pause = IG\left(a_{\sigma^2} + T/2, b_{\sigma^2}+\frac{1}{2} \sum_{t=1}^T v_t^2\right)$ \pause
+\item $p(\sigma_\mu^2|\ldots) \pause = IG\left(a_{\sigma_\mu^2} + T/2, b_{\sigma_\mu^2}+\frac{1}{2} \sum_{t=1}^T w_{t,1}^2\right)$ \pause
+\item $p(\sigma_\beta^2|\ldots) \pause = IG\left(a_{\sigma_\beta^2} + T/2, b_{\sigma_\beta^2}+\frac{1}{2} \sum_{t=1}^T w_{t,2}^2\right)$ \pause
+\end{itemize}
+and importantly, they are independent!
+}
+\subsection{General models}
+\frame{\frametitle{More generally}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F_t\theta_t + v_t & v_t \sim N(0,V) \\
+\theta_t &= G_t\theta_{t-1} + w_t & w_t \sim N_p(0,W)
+\end{array} \]
+where $W$ is diagonal with elements $W_i$ and all variances have independent inverse gamma priors.
+
+\vspace{0.2in} \pause
+
+The full conditionals for parameters are
+\begin{itemize}
+\item $p(V|\ldots) = IG\left(a_{V} + T/2, b_{V}+\frac{1}{2} \sum_{t=1}^T v_t^2\right)$
+\item $p(W_i|\ldots) = IG\left(a_{W_i} + T/2, b_{W_i}+\frac{1}{2} \sum_{t=1}^T w_{t,i}^2\right)$
+\end{itemize}
+and again, they are independent!
+}
+\subsection{MCMC scheme}
+\frame{\frametitle{MCMC scheme for models with $d$ inverse gamma priors}
+Two-stage Gibbs sampler
+\begin{itemize}
+\item Use FFBS to sample from $p(\theta_{0:T}|\ldots)$
+\item Jointly sample $V,W_1,\ldots,W_p$ by sampling their full conditionals
+ \begin{itemize}
+ \item $p(V|\ldots)$
+ \item $p(W_i|\ldots)$ for $i\in(1,2,\ldots,p)$.
+ \end{itemize}
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+Implemented in \texttt{dlmGibbsDIG}.
+}
+
+
+
+\section{Unknown covariance matrices}
+\subsection{Model}
+\frame{\frametitle{}
+Suppose we assume the model
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F_t\theta_t + v_t & v_t \sim N_m\left(0,\mathrm\Phi_0^{-1}\right) \\
+\theta_t &= G_t\theta_{t-1} + w_t & w_t \sim N_p\left(0,\mathrm\Phi_1^{-1}\right)
+\end{array} \]
+where $\mathrm\Phi_0$ is an $m\times m$ observation precision matrix and $\mathrm\Phi_1$ is a $p\times p$ evolution precision matrix. \pause It will be convenient to choose independent Wishart distributions for the prior for these precision matrices, \pause i.e. 
+\[p\left(\mathrm\Phi_0,\mathrm\Phi_1\right)=p\left(\mathrm\Phi_0\right)p\left(\mathrm\Phi_1\right)=\mathcal{W}\left(\mathrm\Phi_0; \nu_0, S_0\right)\mathcal{W}\left(\mathrm\Phi_1; \nu_1, S_1\right) \] \pause
+where
+
+\[ \mathcal{W}(P; \nu, S) = \frac{|S|^{\nu}|P|^{\frac{\nu-p-1}{2}}}{\Gamma_p(\nu)}\exp\left( - tr(SP)\right) \]
+is a distribution on symmetric, positive definite matrices $P$ with parameters $\nu>(p-1)/2$ and $S$, symmetric non-singular matrix.
+}
+
+\subsection{Full conditionals}
+\frame{\frametitle{Full conditionals for the precision matrices}
+Wishart distributions are conditionally conjugate in this model: \pause
+\[ p\left(\mathrm\Phi_0|\ldots\right) = \mathcal{W}\left(\nu_0+T/2, S_0+\frac{1}{2}SS_y\right) \]
+where $SS_y = \sum_{t=1}^T \left(y_t-F_t\theta_t\right)\left(y_t-F_t\theta_t\right)^\top $.
+
+\vspace{0.2in} \pause
+
+\[ p\left(\mathrm\Phi_1|\ldots\right) = \mathcal{W}\left(\nu_1+T/2, S_1+\frac{1}{2}SS_\theta\right) \]
+where $SS_\theta = \sum_{t=1}^T \left(\theta_t-G_t\theta_{t-1}\right)\left(\theta_t-G_t\theta_{t-1}\right)^\top $.
+
+\vspace{0.2in} \pause
+
+Again, $p\left(\mathrm\Phi_0,\mathrm\Phi_1|\ldots\right)=p\left(\mathrm\Phi_0|\ldots\right)p\left(\mathrm\Phi_1|\ldots\right)$.
+
+\vspace{0.2in} \pause
+
+To draw from these distributions, use \texttt{rwishart} in \texttt{dlm} package which has arguments degrees of freedom $\delta$ and scale matrix $V_0^{-1}$ where $\mathcal{W}(\delta/2, V_0/2)$. 
+}
+
+\section{$d$ inverse Wisharts}
+\subsection{The model}
+\frame{\frametitle{The model}
+Consider the model with block-diagonal evolution covariance:
+
+\vspace{0.2in}
+
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F_t\theta_t + v_t & v_t \sim N_m(0,\mathrm\Phi_0^{-1}) \\
+\theta_t &= G_t\theta_{t-1} + w_t & w_t \sim N_{p*}(0,W)
+\end{array} \]
+
+\vspace{0.2in}
+
+where $W$ is block-diagonal with elements $W_i$.\pause  Set $\mathrm\Phi_i^{-1} = W_i$ and give $\mathrm\Phi_0, \mathrm\Phi_1, \ldots, \mathrm\Phi_d$ independent Wishart priors $\mathrm\Phi_i\sim \mathcal{W}(\nu_i, S_i).$
+}
+
+\frame{\frametitle{Rewritten univariate model}
+For combining individual components, e.g. polynomial trend, seasonal, dynamic regression, $G_t$ is block diagonal with elements $G_{i,t}$ relating to $W_i$ and the model can be re-written 
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= F_t\theta_t + v_t & v_t \sim N(0,\mathrm\Phi_0^{-1}) \\
+\theta_{1,t} &= G_{1,t}\theta_{1,t-1} + w_{1,t} & w_{1,t} \sim N_{p_1}(0,\mathrm\Phi^{-1}_1) \\
+& \vdots \\
+\theta_{i,t} &= G_{i,t}\theta_{i,t-1} + w_{i,t} & w_{i,t} \sim N_{p_i}(0,\mathrm\Phi^{-1}_i) \\
+& \vdots \\
+\theta_{p,t} &= G_{p,t}\theta_{p,t-1} + w_{p,t} & w_{p,t} \sim N_{p_d}(0,\mathrm\Phi^{-1}_d) \\
+\end{array} \]
+where $w_{i,t}$ are independent across $i$. Then 
+\[ SS_{ii,t} = (\theta_{i,t}-G_{i,t}\theta_{i,t-1})(\theta_{i,t}-G_{i,t}\theta_{i,t-1})^\top .\]
+}
+
+\frame{\frametitle{Multivariate models}
+Let
+\[ SS_t = (\theta_t-G_t\theta_{t-1})(\theta_t-G_t\theta_{t-1})^\top  \]
+and partition it according to
+\[ SS_t = \left[ \begin{array}{ccc} SS_{11,t} & \cdots & SS_{1d,t} \\
+\vdots & \ddots & \vdots \\ SS_{d1,t} & \cdots & S_{dd,t} \end{array} \right] \]
+where the partition is according to the partition in $\mathrm\Phi=\mbox{blockdiag}(\mathrm\Phi_1,\ldots,\mathrm\Phi_d)$.
+}
+
+\subsection{Full conditional distributions}
+\frame{\frametitle{Full conditional distributions}
+\[ p\left(\mathrm\Phi_0^{-1}|\ldots\right) = \mathcal{W}\left(\nu_0+T/2, S_0+\frac{1}{2}SS_y\right) \]
+where $SS_y = \sum_{t=1}^T \left(y_t+F_t\theta_t\right)\left(y_t-F_t\theta_t\right)^\top $.
+
+\vspace{0.2in} \pause
+
+\[ p\left(\mathrm\Phi_i^{-1}|\ldots\right) = \mathcal{W}\left(\nu_i+T/2, S_i+\frac{1}{2}SS_{\theta_i}\right) \]
+where $SS_{\theta_i} = \sum_{t=1}^T SS_{ii,t}$ given on the previous page.
+
+\vspace{0.2in} \pause
+
+Once again, $p\left(\mathrm\Phi_0^{-1},\mathrm\Phi_1^{-1},\ldots,\mathrm\Phi_d^{-1}|\ldots\right)=p\left(\mathrm\Phi_0^{-1}|\ldots\right)\prod_{i=1}^d p\left(\mathrm\Phi_i^{-1}|\ldots\right)$.
+}
+
+\section{SUTSE example}
+\subsection{Data}
+\frame{\frametitle{Denmark and Spain investments}
+\begin{center}
+\includegraphics{invest}
+\end{center}
+}
+\subsection{Model}
+\frame{\frametitle{SUTSE model}
+\[ \begin{array}{rl@{\qquad}l}
+Y_t &= (F \otimes I_2)\theta_t + v_t & v_t \sim N_2(0,\mathrm\Phi_0^{-1}) \\
+\theta_t &= (G \otimes I_2) \theta_{t-1} + w_t & w_t \sim N_4(0,W)
+\end{array} \]
+where $W=\mbox{blockdiag}(W_1,W_2)$, $\mathrm\Phi_1^{-1}=W_1$, and $\mathrm\Phi_2^{-1}=W_2$.
+
+\vspace{0.2in}\pause
+
+Assume independent Wishart priors
+\[ \begin{array}{rl@{\qquad}l}
+p(\mathrm\Phi_0) &= \mathcal{W}\left(\frac{\delta_0+1}{2}, \frac{1}{2}V_0\right) & V_0 = (\delta_0-2) \left[ \begin{array}{cc} 10^2 & 0 \\ 0 & 500^2 \end{array} \right] \\
+p(\mathrm\Phi_1) &= \mathcal{W}\left(\frac{\delta_1+1}{2},\frac{1}{2}W_{\mu,0}\right) & W_{\mu,0} = (\delta_1-2) \left[ \begin{array}{cc} 0.01^2 & 0 \\ 0 & 0.01^2 \end{array} \right]\\
+p(\mathrm\Phi_2) &= \mathcal{W}\left(\frac{\delta_2+1}{2},\frac{1}{2}W_{\beta,0}\right) & W_{\beta,0} = (\delta_2-2) \left[ \begin{array}{cc} 5^2 & 0 \\ 0 & 100^2 \end{array} \right]
+\end{array} \]
+where $\delta_0=\delta_2=3$ and $\delta_1=100$.
+}
+
+\subsection{MCMC}
+\frame{\frametitle{MCMC sampling}
+MCMC Scheme:
+\begin{itemize}
+\item Sample $\theta_{0:T}\sim p(\theta_{0:T}|\ldots)$ using FFBS
+\item Sample $p(\mathrm\Phi_0,\mathrm\Phi_1,\mathrm\Phi_2|\ldots)$ jointly
+\[ \begin{array}{rl@{\qquad}l}
+p(\mathrm\Phi_0|\ldots) &= \mathcal{W}\left(\frac{\delta_0+1+T}{2}, \frac{1}{2}(V_0+SS_y)\right) \\
+p(\mathrm\Phi_1|\ldots) &= \mathcal{W}\left(\frac{\delta_1+1+T}{2},\frac{1}{2}(W_{\mu,0}+SS_{1\cdot})\right) \\
+p(\mathrm\Phi_2|\ldots) &= \mathcal{W}\left(\frac{\delta_2+1+T}{2},\frac{1}{2}(W_{\beta,0}+SS_{2\cdot})\right)
+\end{array} \]
+where
+\[
+SS_{i\cdot} = \sum_{t=1}^T SS_{ii,t}.
+ \]
+provided earlier.
+\end{itemize}
+}
+
+\frame{\frametitle{Convergence and autocorrelation}
+\begin{center}
+\includegraphics[page=1]{inv-conv}
+\end{center}
+}
+\frame{\frametitle{Convergence}
+\begin{center}
+\includegraphics[page=2]{inv-conv}
+\end{center}
+}
+\frame{\frametitle{Convergence}
+\begin{center}
+\includegraphics[page=3]{inv-conv}
+\end{center}
+}
+
+\subsection{Inference}
+\frame{\frametitle{Posterior covariance expectations}
+\[ \begin{array}{rl} E[V|y_{1:T}] &= \phantom{1e-5}\left[ \begin{array}{cccc}
+86 &(1) & 1026 &(23) \\
+&& 59340 &(807)
+\end{array} \right]
+\\
+\\
+E[W_\mu|y_{1:T}] &= 1e-5\left[ \begin{array}{cccc}
+9.97  &(0.02) & 0.016 & (0.014) \\
+&& 10.04 & (0.02)
+\end{array} \right]
+\\
+\\
+E[W_\beta|y_{1:T}] &= \phantom{1e-5}\left[ \begin{array}{cccc}
+38.3  &(0.8) & 305 & (41) \\
+&& 311073 & (2346)
+\end{array} \right]
+\end{array} \]
+}
+\frame{\frametitle{Posterior $\mu_t$}
+\begin{center}
+\includegraphics{inv-states}
+\end{center}
+}
+
+
+
+\section{Missing data}
+\subsection{Types}
+\frame{\frametitle{Types of missing data}
+
+Complete data $Y_{i,t}$ and missing indicator $M_{i,t}$ where $M_{i,t}=1$ if observation $Y_{it}$ is missing and $0$ otherwise. \pause Let $Y_{\mbox{obs}}$ contain all the data that is observed while $Y_{\mbox{mis}}$ contains all the data that is missing with $Y = (Y_{\mbox{obs}},Y_{\mbox{mis}})$.  \pause Then several types of missing-ness are possible:
+
+\vspace{0.2in} \pause
+
+\begin{itemize}
+\item Missing completely at random (MCAR)
+\[ p(M|Y,\phi) = p(M|\phi). \] \pause
+\item Missing at random (MAR)
+\[ p(M|Y,\phi) = p(M|Y_{obs},\phi). \] \pause
+\item Not missing at random
+\[ p(M|Y,\phi) \mbox{ depends on } Y_{\mbox{mis}} .\] \pause
+\end{itemize}
+
+We will only consider $MCAR$.
+}
+
+\frame{\frametitle{No missing data}
+\begin{center}
+\includegraphics[page=1]{missing}
+\end{center}
+}
+\frame{\frametitle{Missing completely at random}
+\begin{center}
+\includegraphics[page=2]{missing}
+\end{center}
+}
+\frame{\frametitle{Not missing at random}
+\begin{center}
+\includegraphics[page=3]{missing}
+\end{center}
+}
+
+\subsection{in DLMs}
+\frame{\frametitle{Missing data in multivariate DLMs}
+Two situations:
+\begin{itemize}
+\item Totally missing: at time $t$, $Y_t$ is completely missing
+\item Partially missing: at time $t$, part of $Y_t$ is observed
+\end{itemize}
+}
+
+\frame{\frametitle{Totally missing}
+Recall `Kalman filter' lecture: missing data are handled trivially while filtering.
+\[ m_t = a_t \qquad C_t = R_t.\]
+
+\vspace{0.2in} 
+
+Unknown fixed parameters are sampled without these data, e.g. scalar $V$
+\[ \begin{array}{rl}
+p(\phi_V|\ldots) &= G\left(a+\frac{T'}{2}, b+\sum_{t\in \mbox{obs}} (y_t -F_t\theta_t)^2\right)
+\end{array} \]
+where `obs' is a vector of times when the data are observed and $T'\le T$ is the length of obs.
+
+\vspace{0.1in}
+e.g. matrix $V$
+\[ \begin{array}{rl}
+p(\mathrm\Phi_V|\ldots) &= W\left(a+\frac{T'}{2}, b+\sum_{t\in \mbox{obs}} (y_t -F_t\theta_t)(y_t -F_t\theta_t)^\top \right) .
+\end{array} \]
+}
+
+\frame{\frametitle{Partially missing when filtering}
+Suppose $M_t$ is the matrix that is built by taking an identity matrix and removing the rows of any missing observations in $y_t$. \pause Then $\tilde{y}_t = M_ty_t$ contains only the observed data. The correct observation equation to consider is 
+\[ \tilde{y}_t = \tilde{F}_t\theta_t + \tilde{v}_t \qquad \tilde{v}_t \sim N(0,\tilde{V}_t). \]
+
+\vspace{0.2in} \pause
+
+What are $\tilde{F}_t$ and $\tilde{V}_t$?
+
+\vspace{0.1in} \pause 
+
+\begin{itemize}
+\item $\tilde{F}_t = M_tF_t$
+\item $\tilde{V}_t = M_tV_tM_t^\top $
+\end{itemize}
+}
+
+\frame{\frametitle{Partially missing in MCMC}
+Let $Y = (Y_{\mbox{obs}},Y_{\mbox{mis}})$. \pause If we build an MCMC with only the observed data, then our scheme will look like
+
+\vspace{0.2in}
+
+\begin{itemize}
+\item Sample $p(\theta|Y_{\mbox{obs}},\psi)$ via FFBS
+\item Sample $p(\psi|Y_{\mbox{obs}},\theta)$.
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+For example, consider the observation precision matrix $\mathrm\Phi_V$ as the only unknown parameter. What is it's full conditional distribution?
+\[ p(\mathrm\Phi_V|Y_{\mbox{obs}}, \theta) \propto p(Y_{\mbox{obs}}|\mathrm\Phi_V,\theta)p(\mathrm\Phi_V)\]
+Who knows?
+}
+
+\frame{\frametitle{Partially missing in MCMC}
+Let $Y = (Y_{\mbox{obs}},Y_{\mbox{mis}})$. \pause Augment the MCMC to simulate the missing values, then our scheme will look like
+
+\vspace{0.2in}
+
+\begin{itemize}
+\item Sample $p(\theta|Y,\psi)$ via FFBS
+\item Sample $p(\psi|Y,\theta)$
+\item Sample $p(Y_{\mbox{mis}}|Y_{\mbox{obs}},\theta,\psi)$.
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+This works since 
+\[ p(\theta,\psi|Y_{\mbox{obs}}) = \int p(\theta,\psi,Y_{\mbox{mis}}|Y_{\mbox{obs}}) dY_{\mbox{mis}} .\]
+}
+
+\frame{\frametitle{Partially missing in MCMC}
+How to simulate $p(Y_{\mbox{mis}}|Y_{\mbox{obs}},\theta,\psi)$?
+
+\vspace{0.2in} \pause
+
+First note, 
+\[ p(Y_{\mbox{mis}}|Y_{\mbox{obs}},\theta,\psi) = \prod_{t=1}^T p(Y_{\mbox{mis},t}|Y_{\mbox{obs},t},\theta_t,\psi).\]
+
+\vspace{0.2in} \pause
+
+Second note,
+\[ \left( \begin{array}{c} Y_{\mbox{mis},t} \\ Y_{\mbox{obs},t}\end{array} \right) \pause \sim N\left(\pause \left[\begin{array}{c} F\theta_{\mbox{mis},t} \\ F\theta_{\mbox{obs},t} \end{array} \right] ,\left[ \begin{array}{cc}V_{\mbox{mis}} & V_{\mbox{m,o}} \\ V_{\mbox{o,m}} & V_{\mbox{obs}}\end{array}\right]
+\right). \]
+}
+
+\section{Forecasting}
+\frame{\frametitle{Goal}
+With \alert{all fixed parameters known}: \pause
+\[ \begin{array}{rl}
+p(y_{t+k},\theta_{t+k}|y_{1:t}) \pause &= \int p(y_{t+k},\theta_{t+k},\theta_{t+(k-1)}|y_{1:t}) d\theta_{t+(k-1)} \\ \pause
+&= \int p(y_{t+k},\theta_{t+k}|\theta_{t+(k-1)})p(\theta_{t+(k-1)}|y_{1:t}) d\theta_{t+(k-1)}
+\end{array} \] \pause
+To get $p(y_{t+k},\theta_{t+k}|\theta_t)$ just use the Kalman filter with missing data from $y_{t+1}$ up to $y_{t+(k-1)}$.
+\vspace{0.2in} \pause
+
+With \alert{unknown fixed parameters}: \pause
+\[ \begin{array}{rl}
+\multicolumn{2}{l}{p(y_{t+k},\theta_{t+k}|y_{1:t}) \pause =} \\
+ &=\int p(y_{t+k},\theta_{t+k}|\theta_{t+(k-1)},\psi) p(\theta_{t+(k-1)},\psi|y_{1:t}) d\theta_{t+(k-1)} d\psi.
+ \end{array} \] \pause
+Now we can't just use the Kalman filter due to the unknown fixed parameters. Instead, we need to integrate over their posteriors.
+}
+
+\subsection{Integrating over Kalman filters}
+\frame{\frametitle{MCMC Forecasting}
+After completing the MCMC, follow this procedure
+\begin{itemize}[<+->]
+\item For each iteration $j=1,2,\ldots,J$ in the MCMC chain post burn-in:
+ \begin{itemize}
+ \item Run a Kalman filter (\texttt{dlmFilter}) on your data using $\psi^{(j)}$ to obtain $p(\theta_t|y_{1:t},\psi^{(j)})=N(m_t^{(j)}, C_t^{(j)})$.
+ \item Forecast ahead (\texttt{dlmForecast}) to obtain $p(y_{t+k}|y_{1:t},\psi^{(j)}) = N(f_t(k)^{(j)}, Q_t(k)^{(j)})$ (see section 2.8 in Petris)
+ \item Calculate mean and 95\% intervals for $p(y_{t+k}|y_{1:t},\psi^{(j)})$, i.e. $f_t(k)^{(j)}\, (f_t(k)^{(j)}-1.96\sqrt{Q_t(k)^{(j)}}, f_t(k)^{(j)}+1.96\sqrt{Q_t(k)^{(j)})}$ if $Q$ is scalar, otherwise do this component-wise.
+ \end{itemize}
+\end{itemize}
+
+\vspace{0.2in} \pause
+
+This provides a set of means and 95\% intervals, one for each MCMC iteration $j$.
+}
+
+\frame{\frametitle{MCMC Forecasting}
+To find the marginal mean and 95\% interval, average these means and 95\% intervals for all $j$, i.e.
+\begin{eqnarray*}
+E[y_{t+k}|y_{1:t}] &\approx& \frac{1}{J} \sum_{j=1}^J f_t(k)^{(j)} \\
+Q_{2.5\%}[y_{t+k}|y_{1:t}] &\approx& \frac{1}{J} \sum_{j=1}^J f_t(k)^{(j)}-1.96\sqrt{Q_t(k)^{(j)}} \\
+Q_{97.5\%}[y_{t+k}|y_{1:t}] &\approx& \frac{1}{J} \sum_{j=1}^J f_t(k)^{(j)}+1.96\sqrt{Q_t(k)^{(j)}} \\
+\end{eqnarray*}
+
+\vspace{0.2in}
+
+If you have many MCMC iterations, you can use fewer iterations for this forecast by thinning the chain.
+}
+
+
+
+
+\end{document}
+
