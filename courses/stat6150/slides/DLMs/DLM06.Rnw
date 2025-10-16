@@ -143,7 +143,7 @@ What are the unknown parameters? \pause
 
 \section{Maximum likelihood estimation}
 \subsection{General MLE approach}
-\frame{\frametitle{}
+\frame{\frametitle{Maximum likelihood estimation}
 For a parameter vector $\psi$ and data vector $y$, the likelihood function \pause
 \[ L(\psi) \propto p(y|\psi).\]
 
@@ -174,19 +174,20 @@ p(\theta_0) &\pause=& N_p(m_0,C_0) \\ \pause
 p(\theta_t|y_{1:t-1},\psi) &\pause = & N(a_t, R_t) \\ \pause
 p(y_t|y_{1:t-1},\psi) &\pause = & N(f_t, Q_t) \\ \pause
 \\
-p(y|\psi) &\pause = & \prod_{t=1}^n p(y_t|y_{1:t-1},\psi)
+p(y|\psi) =\pause p(y_{1:T}|\psi) 
+&\pause = & \prod_{t=1}^T p(y_t|y_{1:t-1},\psi)
 \end{eqnarray*}
 }
 
 \subsection{MLEs in DLMs}
 \frame{\frametitle{Finding MLEs for DLMs}
 If $y_t$ is multivariate, the likelihood function is \pause
-\[ L(\psi) \propto \prod_{t=1}^n \frac{1}{(2\pi)^{k/2} |Q_t|^{1/2}} \exp\left( -\frac{1}{2} (y_t-f_t)^\top Q_t^{-1}(y_t-f_t)\right).\]
+\[ L(\psi) \propto \prod_{t=1}^T \frac{1}{(2\pi)^{k/2} |Q_t|^{1/2}} \exp\left( -\frac{1}{2} (y_t-f_t)^\top Q_t^{-1}(y_t-f_t)\right).\]
 
 \vspace{0.2in} \pause
 
 Log-likelihood function \pause
-\[ \ell(\psi) = C + -\frac{1}{2}\sum_{t=1}^n \log |Q_t|-\frac{1}{2}\sum_{t=1}^n (y_t-f_t)^\top Q_t^{-1}(y_t-f_t).\]
+\[ \ell(\psi) = C + -\frac{1}{2}\sum_{t=1}^T \log |Q_t|-\frac{1}{2}\sum_{t=1}^T (y_t-f_t)^\top Q_t^{-1}(y_t-f_t).\]
 
 \vspace{0.2in} \pause
 
@@ -244,18 +245,18 @@ Conjugate Bayesian inference is one where if
 \vspace{0.2in} \pause
 
 Remember the examples
-\begin{itemize}
-\item $y \sim N(\mu,I), \mu \sim N(\cdot, \cdot) \implies \mu|y \sim N(\cdot, \cdot)$
-\item $y \sim N(0,\phi^{-1}I), \phi \sim Ga(\cdot, \cdot) \implies \phi|y \sim Ga(\cdot, \cdot)$
-\item $y \sim N(\mu,\phi^{-1}I), \mu,\phi \sim NG(\cdot) \implies \mu, \phi|y \sim NG(\cdot)$
-\item $y \sim N(X\beta,\phi^{-1}I), \beta,\phi \sim NG(\cdot) \implies \beta, \phi|y \sim NG(\cdot)$
-\item $y \sim Bin(n,p), p\sim Be(\cdot,\cdot) \implies p|y \sim Be(\cdot,\cdot)$
-\end{itemize}
+\[ \begin{array}{ll}
+y \sim N(\mu,I), \mu \sim N(\cdot, \cdot) &\implies \mu|y \sim N(\cdot, \cdot) \\
+y \sim N(0,\phi^{-1}I), \phi \sim Ga(\cdot, \cdot) &\implies \phi|y \sim Ga(\cdot, \cdot) \\
+y \sim N(\mu,\phi^{-1}I), \mu,\phi \sim NG(\cdot) &\implies \mu, \phi|y \sim NG(\cdot) \\
+y \sim N(X\beta,\phi^{-1}I), \beta,\phi \sim NG(\cdot) &\implies \beta, \phi|y \sim NG(\cdot) \\
+y \sim Bin(n,p), p\sim Be(\cdot,\cdot) &\implies p|y \sim Be(\cdot,\cdot)
+\end{array} \]
 }
 
 \subsection{Conjugate Bayesian inference in DLMs}
 \frame{\frametitle{What are the unknowns in DLMs?}
-So for $\psi = (F_{1:n}, G_{1:n}, W_{1:n}, V_{1:n})$, we are looking for
+So for $\psi = (F_{1:T}, G_{1:T}, W_{1:T}, V_{1:T})$, we are looking for
 \[ \psi \sim f(\alpha) \implies \psi|y \sim f(\alpha'). \]
 
 \vspace{0.2in} \pause
@@ -273,7 +274,7 @@ This only happens in simple examples. Today, we will discuss
 \[ \begin{array}{rl@{\qquad}ll}
 Y_t &= F_t\theta_t + v_t &v_t&\ind N_m(0,\phi^{-1}\tilde{V}_t) \\
 \theta_t &= G_t\theta_{t-1}+w_t & w_t&\ind N_p(0,\phi^{-1}\tilde{W}_t) \\
-&&\theta_0 &\sim N_p(m_0,\phi^{-1}\tilde{C}_0) \\
+&&\theta_0 &\sim N_p(m_0,\phi^{-1}\tilde{C}_0) \\ \\
 \phi &\sim  Ga(\alpha_0, \beta_0)
 \end{array} \]
 
@@ -1505,8 +1506,8 @@ The posterior for $f(\psi)$ is available using the MCMC simulations by plugging 
 
 For example,
 \begin{itemize}
-\item $f(\theta_{0:T},V,W) = \sqrt(V)$
-\item $f(\theta_{0:T},V,W) = \sqrt(W)$
+\item $f(\theta_{0:T},V,W) = \sqrt{V}$
+\item $f(\theta_{0:T},V,W) = \sqrt{W}$
 \item $f(\theta_{0:T},V,W) = W/V$ (signal-to-noise ratio)
 \item $f(\theta_{0:T},V,W) = P(W/V<1)$
 \end{itemize}
@@ -1576,7 +1577,7 @@ What are the full conditionals for $\sigma^2, \sigma_{\mu}^2,$ and $\sigma_{\bet
 \item $p(\sigma_\mu^2|\ldots) \pause = IG\left(a_{\sigma_\mu^2} + T/2, b_{\sigma_\mu^2}+\frac{1}{2} \sum_{t=1}^T w_{t,1}^2\right)$ \pause
 \item $p(\sigma_\beta^2|\ldots) \pause = IG\left(a_{\sigma_\beta^2} + T/2, b_{\sigma_\beta^2}+\frac{1}{2} \sum_{t=1}^T w_{t,2}^2\right)$ \pause
 \end{itemize}
-and importantly, they are independent!
+and importantly, they are conditionally independent!
 }
 \subsection{General models}
 \frame{\frametitle{More generally}
