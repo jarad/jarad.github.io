@@ -60,10 +60,10 @@ set.seed(2)
 \frame{\frametitle{Structure}
  \[ \begin{array}{rl@{\qquad}rl@{\qquad}l}
 \multicolumn{2}{l}{\mbox{Observation equation:}} \\
- \uncover<2->{Y_t &= f_t(\theta_t,v_t)} & \uncover<4->{Y_t &\sim p_t(y_t|\theta_t,\dots)} \\ 
+ \uncover<2->{Y_t &= f_t(\theta_t,v_t)} & \uncover<4->{Y_t|\theta_t &\ind p_t(y_t|\theta_t,\dots)} \\ 
  \\
 \multicolumn{2}{l}{\mbox{State transition (evolution) equation:}} \\
- \uncover<3->{\theta_t &= g_t(\theta_{t-1},w_t)} & \uncover<5->{\theta_t &\sim p_t(\theta_t| \theta_{t-1},\ldots)}
+ \uncover<3->{\theta_t &= g_t(\theta_{t-1},w_t)} & \uncover<5->{\theta_t|\theta_{t-1} &\ind p_t(\theta_t| \theta_{t-1},\ldots)}
  \end{array} \]
  
  \vspace{0.1in}
@@ -89,7 +89,7 @@ set.seed(2)
 
 
 \subsection{Examples}
-\frame{\frametitle{Stochastic volatility}
+\frame{\frametitle{Stochastic volatility model}
 \setkeys{Gin}{width=0.5\textwidth}
 
 \begin{eqnarray*}
@@ -171,7 +171,7 @@ e.g.
 \end{itemize}
 to indicate that the form of the distribution/density has changed. 
 \pause
-But, most in most models the form stays the same and only the state changes with
+But, in most models the form stays the same and only the state changes with
 time.
 
 \vspace{0.1in} \pause
@@ -253,9 +253,10 @@ Recursively, given $p(\theta_{t+(k-1)}|y_{1:t})$ \pause
  \begin{eqnarray*}
  p(\theta_{t+k}|y_{1:t}) \pause &=& \int p(\theta_{t+k},\theta_{t+(k-1)}|y_{1:t})\, d\theta_{t+(k-1)} \\ \pause
  &=& \int p(\theta_{t+k}|\theta_{t+(k-1)},y_{1:t})p(\theta_{t+(k-1)}|y_{1:t}) d\theta_{t+(k-1)} \\ \pause
- &=& \int p(\theta_{t+k}|\theta_{t+(k-1)})p(\theta_{t+(k-1)}|y_{1:t}) d\theta_{t+(k-1)}
+ &=& \int p(\theta_{t+k}|\theta_{t+(k-1)})p(\theta_{t+(k-1)}|y_{1:t}) d\theta_{t+(k-1)}  \\ \\ \pause
+p(y_{t+k}|y_{1:t}) \pause &=& \int p(y_{t+k}|\theta_{t+k})p(\theta_{t+k}|y_{1:t}) p\theta_{t+k} \\
  \end{eqnarray*}
- }
+}
 }
 
 \frame{\frametitle{Filtering in a Markov switching model}
@@ -323,7 +324,7 @@ Assume $\pi_0^0$ is given.
 \pause
 
 \begin{itemize}
-\item What is forecast distribution at time $t$ given only $\pi_0^0$,
+\item What is forecast distribution at time $t$ given only $\pi_0^0 = \pi_0$,
 \pause
 i.e. $\pi_t^0$?
 \pause
@@ -338,11 +339,11 @@ Alternatively, we have
 \]
 \pause
 \item What is the filtered distribution at time $t$,
-i.e. $\pi_{t,i}^{t}$?
+i.e. what are the $\pi_{t,s}^{t}$ for all states $s$?
 \pause
 Find this recursively via
 \[
-\pi_{t,i}^{t} \propto p(y_t|\theta_{t} = i) \pi_{t-1}^{t-1} \cdot P_{\cdot,i}
+\pi_{t,s}^{t} \propto p(y_t|\theta_{t} = s) \pi_{t-1}^{t-1} \cdot P_{\cdot,s}
 \]
 % \pause
 % \item What is the smoothed distribution at time $t$,
@@ -405,13 +406,13 @@ An algorithm to obtain a joint sample for $\theta$ is
 \item Sample $\theta_T \sim p(\theta_T|y_{1:T})$ 
 \pause 
 which is a discrete distribution with 
-$P(\theta_T = i|y_{1:T}) = \pi_{T,i}^T$. 
+$P(\theta_T = s|y_{1:T}) = \pi_{T,s}^T$. 
 \item For $t=T,\ldots,1$, sample $\theta_{t-1}$ from a discrete distribution 
 with 
 \[
-P(\theta_{t-1} = i|\theta_t,y_{1:t-1}) 
-\propto P_{i,\theta_t} \pi_{T-1,i}^{T-1}
-= \frac{P_{i,\theta_t} \pi_{T-1,i}^{T-1}}{\sum_{i'=1}^S P_{i',\theta_t} \pi_{T-1,i'}^{T-1}}.
+P(\theta_{t-1} = s|\theta_t,y_{1:t-1}) 
+\propto P_{s,\theta_t} \pi_{T-1,s}^{T-1}
+= \frac{P_{s,\theta_t} \pi_{T-1,s}^{T-1}}{\sum_{s'=1}^S P_{s',\theta_t} \pi_{T-1,s'}^{T-1}}.
 \]
 \end{enumerate}
 \end{frame}
@@ -436,7 +437,7 @@ Since this is a row stochastic matrix $\Psi$,
 \pause
 we have 
 \[ 
-\sum_{j=1}^S \Psi_{ij} = 1 \quad \forall\, i.
+\sum_{s'=1}^S \Psi_{ss'} = 1 \quad \forall\, s.
 \]
 So what priors are reasonable for $\Psi$?
 
@@ -451,11 +452,11 @@ So what priors are reasonable for $\Psi$?
 
 One option is a set of independent Dirichlet distributions for each row,
 \pause
-i.e. let $\Psi_{i\cdot}$ be the $i$th row of $\Psi$, then
+i.e. let $\Psi_{s\cdot}$ be the $i$th row of $\Psi$, then
 \[ 
-\Psi_{i\cdot} \sim Dir(A_i)
+\Psi_{s\cdot} \sim Dir(A_s)
 \]
-where $A_i$ is a vector of length $S$ and $A$ is the matrix with rows $A_i$.
+where $A_s$ is a vector of length $S$ and $A$ is the matrix with rows $A_s$.
 
 \vspace{0.1in} \pause
 
@@ -471,23 +472,23 @@ Do we want more structure here?
 \begin{frame}
 \frametitle{Dirichlet distribution}
 
-The Dirichlet distribution (named after Peter Gustav Lejeune Dirichlet), i.e. $P\sim Dir(a)$, is a probability distribution for a probability vector of length $H$. \pause The probability density function for the Dirichlet distribution is 
+The Dirichlet distribution (named after Peter Gustav Lejeune Dirichlet), i.e. $P\sim Dir(a)$, is a probability distribution for a probability vector of length $S$. \pause The probability density function for the Dirichlet distribution is 
 \[
-p(P;a) = \frac{\mG(a_1+\cdots+a_H)}{\mG(a_1)\cdots \mG(a_H)} \prod_{h=1}^H p_h^{a_h-1}
+p(P;a) = \frac{\mG(a_1+\cdots+a_S)}{\mG(a_1)\cdots \mG(a_S)} \prod_{s=1}^S p_h^{a_s-1}
 \]
-where $p_h\ge 0$, $\sum_{h=1}^H p_h=1$, and $a_h>0$. 
+where $p_s\ge 0$, $\sum_{s=1}^S p_s=1$, and $a_s>0$. 
 
 \vspace{0.2in} \pause
 
-Letting $a_0 = \sum_{h=1}^H a_h$, then some moments are
+Letting $a_0 = \sum_{s=1}^S a_s$, then some moments are
 \begin{itemize}[<+->]
-\item $E[p_h] = \frac{a_h}{a_0}$,
-\item $V[p_h] = \frac{a_h(a_0-a_h)}{a_0^2(a_0+1)}$,
-\item $Cov(p_h,p_k) = -\frac{a_ha_k}{a_0^2(a_0+1)}$, and 
-\item $\mbox{mode}(p_h) = \frac{a_h-1}{a_0-H}$ for $a_h>1$.
+\item $E[p_s] = \frac{a_s}{a_0}$,
+\item $V[p_s] = \frac{a_s(a_0-a_s)}{a_0^2(a_0+1)}$,
+\item $Cov(p_s,p_{s'}) = -\frac{a_sa_{s'}}{a_0^2(a_0+1)}$, and 
+\item $\mbox{mode}(p_s) = \frac{a_s-1}{a_0-S}$ for $a_s>1$.
 \end{itemize}
 
-A special case is $H=2$ which is the beta distribution.
+A special case is $S=2$ which is the beta distribution.
 
 \end{frame}
 
@@ -523,23 +524,23 @@ The resulting posterior is proper if $y_h>0$ for all $h$.
 \begin{frame}
 \frametitle{Dirichlet priors for Markov models}
 
-Let $A$ be the hyperparameter with rows $A_i$ such that 
+Let $A$ be the hyperparameter with rows $A_s$ such that 
 \[ 
-\Psi_i \stackrel{ind}{\sim} Dir(A_i)
+\Psi_i \stackrel{ind}{\sim} Dir(A_s)
 \]
 \pause
 and
 $C$ be the count matrix of observed transitions, 
 \pause
-i.e. $C_i$ is the count vector of transitions from $i$ to all states and 
-$C_{ij}$ is the count of transitions from $i$ to $j$. 
+i.e. $C_s$ is the count vector of transitions from $s$ to all states and 
+$C_{ss'}$ is the count of transitions from $s$ to $s'$. 
 
 \vspace{0.1in} \pause
 
 The posterior distribution $p(\Psi|y_t)$ is fully conjugate with $A'=A+C$ such 
 that 
 \[ 
-\Psi_i|y \stackrel{ind}{\sim} Dir(A_i') \stackrel{d}{=} Dir(A_i+C_i)
+\Psi_s|y \stackrel{ind}{\sim} Dir(A_s') \stackrel{d}{=} Dir(A_s+C_s)
 \]
 \pause
 where $A'_i$ is the $i$th row of $A'$.
@@ -558,13 +559,13 @@ How can we perform posterior inference?
 \vspace{0.1in} \pause
 
 
-If we assume $\Psi_i \ind Dir(A)$, 
+If we assume $\Psi_s \ind Dir(A)$, 
 \pause
 then a Gibbs sampling approach is
 \begin{enumerate}
 \item Sample $\theta_{1:t}|\Psi,y \sim \prod_{t=1}^T p(\theta_{t-1}|\theta_t,y_{1:t},\Psi)$.
-\item For $i=1,\ldots,S$, sample $\Psi_i|\theta,y \ind Dir(A_i+C_i)$ where 
-$C_i$ is the count vector of transitions from $i$ to all states.
+\item For $s=1,\ldots,S$, sample $\Psi_s|\theta,y \ind Dir(A_s+C_s)$ where 
+$C_s$ is the count vector of transitions from $s$ to all states.
 \end{enumerate}
 
 \end{frame}

@@ -24,11 +24,7 @@ options(width=100)
 @
 
 <<libraries, message=FALSE, warning=FALSE>>=
-library("ggplot2")
-library(plyr)
-library("dplyr")
-library(reshape2)
-library("dlm")
+library("tidyverse"); theme_set(theme_bw())
 @
 
 <<set_seed, echo=FALSE>>=
@@ -130,7 +126,7 @@ A univariate capital asset pricing model (CAPM) assumes that
 \begin{frame}
 <<>>=
 # see page 123 in Petris, et. al.
-capm <- structure(list(MOBIL = c(-0.046, -0.017, 0.049, 0.077, -0.011, 
+stock_returns <- structure(list(MOBIL = c(-0.046, -0.017, 0.049, 0.077, -0.011, 
 -0.043, 0.028, 0.056, 0.064, -0.069, 0.037, 0.041, 0.061, -0.002, 
 0.029, 0.079, -0.086, 0.088, 0.018, 0.111, 0.18, -0.031, 0.051, 
 0.063, 0.075, 0.366, -0.176, 0.119, 0.003, -0.024, 0.054, -0.059, 
@@ -240,17 +236,29 @@ capm <- structure(list(MOBIL = c(-0.046, -0.017, 0.049, 0.077, -0.011,
 "1986.02", "1986.03", "1986.04", "1986.05", "1986.06", "1986.07", 
 "1986.08", "1986.09", "1986.10", "1986.11", "1986.12", "1987.01", 
 "1987.02", "1987.03", "1987.04", "1987.05", "1987.06", "1987.07", 
-"1987.08", "1987.09", "1987.10", "1987.11", "1987.12")) %>%
+"1987.08", "1987.09", "1987.10", "1987.11", "1987.12")) |>
   
   mutate(date = seq(from = as.Date("1978/1/1"), 
                     by = "month", 
                     length.out = n()))
 
-ggplot(capm %>% tidyr::gather(stock, value, -date),
-       aes(date, value, group=stock)) + 
+stock_returns_long <- stock_returns |>
+  tidyr::pivot_longer(-date,
+                      names_to  = "stock",
+                      values_to = "return") |>
+  mutate(
+    stock = factor(stock, 
+                   levels = c("CITCRP","IBM","MOBIL",
+                              "WEYER","MARKET","RKFREE"))
+  )
+
+ggplot(stock_returns_long,
+       aes(date, return)) + 
   geom_line() + 
-  facet_wrap(~stock) +
-  theme_bw()
+  facet_wrap(~ stock, dir = "v") +
+  labs(
+    y = 'Monthly Returns'
+  )
 @
 \end{frame}
 
@@ -274,8 +282,12 @@ ggplot(capm %>% tidyr::gather(stock, value, -date),
 % @
 % \end{frame}
 
-\frame[containsverbatim]{\frametitle{Static regression of IBM returns}
- 
+\begin{frame}[fragile]
+\frametitle{Static regression of IBM returns}
+<<>>=
+outLM <- lm(IBM - RKFREE ~ I(MARKET - RKFREE), data = stock_returns)
+summary(outLM)
+@
 \begin{verbatim}
 > outLM <- lm(IBM ~ x)
 > outLM$coef
