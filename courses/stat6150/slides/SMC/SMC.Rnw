@@ -5,7 +5,7 @@
 
 \usepackage{animate}
 
-\graphicspath{{figs/}}
+\graphicspath{{figs/}{figures/}{../StateSpaceModels/figures/}}
 
 \title{Sequential Monte Carlo}
 
@@ -20,15 +20,15 @@ opts_chunk$set(fig.width=7,
                out.width='.8\\linewidth', 
                fig.align='center', 
                size='tiny',
+               cache=TRUE,
                echo=FALSE)
 options(width=100)
 @
 
 <<libraries, echo=FALSE, message=FALSE, warning=FALSE>>=
-library("ggplot2")
-library(plyr)
-library(dplyr)
-library(reshape2)
+library("tidyverse"); theme_set(theme_bw())
+library("dlm")
+library("modi")
 @
 
 <<set_seed, echo=FALSE>>=
@@ -86,7 +86,7 @@ set.seed(2)
 
     \vspace{0.2in} \pause
 
-    Suppose $p(\theta_t,\psi|y_{1:t-1})$ is our current knowledge about the state of the world. \pause We observe datum $y_t$ then
+    Suppose $p(\theta_t,\psi|y_{1:t-1})$ is our current knowledge about the state of the world. \pause We observe $y_t$ then
     \[ p(\theta_t,\psi|y_{1:t}) = \frac{p(y_t|\theta_t,\psi)p(\theta_t,\psi|y_{1:t-1})}{p(y_t|y_{1:t-1})}.\]
     where $y_{1:t} = (y_1,y_2,\ldots,y_t)$.
 }
@@ -121,22 +121,9 @@ set.seed(2)
 \subsection{Graphical representation}
 \frame{
 \frametitle{Graphical representation}
-    \setkeys{Gin}{width=\textwidth}
-
-    \vspace{-1in}
-
-    \begin{center}
-    \multiinclude[<+>][format=pdf]{stateSpaceModel}
-    %\only<1-| handout:0>{\multiinclude[<+>][format=pdf]{stateSpaceModel}}
-%    \only<beamer:0| handout:1>{\includegraphics{stateSpaceModel-0}}
-    \end{center}
-
-    \vspace{-1.5in}
-
-    \begin{itemize}
-    \item<2-> $p(\theta_t|\theta_{t-1},\psi)$
-    \item<3-> $p(y_t|\theta_{t},\psi)$
-    \end{itemize}
+\begin{center}
+\includegraphics{stateSpaceModel}
+\end{center}
 }
 
 \subsection{Interpretation}
@@ -166,11 +153,11 @@ n = 1000
 rho = .98
 log_sigma = rep(0,n)
 for (i in 2:n) log_sigma[i] = rho*log_sigma[i-1] + rnorm(1,0,.1)
-d = data.frame(time = 1:n, 
-               observation = rnorm(n, 0, exp(log_sigma)-.1), 
+d = data.frame(time = 1:n,
+               observation = rnorm(n, 0, exp(log_sigma)-.1),
                volatility = exp(log_sigma))
-ggplot(melt(d, id.var='time'), aes(time,value,group=1)) + 
-  geom_line() + 
+ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
+  geom_line() +
   facet_grid(variable~.) +
   theme_bw()
 @
@@ -185,10 +172,10 @@ p = .99
 theta = rep(0,n)
 for (i in 2:n) theta[i] = ifelse(rbinom(1,1,p), theta[i-1], 1-theta[i-1])
 d = data.frame(time = 1:n,
-           observation = rnorm(n,theta,.5), 
+           observation = rnorm(n,theta,.5),
            state = theta)
-ggplot(melt(d, id.var='time'), aes(time,value,group=1)) + 
-  geom_line() + 
+ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
+  geom_line() +
   facet_grid(variable~.) +
   theme_bw()
 @
@@ -216,24 +203,24 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
     }
 }
 
-\frame{
-    \setkeys{Gin}{width=\textwidth}
-
-    \vspace{-1in}
-
-    \begin{center}
-    \only<1-| handout:0>{\multiinclude[<+>][format=pdf]{ssm}}
-    \only<beamer:0| handout:1>{\includegraphics{ssm-0}}
-    \end{center}
-
-    \vspace{-1.5in}
-
-    \begin{itemize}
-    \item<2-> Filtering
-    \item<3-> Smoothing
-    \item<4-> Forecasting
-    \end{itemize}
-}
+% \frame{
+%     \setkeys{Gin}{width=\textwidth}
+% 
+%     \vspace{-1in}
+% 
+%     \begin{center}
+%     \only<1-| handout:0>{\multiinclude[<+>][format=pdf]{ssm}}
+%     \only<beamer:0| handout:1>{\includegraphics{ssm-0}}
+%     \end{center}
+% 
+%     \vspace{-1.5in}
+% 
+%     \begin{itemize}
+%     \item<2-> Filtering
+%     \item<3-> Smoothing
+%     \item<4-> Forecasting
+%     \end{itemize}
+% }
 
 \subsection{Filtering}
 \frame{\frametitle{Filtering}
@@ -369,7 +356,7 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
 }
 
 \frame{
-    There are two important state-space models when the filtering updating is availably analytically: \pause
+    There are two important state-space models when the filtering updating is available analytically: \pause
     \begin{itemize}
     \item Hidden Markov models
     \item Dynamic linear models
@@ -477,13 +464,13 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
     }
 }
 
-\frame{
-    \setkeys{Gin}{width=0.7\textwidth}
-    Kalman filter updating
-    \begin{center}
-    \multiinclude[format=pdf]{kf}
-    \end{center}
-}
+% \frame{
+%     \setkeys{Gin}{width=0.7\textwidth}
+%     Kalman filter updating
+%     \begin{center}
+%     \multiinclude[format=pdf]{kf}
+%     \end{center}
+% }
 
 \frame{
     Dynamic linear models are a rich class of models:
@@ -539,9 +526,12 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
     \setkeys{Gin}{width=0.9\textwidth}
     Suppose we want to approximate some density $f(\theta)$, e.g. $p(\theta_t|y_{1:t})$. \pause Draw samples from $f(\theta)$. \pause
 
-    \begin{center}
-    \includegraphics{mc}
-    \end{center}
+<<monte-carlo-sampling>>=
+ggplot(data.frame(x = rnorm(10000)), aes(x = x)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 binwidth = 0.25) +
+  stat_function(fun = dnorm, color = "red")
+@
 }
 
 \frame{
@@ -553,7 +543,7 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
     \column{0.5\textwidth}
     \begin{tabular}{ll}
     \hline
-    \# Samples & $P(Z>1)$ \\
+    \# Sample size & $P(Z>1)$ \\
     \hline
     10 & 0.10 \\
     100 & 0.15 \\
@@ -563,19 +553,25 @@ ggplot(melt(d, id.var='time'), aes(time,value,group=1)) +
     \hline
     \end{tabular}
     \column{0.5\textwidth}
-    \includegraphics{mc-tail}
+<<monte-carlo-tail>>=
+ggplot(data.frame(x = rnorm(10000)), aes(x = x)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 binwidth = 0.25) +
+  stat_function(fun = dnorm, color = "red") +
+  geom_vline(xintercept = 1)
+@
     \end{columns}
 }
 
 \subsection{MCMC}
 \frame{
-\frametitle{Sequential MCMC}
+\frametitle{MCMC}
     Suppose we want to sample from
     \[ p(\theta_{\alt<5-6>{\alert{t+1}}{t}}|y_{1:\alt<5-6>{\alert{t+1}}{t}}) \pause = \int p(\theta_{0:\alt<5-6>{\alert{t+1}}{t}}|y_{1:\alt<5-6>{\alert{t+1}}{t}}) d\theta_{0:\alt<5-6>{\alert{t}}{t-1}} .\]
 
     \vspace{0.1in} \pause
 
-An MCMC approach says to iterate through draws of full conditionals, e.g.
+A (univariate) Gibbs sampler iterates through draws of full conditionals, e.g.
     \[ \theta_{s} \sim p(\theta_{s}|y_{1:t},\theta_{-s})\pause =p(\theta_s|y_s,\theta_{s-1},\theta_{s+1}) \]
     where $\theta_{-s}$ indicates $\theta_{0:t}$ with the $s$ component removed and $s=0,1,2,\ldots,t$.
 
@@ -609,71 +605,61 @@ d = rbind(data.frame(x=x) %>%
                    proposal = dt(x, 15),
                    ratio = target/proposal))
 
-ggplot(melt(d, id.var=c('x','example'), value.name='density'), 
+ggplot(melt(d, id.var=c('x','example'), value.name='density'),
        aes(x,density,color=variable,linetype=variable,group=variable)) +
-  geom_line() + 
-  facet_wrap(~example) + 
-  ylim(c(0,2)) +
-  theme_bw()
+  geom_line() +
+  facet_wrap(~example) +
+  ylim(c(0,2))
 @
 \end{frame}
 
 \frame{
-    Suppose we are trying to estimate $E[\theta]$ when $\theta\sim t_2$. We draw samples from $\theta_i\sim N(0,0.5^2)$ and give a weight $w_i = \frac{t_2(\theta_i)}{N(\theta_i;0,0.5^2)}$ to each sample.
-    \begin{center}
-    \multiinclude[format=pdf]{is}
-    %\only<1-| handout:0>{\multiinclude[format=pdf]{is}}
-%    \only<beamer:0| handout:1>{\includegraphics{is-0}}
-    \end{center}
+    Suppose we are trying to estimate $E[\theta]$ when $\theta\sim t_2$. We draw samples from $\theta_m\sim N(0,0.5^2)$ and give a weight $w_m = \frac{t_2(\theta_m)}{N(\theta_m;0,0.5^2)}$ to each sample.
+<<importance-sampling-weights>>=
+
+data.frame(theta = rnorm(1e4, mean = 0, sd = 0.5)) |>
+  mutate(weight = dt(theta, df = 2) / dnorm(theta, mean = 0, sd = 0.5)) |>
+
+ggplot(aes(x = theta, y = weight)) + 
+  geom_point()
+@
 }
 
-\frame{
-    \setkeys{Gin}{width=\textwidth}
-    Suppose $Z\sim N(0,1)$ \pause and we are trying to estimate $P(Z>4.5)\pause \approx 3.398\times 10^{-6}$. \pause If $Z_i\sim N(0,1)$, then
-    \[ P(Z>4.5) \approx \frac{1}{J} \sum_{i=1}^J \mathrm{I}(Z_i>4.5)\]
-    is a standard MC approach. \pause If J=100,000 usually the indicator function is all zeros.
-    \phantom{
-    \begin{columns}
-    \column{0.5\textwidth}
-    \begin{tabular}{ll}
-    \hline
-    \# Samples & $P(Z>4.5)[\times 10^{-6}]$ \\
-    \hline
-    10 & 3.53 \\
-    100 & 2.95 \\
-    1000 & 3.32 \\
-    10000 & 3.41 \\
-    100000 & 3.41 \\
-    \hline
-    \end{tabular}
-    \column{0.5\textwidth}
-    % \includegraphics{is-tail}
-    \end{columns}
-    }
-}
+\begin{frame}[fragile]
+    Suppose $Z\sim N(0,1)$ \pause and we are trying to estimate $P(Z>4.5)\pause \approx 3.398\times 10^{-6}$. \pause If $Z_m\ind N(0,1)$, then
+    \[ P(Z>4.5) \approx \frac{1}{J} \sum_{m=1}^M \mathrm{I}(Z_m>4.5)\]
+    is a standard MC approach. \pause
+<<mc-tail-sampling>>=
+d <- data.frame(n = 10^(1:7)) |>
+  mutate(
+    n = tibble::num(n, notation = "dec"),
+    expected = n * (1-pnorm(4.5)))
 
-\frame{
-    \setkeys{Gin}{width=\textwidth}
-    Suppose $Z\sim N(0,1)$ and we are trying to estimate $P(Z>4.5) \approx 3.398\times 10^{-6}$. \pause If $\theta_i\sim Exp(1)+4.5$, then
-    \[ P(Z>4.5) \approx \frac{1}{J} \sum_{i=1}^J \frac{N(\theta_i;0,1)}{Exp(\theta_i-4.5;1)} \mathrm{I}(\theta_i>4.5)\]
+d
+@
+\end{frame}
+
+\begin{frame}[fragile]
+    Suppose $Z\sim N(0,1)$ and we are trying to estimate $P(Z>4.5) \approx 3.398\times 10^{-6}$. \pause If $\theta_m\ind Exp(1)+4.5$, then
+    \[ P(Z>4.5) \approx \frac{1}{M} \sum_{m=1}^M \frac{N(\theta_m;0,1)}{Exp(\theta_m-4.5;1)} \mathrm{I}(\theta_m>4.5)\]
     is an importance sampling approach. \pause
-    \begin{columns}
-    \column{0.5\textwidth}
-    \begin{tabular}{lc}
-    \hline
-    \# Samples & $P(Z>4.5)[\times 10^{-6}]$ \\
-    \hline
-    10 & 3.53 \\
-    100 & 2.95 \\
-    1000 & 3.32 \\
-    10000 & 3.41 \\
-    100000 & 3.41 \\
-    \hline
-    \end{tabular}
-    \column{0.5\textwidth}
-    % \includegraphics{is-tail}
-    \end{columns}
-}
+<<is-tail-probability, fig.height=3>>=
+n <- 1e4
+d <- data.frame(
+  theta = rexp(n) + 4.5
+) |>
+  mutate(
+    weight = dnorm(theta) / dexp(theta - 4.5)
+  )
+
+ggplot(d, aes(x = theta, y = weight)) + 
+  geom_point()
+@
+
+<<is-tail-probability-value,echo=TRUE>>=
+mean(d$weight)
+@
+\end{frame}
 
 \frame{
 \frametitle{Importance sampling summary}
@@ -731,13 +717,13 @@ ggplot(melt(d, id.var=c('x','example'), value.name='density'),
     = \int p(\theta_t|\theta_{t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\ \pause
     \frac{f(\theta_t)}{g(\theta_t)} &\propto & \frac{p(y_t|\theta_t)p(\theta_t|y_{1:t-1})}{p(\theta_t|y_{1:t-1})}  \pause
     =p(y_t|\theta_t) \\ \pause
-    \theta_{t-1}^{(i)} &\sim & p(\theta_{t-1}|y_{1:t-1}) \\ \pause
-    \theta_{t}^{(i)} &\sim & p(\theta_t|\theta_{t-1}^{(i)}) \\ \pause
-    w_t^{(i)} &\propto & p(y_t|\theta_t^{(i)}) \\ \pause
-    p(\theta_t|y_{1:t}) &\approx&  \sum_{i=1}^J w_t^{(i)} \delta_{\theta_t^{(i)}} \pause
+    \theta_{t-1}^{(m)} &\ind & p(\theta_{t-1}|y_{1:t-1}) \\ \pause
+    \theta_{t}^{(m)} &\ind & p(\theta_t|\theta_{t-1}^{(m)}) \\ \pause
+    w_t^{(m)} &\propto & p(y_t|\theta_t^{(m)}) \\ \pause
+    p(\theta_t|y_{1:t}) &\approx&  \sum_{i=1}^J w_t^{(m)} \delta_{\theta_t^{(m)}} \pause
     \end{eqnarray*}
 
-    The pair $\left(w_t^{(i)},\theta_t^{(i)}\right)$ is called a \alert{particle}.
+    The pair $\left(w_t^{(m)},\theta_t^{(m)}\right)$ is called a \alert{particle}.
     }
 }
 
@@ -746,26 +732,127 @@ ggplot(melt(d, id.var=c('x','example'), value.name='density'),
     Sequential importance sampling procedure: \pause
     \begin{enumerate}
     \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
-    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{i=1}^J w_{t-1}^{(i)} \delta_{\theta_{t-1}^{(i)}}.\] \pause
-    \item For $i\in\{1,2,\ldots,J\}$ \pause
+    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M w_{t-1}^{(m)} \delta_{\theta_{t-1}^{(m)}}.\] \pause
+    \item For $m\in\{1,2,\ldots,M\}$ \pause
         \begin{enumerate}
-        \item Sample $\theta_t^{(i)}\sim p(\theta_t|\theta_{t-1}^{(i)})$ \pause
-        \item Set $w_{t}^{(i)} \propto w_{t-1}^{(i)} p(y_t|\theta_t^{(i)})$ \pause
+        \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m)})$ \pause
+        \item Set $w_{t}^{(m)} \propto w_{t-1}^{(m)} p(y_t|\theta_t^{(m)})$ \pause
         \end{enumerate}
     \item We now have a particle approximation to our density at time $t$, i.e.
-    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{i=1}^J w_{t}^{(i)} \delta_{\theta_{t}^{(i)}}.\]
+    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{m=1}^M w_{t}^{(m)} \delta_{\theta_{t}^{(m)}}.\]
     \end{enumerate}
 }
 
 \begin{frame}
 \frametitle{Sequential importance sampling (SIS)}
-    \setkeys{Gin}{width=0.8\textwidth}
-    \begin{center}
-    \multiinclude[format=pdf]{sis}
-    %\only<1-| handout:0>{\multiinclude[format=pdf]{sis}}
-%    \only<beamer:0| handout:1>{\includegraphics{sis-0}}
-    \end{center}
+Consider a local-level model with W = 0.1, V = 1. 
+<<local-level-model-data,echo=TRUE>>=
+T <- 1000; V <- 1; W <- 0.1
+theta0 <- rnorm(1)
+y <- theta <- numeric(T)
+theta[1] <- rnorm(1, theta0,   sd = sqrt(W))
+y[1]     <- rnorm(1, theta[1], sd = sqrt(V))
+
+for (t in 2:T) {
+  theta[t] <- rnorm(1, theta[t-1], sd = sqrt(W))
+  y[t]     <- rnorm(1, theta[t],   sd = sqrt(V))
+}
+
+d <- data.frame(time = 1:T, theta = theta, y = y)
+@
 \end{frame}
+
+\begin{frame}
+\frametitle{Local-level model data}
+<<local-level-model-data-plot,dependson="local-level-model-data">>=
+ggplot(d, 
+       aes(x = time))+ 
+  geom_point(aes(y = y), col= "red") + 
+  geom_line(aes(y = theta)) 
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Sequential importance sampling for local level model}
+<<local-level-model-sis,dependson="local-level-model-data",echo=TRUE>>=
+M <- 1000
+
+particles <- list()
+theta0  <- rnorm(M)
+
+particles[[1]] <- data.frame(time = 1, theta = rnorm(M, theta0, sd = sqrt(W))) |>
+  mutate(weight = 1/M * dnorm(d$y[1], theta, sd = sqrt(V)),
+         weight = weight / sum(weight))
+
+
+for (t in 2:T) {
+  particles[[t]] <- data.frame(
+    time = t,
+    theta = rnorm(M, particles[[t-1]]$theta, sd = sqrt(W))) |>
+    mutate(weight = particles[[t-1]]$weight * dnorm(d$y[t], theta, sd = sqrt(V)),
+           weight = weight / sum(weight))
+}
+
+filtering <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    median = weighted.quantile(theta, w = weight),
+    lcl = weighted.quantile(theta, w = weight, prob = 0.025),
+    ucl = weighted.quantile(theta, w = weight, prob = 0.975)
+  )
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Filtering}
+
+<<local-level-model-filter,dependson="local-level-model-sis">>=
+ggplot(filtering, 
+       aes(x = time)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), , fill="#F1BE48") + 
+  geom_line(data = d, aes(y = theta))
+@
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Filtering}
+
+<<local-level-model-filter2,dependson="local-level-model-sis">>=
+Tend <- 100
+ggplot(filtering |> filter(time < Tend), 
+       aes(x = time)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), fill="#F1BE48") + 
+  geom_line(data = d |> filter(time < Tend), 
+            aes(y = theta))
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{SIS - Max Weights}
+
+<<local-level-model-weights,dependson="local-level-model-sis", fig.height=3,echo=TRUE>>=
+particle_weights <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    max_weight = max(weight)
+  )
+
+ggplot(particle_weights,
+       aes(x = time, y = max_weight)) + 
+  geom_line()
+@
+
+\end{frame}
+
+
+
+
+
+
 
 \frame{
 \frametitle{SIS summary}
@@ -839,15 +926,78 @@ ggplot(melt(d, id.var=c('x','example'), value.name='density'),
     \end{enumerate}
 }
 
-\begin{frame}
-\frametitle{Sequential importance sampling with resampling (SIR)}
-    \setkeys{Gin}{width=0.8\textwidth}
-    \begin{center}
-    %\multiinclude[<+>][format=pdf]{sir}
-    \only<1-| handout:0>{\multiinclude[format=pdf]{sir}}
-    \only<beamer:0| handout:1>{\includegraphics{sir-9}}
-    \end{center}
+
+\begin{frame}[fragile]
+\frametitle{Sequential importance sampling with resampling}
+<<local-level-model-sir,dependson="local-level-model-data",echo=TRUE>>=
+M <- 1000
+
+particles <- list()
+theta0  <- rnorm(M)
+
+particles[[1]] <- data.frame(time = 1, theta = rnorm(M, theta0, sd = sqrt(W))) |>
+  mutate(weight = 1/M * dnorm(d$y[1], theta, sd = sqrt(V)),
+         weight = weight / sum(weight))
+
+
+for (t in 2:T) {
+  particles[[t]] <- data.frame(
+    time = t,
+    
+    # New step
+    theta = sample(particles[[t-1]]$theta, 
+                   prob = particles[[t-1]]$weight, 
+                   replace = TRUE)) |>
+    
+    mutate(theta  = rnorm(M, theta, sd = sqrt(W)),
+           weight = dnorm(d$y[t], theta, sd = sqrt(V)),
+           weight = weight / sum(weight))
+}
+
+filtering <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    sum_weights = sum(weight),
+    median = weighted.quantile(theta, w = weight),
+    lcl    = weighted.quantile(theta, w = weight, prob = 0.025),
+    ucl    = weighted.quantile(theta, w = weight, prob = 0.975)
+  )
+@
 \end{frame}
+
+
+\begin{frame}
+\frametitle{SIR - Filtering}
+
+<<local-level-model-sir-filter,dependson="local-level-model-sir">>=
+ggplot(filtering, 
+       aes(x = time)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), , fill="#F1BE48") + 
+  geom_line(data = d, aes(y = theta))
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{SIR - Max Weights}
+
+<<local-level-model-sir-weights,dependson="local-level-model-sir", fig.height=3,echo=TRUE>>=
+particle_weights <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    max_weight = max(weight)
+  )
+
+ggplot(particle_weights,
+       aes(x = time, y = max_weight)) + 
+  geom_line()
+@
+
+\end{frame}
+
+
+
 
 \subsection{Resampling}
 \frame{\frametitle{}
@@ -879,7 +1029,7 @@ ggplot(melt(d, id.var=c('x','example'), value.name='density'),
 \begin{enumerate}
 \item Draw $U_1,\ldots,U_J \ind  Unif(0,1)$
 \item Invert cumulative sum of weights
-\end{enumerate} 
+\end{enumerate}
 
 \pause
 
@@ -894,7 +1044,7 @@ plot(1:n, b, ylim=c(0,1), xlim=c(0,10), type='n', cex.lab=1.5, cex.axis=1.5,
 segments(1:10,c(0,b[-n]),1:10,b, lwd=2)
 u <- runif(n)
 ind <- numeric(n)
-for (i in 1:n) 
+for (i in 1:n)
   ind[i] <- sum(u[i]>b)+1
 points(rep(0,n), u, col='red', pch=19)
 segments(0, u, ind, u, col='red')
@@ -948,7 +1098,7 @@ segments(0, u, ind, u, col='red')
     \item Draw $U_j \ind  Unif\left(\frac{j-1}{J},\frac{j}{J}\right)$ for $j=1,2,\ldots,J$
     \item Invert cumulative sum of weights
     \end{enumerate} \pause
-    
+
 <<stratified_sampling>>=
 set.seed(1)
 n <- 10
@@ -978,7 +1128,7 @@ segments(0, u, ind, u, col='red')
     \item Draw $U_1 \sim Unif(0,1/J)$
     \item Set $U_j = U_{j-1}+\frac{1}{J}$ for $j=1,2,\ldots,J$
     \item Invert cumulative sum of weights
-    \end{enumerate} 
+    \end{enumerate}
     \vspace{-0.15in} \pause
 <<systematic_resampling, fig.height=4>>=
 set.seed(1)
@@ -989,7 +1139,7 @@ b <- cumsum(a)
 plot(1:n, b, ylim=c(0,1), xlim=c(0,10), type='n', cex.lab=1.5, cex.axis=1.5,
      xlab='Index', ylab='Cumulative sum of weights')
 segments(1:n,c(0,b[-n]),1:n,b, lwd=2)
-u <- runif(1)/n 
+u <- runif(1)/n
 for (i in 2:n) u[i]<-u[i-1]+1/n
 ind <- numeric(n)
 for (i in 1:n) {
@@ -1065,9 +1215,9 @@ s = ddply(rbind.fill(d_list, by=c('time','weights')), .(time), function(x) {
 
 <<dependson='ess', fig.show='animate'>>=
 for (i in 1:max(s$time)) {
-  g = ggplot(subset(s, time<=i), aes(time,ess)) + 
+  g = ggplot(subset(s, time<=i), aes(time,ess)) +
     geom_point() +
-    xlim(0,max(s$time)) + 
+    xlim(0,max(s$time)) +
     ylim(0,max(s$ess)) +
     geom_hline(yintercept=n/2, color='red') +
     labs(y='Effective sample size') +
@@ -1088,53 +1238,182 @@ for (i in 1:max(s$time)) {
     \end{itemize}
 }
 
-\frame{
-    Resample-move procedure:
+\subsection{Resample-move}
+\begin{frame}
+\frametitle{Resample-move}
     \begin{enumerate}
     \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
-    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{i=1}^J \frac{1}{J} \delta_{\theta_{t-1}^{(i)}}.\] \pause
-    \item For $i\in\{1,2,\ldots,J\}$
+    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M \frac{1}{M} \delta_{\theta_{t-1}^{(m)}}.\] \pause
+    \item For $m\in\{1,2,\ldots,M\}$
         \begin{enumerate}
-        \item Sample $j\in\{1,2,\ldots,J\}$ with probability proportional to $\alert<5>{p(y_t|\theta_{t-1}^{(j)})}$ \pause
-        \item Sample $\theta_t^{(i)}\sim p(\theta_t|\theta_{t-1}^{(j)})$ \pause
+        \item Sample $m'\in\{1,2,\ldots,M\}$ with probability proportional to $\alert<5>{p(y_t|\theta_{t-1}^{(m)})}$ \pause
+        \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m')})$ \pause
         \end{enumerate}
     \item We now have a particle approximation to our density at time $t$, i.e.
-    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{i=1}^J \frac{1}{J} \delta_{\theta_{t}^{(i)}}.\]
+    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{m=1}^M \frac{1}{M} \delta_{\theta_{t}^{(m)}}.\]
     \end{enumerate} \pause\pause
 
     \vspace{0.1in}
 
     Evaluating $p(y_t|\theta_{t-1})$ requires solving the integral
     \[ p(y_t|\theta_{t-1}) = \int p(y_t|\theta_t)p(\theta_t|\theta_{t-1})d\theta_t.\]
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Resample-move filter}
+<<local-level-model-rm,dependson="local-level-model-data",echo=TRUE>>=
+M <- 1000
+
+particles <- list()
+theta0  <- rnorm(M)
+
+particles[[1]] <- data.frame(time = 1, 
+                             theta = rnorm(M, theta0, sd = sqrt(W + V))) |>
+  mutate(weight = 1/M)
+
+
+for (t in 2:T) {
+  # Resample
+  indices <- sample(1:M, M, replace = TRUE,
+                    prob = dnorm(d$y[t], 
+                                 particles[[t-1]]$theta, 
+                                 sd = sqrt(W + V)))
+  
+  particles[[t]] <- data.frame(
+    time = t,
+    weight = 1 / M,
+    
+    # Move
+    theta = rnorm(M, particles[[t-1]]$theta[indices])) 
 }
 
-\frame{
-    Auxiliary particle filter (APF) procedure:
-    \begin{enumerate}
-    \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
-    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{i=1}^J w_{t-1}^{(i)}\delta_{\theta_{t-1}^{(i)}}.\] \pause
-    \item For $i\in\{1,2,\ldots,J\}$
-        \begin{enumerate}
-        \item Sample $j\in\{1,2,\ldots,J\}$ with prob. proportional to $w_{t-1}^{(j)}p(y_t|\mu_t^{(j)})$ \pause
-        \item Sample $\theta_t^{(i)}\sim p(\theta_t|\theta_{t-1}^{(j)})$ \pause
-        \item Set $w_t^{(i)} = \frac{p(y_t|\theta_t^{(i)})}{p(y_t|\mu_t^{(j)})}$ \pause
-        \end{enumerate}
-    \item We now have a particle approximation to our density at time $t$, i.e.
-    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{i=1}^J w_{t}^{(i)} \delta_{\theta_{t}^{(i)}}.\]
-    \end{enumerate}
-    \pause
-    where $\mu_t^{(j)}$ is a point estimate of $\theta_t^{(j)}$, usually $\mu_t^{(j)}=E[\theta_t|\theta_{t-1}^{(j)}]$.
-}
+filtering <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    sum_weights = sum(weight),
+    median = weighted.quantile(theta, w = weight),
+    lcl    = weighted.quantile(theta, w = weight, prob = 0.025),
+    ucl    = weighted.quantile(theta, w = weight, prob = 0.975)
+  )
+@
+\end{frame}
+
 
 \begin{frame}
-\frametitle{Auxiliary Particle Filter (APF)}
-    \setkeys{Gin}{width=0.8\textwidth}
-    \begin{center}
-    %\multiinclude[<+>][format=pdf]{apf}
-    \only<1-| handout:0>{\multiinclude[format=pdf]{apf}}
-    \only<beamer:0| handout:1>{\includegraphics{apf-9}}
-    \end{center}
+\frametitle{Resample-move - Filtering}
+
+<<local-level-model-rm-filter,dependson="local-level-model-rm">>=
+ggplot(filtering, 
+       aes(x = time)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), , fill="#F1BE48") + 
+  geom_line(data = d, aes(y = theta))
+@
+
 \end{frame}
+
+
+
+
+
+\subsection{Auxiliary Particle Filter}
+\begin{frame}
+\frametitle{Auxiliary particle filter (APF)}
+    \begin{enumerate}
+    \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
+    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M w_{t-1}^{(m)}\delta_{\theta_{t-1}^{(m)}}.\] \pause
+    \item For $m\in\{1,2,\ldots,M\}$
+        \begin{enumerate}
+        \item Sample $m'\in\{1,2,\ldots,M\}$ with prob. proportional to $w_{t-1}^{(m)}p(y_t|\mu_t^{(m)})$ \pause
+        \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m')})$ \pause
+        \item Set $w_t^{(m)} = \frac{p(y_t|\theta_t^{(m)})}{p(y_t|\mu_t^{(m')})}$ \pause
+        \end{enumerate}
+    \item We now have a particle approximation to our density at time $t$, i.e.
+    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{m=1}^M w_{t}^{(m)} \delta_{\theta_{t}^{(m)}}.\]
+    \end{enumerate}
+    \pause
+    where $\mu_t^{(m)}$ is any point estimate of $\theta_t^{(m)}$, usually $\mu_t^{(m)}=E[\theta_t|\theta_{t-1}^{(m)}]$.
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Auxiliary particle filter}
+<<local-level-model-apf,dependson="local-level-model-data",echo=TRUE>>=
+M <- 1000
+
+particles <- list()
+theta0  <- rnorm(M)
+
+particles[[1]] <- data.frame(time = 1, theta = rnorm(M, theta0, sd = sqrt(W))) |>
+  mutate(weight = 1/M * dnorm(d$y[1], theta, sd = sqrt(V)),
+         weight = weight / sum(weight))
+
+
+for (t in 2:T) {
+  particles[[t]] <- data.frame(
+    time = t,
+  
+    theta = sample(particles[[t-1]]$theta, 
+                   
+                   # Modified step
+                   prob = particles[[t-1]]$weight * dnorm(d$y[t], particles[[t-1]]$theta), 
+                   replace = TRUE)) |>
+    
+    mutate(theta  = rnorm(M, theta, sd = sqrt(W)),
+           weight = dnorm(d$y[t], theta, sd = sqrt(V)) / 
+             dnorm(d$y[t], particles[[t-1]]$theta, sd = sqrt(V)), 
+           weight = weight / sum(weight))
+}
+
+filtering <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    sum_weights = sum(weight),
+    median = weighted.quantile(theta, w = weight),
+    lcl    = weighted.quantile(theta, w = weight, prob = 0.025),
+    ucl    = weighted.quantile(theta, w = weight, prob = 0.975)
+  )
+@
+\end{frame}
+
+
+\begin{frame}
+\frametitle{APF - Filtering}
+
+<<local-level-model-apf-filter,dependson="local-level-model-apf">>=
+ggplot(filtering, 
+       aes(x = time)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), , fill="#F1BE48") + 
+  geom_line(data = d, aes(y = theta))
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{APF - Max Weights}
+
+<<local-level-model-apf-weights,dependson="local-level-model-apf", fig.height=3,echo=TRUE>>=
+particle_weights <- bind_rows(particles) |>
+  group_by(time) |>
+  summarize(
+    max_weight = max(weight)
+  )
+
+ggplot(particle_weights,
+       aes(x = time, y = max_weight)) + 
+  geom_line()
+@
+
+\end{frame}
+
+
+
+
 
 \subsection{Summary}
 \frame{
@@ -1272,20 +1551,20 @@ plot(0,0,type='n',main='',xlab='t',ylab='',xlim=c(0,10),
   if (nParam != 3) { abline(h=0.05,col='red') } else { abline(h=0.95,col='red') }
   points(rep(1,nParticles),x[1,,nParam],pch=19,
            cex=(w[1,])^.5*2)
-} 
+}
 
-ind = 1:nParticles 
+ind = 1:nParticles
 for (i in 2:10) {
   par(mfrow=c(2,2))
   for (nParam in 2:5) {
     plot(0,0,type='n',main='',xlab='t',ylab='',xlim=c(0,10), ylim=range(x[1:10,,nParam]))
     if (nParam != 3) { abline(h=0.05,col='red') } else { abline(h=0.95,col='red') }
-    
+
     for (ii in i:1) {
       points(rep(ii,nParticles), x[ii,,nParam], pch=19, cex=(w[ii,])^.5*2)
       ind = unique(ri[ii,ind])
-    }            
-  }        
+    }
+  }
 }
 @
 \end{frame}
@@ -1464,7 +1743,7 @@ for (i in 2:10) {
 \pause
 
     The marginal likelihood can be decomposed as
-    \[ p(y_{1:T}) = \prod_{t=1}^T p(y_t|y_{1:t-1}) 
+    \[ p(y_{1:T}) = \prod_{t=1}^T p(y_t|y_{1:t-1})
     %= \int \int \left[ \prod_{t=0}^T \int p(y_t|\theta_t,\psi)p(\theta_t|y_{1:t-1},\psi) d\theta_{t} \right] p(\theta_0|\psi) d\theta_0 p(\psi) d\psi .
     \] \pause
     This can be approximated using SMC methods by
@@ -1545,7 +1824,7 @@ for (i in 2:10) {
     \begin{itemize}
     \item R::KFAS
     \item R::dlm
-    \item R::pomp 
+    \item R::pomp
     \item R::SMC (not updated sinced 2011-12-11)
     \item smcUtils (\href{https://github.com/jarad/smcUtils}{GitHub})
     \item LiBbi \url{libbi.org/} (RBi \url{https://github.com/sbfnk/RBi})
