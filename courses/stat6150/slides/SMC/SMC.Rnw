@@ -1734,7 +1734,7 @@ for (i in 2:10) {
 \frametitle{Marginal likelihood calculations}
     {\small
     In Bayesian data analysis, model comparison and hypothesis testing involves the \alert{marginal likelihood}:
-    \[ p(y) = \int p(y|\psi)p(\psi)d\psi.\] \pause
+    \[ p(y) = \int \int p(y|\theta,\psi)p(\theta|\psi)p(\psi)d \theta d\psi.\] \pause
     For example, Bayes' factors depend on the marginal likelihood of for both models:
     \[ BF(0:1) = \frac{p(y|M_0)}{p(y|M_1)} = \frac{\int p(y|\psi_0)p(\psi_0|M_0) d\psi_0}{\int p(y|\psi_1)p(\psi_1|M_1) d\psi_1}.\]
 
@@ -1746,7 +1746,7 @@ for (i in 2:10) {
     \] \pause
     This can be approximated using SMC methods by
     \[ p(y_t|y_{1:t-1}) \approx \frac{1}{M} \sum_{m=1}^M \tilde{w}_t^{(m)}\]
-    where $\tilde{w}_t^{(m)}$ are the \emph{unnormalized} weights.
+    where $\tilde{w}_t^{(m)}$ are the \alert{unnormalized} weights.
     }
 }
 
