@@ -536,8 +536,8 @@ ggplot(data.frame(x = rnorm(10000)), aes(x = x)) +
 
 \frame{
     \setkeys{Gin}{width=\textwidth}
-    Suppose $Z\sim N(0,1)$ \pause and we are trying to estimate $P(Z>1)\pause \approx 0.1586553$. \pause If $Z_i\ind  N(0,1)$, then
-    \[ P(Z>1) \approx \frac{1}{J} \sum_{i=1}^J \mathrm{I}(Z_i>1)\]
+    Suppose $Z\sim N(0,1)$ \pause and we are trying to estimate $P(Z>1)\pause \approx 0.1586553$. \pause If $Z_m\ind  N(0,1)$, then
+    \[ P(Z>1) \approx \frac{1}{M} \sum_{m=1}^M \mathrm{I}(Z_m>1)\]
     is a standard MC approach. \pause
     \begin{columns}
     \column{0.5\textwidth}
@@ -627,7 +627,7 @@ ggplot(aes(x = theta, y = weight)) +
 
 \begin{frame}[fragile]
     Suppose $Z\sim N(0,1)$ \pause and we are trying to estimate $P(Z>4.5)\pause \approx 3.398\times 10^{-6}$. \pause If $Z_m\ind N(0,1)$, then
-    \[ P(Z>4.5) \approx \frac{1}{J} \sum_{m=1}^M \mathrm{I}(Z_m>4.5)\]
+    \[ P(Z>4.5) \approx \frac{1}{M} \sum_{m=1}^M \mathrm{I}(Z_m>4.5)\]
     is a standard MC approach. \pause
 <<mc-tail-sampling>>=
 d <- data.frame(n = 10^(1:7)) |>
@@ -689,12 +689,12 @@ mean(d$weight)
 %    &=& p(y_t|\theta_t) \int p(\theta_t,\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\ \pause
 %    &=& p(y_t|\theta_t) \int p(\theta_t|\theta_{t-1},y_{1:t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\ \pause
 %    &=& p(y_t|\theta_t) \int p(\theta_t|\theta_{t-1})p(\theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\ \pause
-%    &\approx&  p(y_t|\theta_t) \sum_{i=1}^J \delta_{\theta_t^{(i)}} \pause
-%    \approx  \sum_{i=1}^J p(y_t|\theta_t^{(i)}) \delta_{\theta_t^{(i)}}  \pause
-%    \approx  \sum_{i=1}^J w_i \delta_{\theta_t^{(i)}}
+%    &\approx&  p(y_t|\theta_t) \sum_{m=1}^M \delta_{\theta_t^{(m)}} \pause
+%    \approx  \sum_{m=1}^M p(y_t|\theta_t^{(m)}) \delta_{\theta_t^{(m)}}  \pause
+%    \approx  \sum_{m=1}^M w_m \delta_{\theta_t^{(m)}}
 %    \end{eqnarray*}
 %    }
-%    where $\theta_t^{(i)} \sim p(\theta_t|\theta_{t-1}^{(i)})$ and $\theta_{t-1}^{(i)}\sim p(\theta_{t-1}|y_{1:t-1})$.
+%    where $\theta_t^{(m)} \sim p(\theta_t|\theta_{t-1}^{(m)})$ and $\theta_{t-1}^{(m)}\sim p(\theta_{t-1}|y_{1:t-1})$.
 %
 %    \vspace{0.2in} \pause
 %
@@ -720,7 +720,7 @@ mean(d$weight)
     \theta_{t-1}^{(m)} &\ind & p(\theta_{t-1}|y_{1:t-1}) \\ \pause
     \theta_{t}^{(m)} &\ind & p(\theta_t|\theta_{t-1}^{(m)}) \\ \pause
     w_t^{(m)} &\propto & p(y_t|\theta_t^{(m)}) \\ \pause
-    p(\theta_t|y_{1:t}) &\approx&  \sum_{i=1}^J w_t^{(m)} \delta_{\theta_t^{(m)}} \pause
+    p(\theta_t|y_{1:t}) &\approx&  \sum_{m=1}^M w_t^{(m)} \delta_{\theta_t^{(m)}} \pause
     \end{eqnarray*}
 
     The pair $\left(w_t^{(m)},\theta_t^{(m)}\right)$ is called a \alert{particle}.
@@ -883,20 +883,20 @@ ggplot(particle_weights,
     \[ \begin{array}{c}
     p(\theta_{t-1}|y_{1:t-1}) \approx \left\{
     \begin{array}{c|cccr}
-    i & 1 & 2 & \cdots & J \\
+    m & 1 & 2 & \cdots & M \\
     \hline
-    w_{t-1}^{(i)} & 0.02 & 0.05 & \cdots & 0.03 \\
-    \theta_{t-1}^{(i)} & 1.91 & 0.63 & \cdots & -0.12
+    w_{t-1}^{(m)} & 0.02 & 0.05 & \cdots & 0.03 \\
+    \theta_{t-1}^{(m)} & 1.91 & 0.63 & \cdots & -0.12
     \end{array} \right. \\ \pause
     \\
     \Big\Downarrow \\
     \\
     p(\theta_{t-1}|y_{1:t-1}) \approx \left\{
     \begin{array}{c|cccr}
-    i & 1 & 2 & \cdots & J \\
+    i & 1 & 2 & \cdots & M \\
     \hline
-    w_{t-1}^{(i)} & 1/J & 1/J & \cdots & 1/J \\
-    \theta_{t-1}^{(i)} & 0.63 & 0.63 & \cdots & -0.12
+    w_{t-1}^{(m)} & 1/M & 1/M & \cdots & 1/M \\
+    \theta_{t-1}^{(m)} & 0.63 & 0.63 & \cdots & -0.12
     \end{array} \right. \\
 
     \end{array} \]
@@ -914,15 +914,15 @@ ggplot(particle_weights,
     Sequential importance sampling \alt<2>{\alert{with resampling (SIR)}}{} procedure:
     \begin{enumerate}
     \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
-    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{i=1}^J w_{t-1}^{(i)} \delta_{\theta_{t-1}^{(i)}}.\]
-    \item For $i\in\{1,2,\ldots,J\}$
+    \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M w_{t-1}^{(m)} \delta_{\theta_{t-1}^{(m)}}.\]
+    \item For $m\in\{1,2,\ldots,M\}$
         \begin{enumerate}
-        \item \uncover<2->{\alert{Sample $j\in\{1,2,\ldots,J\}$ with probability $w_{t-1}^{(j)}$}}
-        \item Sample $\theta_t^{(i)}\sim p(\theta_t|\theta_{t-1}^{(\alt<2>{\alert{j}}{i})})$
-        \item Set $w_{t}^{(i)} \propto \alt<2>{\alert{1}}{w_{t-1}^{(i)}} p(y_t|\theta_t^{(i)})$
+        \item \uncover<2->{\alert{Sample $m'\in\{1,2,\ldots,M\}$ with probability $w_{t-1}^{(m')}$}}
+        \item Sample $\theta_t^{(m)}\sim p\left(\theta_t|\theta_{t-1}^{(\alt<2>{\alert{m'}}{m})}\right)$
+        \item Set $w_{t}^{(m)} \propto \alt<2>{\alert{1}}{w_{t-1}^{(m)}} p\left(y_t|\theta_t^{(m)}\right)$
         \end{enumerate}
     \item We now have a particle approximation to our density at time $t$, i.e.
-    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{i=1}^J w_{t}^{(i)} \delta_{\theta_{t}^{(i)}}.\]
+    \[ p(\theta_{t}|y_{1:t}) \approx \sum_{m=1}^M w_{t}^{(m)} \delta_{\theta_{t}^{(m)}}.\]
     \end{enumerate}
 }
 
@@ -945,9 +945,8 @@ for (t in 2:T) {
     time = t,
     
     # New step
-    theta = sample(particles[[t-1]]$theta, 
-                   prob = particles[[t-1]]$weight, 
-                   replace = TRUE)) |>
+    theta = sample(particles[[t-1]]$theta, size = M, replace = TRUE,
+                   prob = particles[[t-1]]$weight)) |>
     
     mutate(theta  = rnorm(M, theta, sd = sqrt(W)),
            weight = dnorm(d$y[t], theta, sd = sqrt(V)),
@@ -1007,9 +1006,9 @@ ggplot(particle_weights,
 
     Constraints on resampling:
     \begin{itemize}
-    \item Number of resulting particles ($J$) is fixed
-    \item Resulting weights are uniform ($1/J$)
-    \item Number of repeats is unbiased ($E[N_j]=J w^{(j)}$)
+    \item Number of resulting particles ($M$) is fixed
+    \item Resulting weights are uniform ($1/M$)
+    \item Number of repeats is unbiased ($E[N_m] = M w^{(m)}$)
     \end{itemize}
 
     \vspace{0.2in} \pause
@@ -1027,7 +1026,7 @@ ggplot(particle_weights,
 \begin{frame}
 \frametitle{Multinomial sampling}
 \begin{enumerate}
-\item Draw $U_1,\ldots,U_J \ind  Unif(0,1)$
+\item Draw $U_1,\ldots,U_M \ind  Unif(0,1)$
 \item Invert cumulative sum of weights
 \end{enumerate}
 
@@ -1056,9 +1055,9 @@ segments(0, u, ind, u, col='red')
 \begin{frame}
 \frametitle{Residual sampling}
     \begin{enumerate}
-        \item Keep $n_j=\lfloor J w^{(j)} \rfloor$ repeats of particle $j$
-        \item Update remaining probability $w^{(j)'} \propto J w^{(j)}-n_j$
-        \item Multinomial sampling on remaining $J-\sum_{j=1}^J n_j$ particles with probabilities $w^{(j)'}$
+        \item Keep $n_m=\lfloor M w^{(m)} \rfloor$ repeats of particle $m$
+        \item Update remaining probability $w^{(m')} \propto M w^{(m)}-n_m$
+        \item Multinomial sampling on remaining $M-\sum_{m=1}^M n_m$ particles with probabilities $w^{(m')}$
         \end{enumerate}
 \vspace{-0.2in} \pause
 <<residual_resampling, fig.height=5>>=
@@ -1095,7 +1094,7 @@ segments(0, u, ind, u, col='red')
 \begin{frame}
 \frametitle{Stratified sampling}
     \begin{enumerate}
-    \item Draw $U_j \ind  Unif\left(\frac{j-1}{J},\frac{j}{J}\right)$ for $j=1,2,\ldots,J$
+    \item Draw $U_m \ind  Unif\left(\frac{m-1}{M},\frac{m}{M}\right)$ for $m=1,2,\ldots,M$
     \item Invert cumulative sum of weights
     \end{enumerate} \pause
 
@@ -1125,8 +1124,8 @@ segments(0, u, ind, u, col='red')
 \begin{frame}
 \frametitle{Systematic sampling}
     \begin{enumerate}
-    \item Draw $U_1 \sim Unif(0,1/J)$
-    \item Set $U_j = U_{j-1}+\frac{1}{J}$ for $j=1,2,\ldots,J$
+    \item Draw $U_1 \sim Unif(0,1/M)$
+    \item Set $U_m = U_{m-1}+\frac{1}{M}$ for $m=2,\ldots,M$
     \item Invert cumulative sum of weights
     \end{enumerate}
     \vspace{-0.15in} \pause
@@ -1182,11 +1181,11 @@ segments(0, u, ind, u, col='red')
     Methods for determining when to resample
     \begin{itemize}
     \item Effective sample size
-    \[ ESS = \left( \sum_{i=1}^J (w^{(j)})^2 \right)^{-1} \] \pause
+    \[ ESS = \left( \sum_{m=1}^M (w^{(m)})^2 \right)^{-1} \] \pause
     \item Coefficient of variation
-    \[ CoV = \left( \frac{1}{J} \sum_{i=1}^J (Jw^{(j)}-1)^2 \right)^{1/2} \] \pause
+    \[ CoV = \left( \frac{1}{M} \sum_{m=1}^M (M w^{(m)}-1)^2 \right)^{1/2} \] \pause
     \item Entropy
-    \[ Ent = -\sum_{j=1}^J w^{(j)} \log_2(w^{(j)}) \]
+    \[ Ent = -\sum_{m=1}^M w^{(m)} \log_2(w^{(m)}) \]
     \end{itemize}
 }
 
@@ -1246,7 +1245,7 @@ for (i in 1:max(s$time)) {
     \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M \frac{1}{M} \delta_{\theta_{t-1}^{(m)}}.\] \pause
     \item For $m\in\{1,2,\ldots,M\}$
         \begin{enumerate}
-        \item Sample $m'\in\{1,2,\ldots,M\}$ with probability proportional to $\alert<5>{p(y_t|\theta_{t-1}^{(m)})}$ \pause
+        \item Sample $m'\in\{1,2,\ldots,M\}$ with probability proportional to $\alert<5>{p(y_t|\theta_{t-1}^{(m')})}$ \pause
         \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m')})$ \pause
         \end{enumerate}
     \item We now have a particle approximation to our density at time $t$, i.e.
@@ -1277,7 +1276,7 @@ particles[[1]] <- data.frame(time = 1,
 
 for (t in 2:T) {
   # Resample
-  indices <- sample(1:M, M, replace = TRUE,
+  indices <- sample(1:M, size = M, replace = TRUE,
                     prob = dnorm(d$y[t], 
                                  particles[[t-1]]$theta, 
                                  sd = sqrt(W + V)))
@@ -1287,7 +1286,7 @@ for (t in 2:T) {
     weight = 1 / M,
     
     # Move
-    theta = rnorm(M, particles[[t-1]]$theta[indices])) 
+    theta = rnorm(M, particles[[t-1]]$theta[indices], sd = sqrt(W))) 
 }
 
 filtering <- bind_rows(particles) |>
@@ -1326,7 +1325,7 @@ ggplot(filtering,
     \[ p(\theta_{t-1}|y_{1:t-1}) \approx \sum_{m=1}^M w_{t-1}^{(m)}\delta_{\theta_{t-1}^{(m)}}.\] \pause
     \item For $m\in\{1,2,\ldots,M\}$
         \begin{enumerate}
-        \item Sample $m'\in\{1,2,\ldots,M\}$ with prob. proportional to $w_{t-1}^{(m)}p(y_t|\mu_t^{(m)})$ \pause
+        \item Sample $m'\in\{1,2,\ldots,M\}$ with prob. proportional to $w_{t-1}^{(m')}p(y_t|\mu_t^{(m')})$ \pause
         \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m')})$ \pause
         \item Set $w_t^{(m)} = \frac{p(y_t|\theta_t^{(m)})}{p(y_t|\mu_t^{(m')})}$ \pause
         \end{enumerate}
@@ -1357,11 +1356,10 @@ for (t in 2:T) {
   particles[[t]] <- data.frame(
     time = t,
   
-    theta = sample(particles[[t-1]]$theta, 
+    theta = sample(particles[[t-1]]$theta, size = M, replace = TRUE,
                    
                    # Modified step
-                   prob = particles[[t-1]]$weight * dnorm(d$y[t], particles[[t-1]]$theta), 
-                   replace = TRUE)) |>
+                   prob = particles[[t-1]]$weight * dnorm(d$y[t], particles[[t-1]]$theta))) |>
     
     mutate(theta  = rnorm(M, theta, sd = sqrt(W)),
            weight = dnorm(d$y[t], theta, sd = sqrt(V)) / 
@@ -1503,16 +1501,16 @@ ggplot(particle_weights,
     Modify SIR to include fixed parameters: \pause
     \begin{enumerate}
     \item Suppose we have a particle approximation to our density at time $t-1$, i.e.
-    \[ p(\theta_{t-1},\psi|y_{1:t-1}) \approx \sum_{i=1}^J w_{t-1}^{(i)} \delta_{(\theta_{t-1},\psi)^{(i)}}.\] \pause
-    \item For $i\in\{1,2,\ldots,J\}$
+    \[ p(\theta_{t-1},\psi|y_{1:t-1}) \approx \sum_{m=1}^M w_{t-1}^{(m)} \delta_{(\theta_{t-1},\psi)^{(m)}}.\] \pause
+    \item For $m\in\{1,2,\ldots,M\}$
         \begin{enumerate}
-        \item Sample $j\in\{1,2,\ldots,J\}$ with probability $w_{t-1}^{(j)}$. \pause
-        \item Set $\psi^{(i)}=\psi^{(j)}$. \pause
-        \item Sample $\theta_t^{(i)}\sim p(\theta_t|\theta_{t-1}^{(j)},\psi^{(i)})$. \pause
-        \item Set $w_{t}^{(i)} \propto p(y_t|\theta_t^{(i)},\psi^{(i)})$. \pause
+        \item Sample $m'\in\{1,2,\ldots,M\}$ with probability $w_{t-1}^{(m)}$. \pause
+        \item Set $\psi^{(m)}=\psi^{(m')}$. \pause
+        \item Sample $\theta_t^{(m)}\sim p(\theta_t|\theta_{t-1}^{(m)},\psi^{(m)})$. \pause
+        \item Set $w_{t}^{(m)} \propto p(y_t|\theta_t^{(m)},\psi^{(m)})$. \pause
         \end{enumerate}
     \item We now have a particle approximation to our density at time $t$, i.e.
-    \[ p(\theta_{t},\psi|y_{1:t}) \approx \sum_{i=1}^J w_{t}^{(i)} \delta_{(\theta_{t},\psi)^{(i)}}.\]
+    \[ p(\theta_{t},\psi|y_{1:t}) \approx \sum_{m=1}^M w_{t}^{(m)} \delta_{(\theta_{t},\psi)^{(m)}}.\]
     \end{enumerate}
 }
 
@@ -1583,8 +1581,8 @@ for (i in 2:10) {
     \end{itemize} \pause
 
     \begin{eqnarray*}
-    p(\psi|y_{1:t-1}) &\approx& \sum_{i=1}^J w_{t-1}^{(i)} \delta_{\psi^{(i)}} \\ \pause
-    &\approx & \sum_{i=1}^J w_{t-1}^{(i)} N(a\psi^{(i)}+(1-a)\overline{\psi}, h^2V)  \pause
+    p(\psi|y_{1:t-1}) &\approx& \sum_{m=1}^M w_{t-1}^{(m)} \delta_{\psi^{(m)}} \\ \pause
+    &\approx & \sum_{m=1}^M w_{t-1}^{(m)} N(a\psi^{(m)}+(1-a)\overline{\psi}, h^2V)  \pause
     \end{eqnarray*}
     where
     \[     h^2 = 1-a^2 = 1-\left( \frac{3\tau-1}{2\tau} \right)^2 \]
@@ -1747,8 +1745,8 @@ for (i in 2:10) {
     %= \int \int \left[ \prod_{t=0}^T \int p(y_t|\theta_t,\psi)p(\theta_t|y_{1:t-1},\psi) d\theta_{t} \right] p(\theta_0|\psi) d\theta_0 p(\psi) d\psi .
     \] \pause
     This can be approximated using SMC methods by
-    \[ p(y_t|y_{1:t-1}) \approx \frac{1}{J} \sum_{i=1}^J \tilde{w}_t^{(i)}\]
-    where $\tilde{w}_t^{(i)}$ are the \emph{unnormalized} weights.
+    \[ p(y_t|y_{1:t-1}) \approx \frac{1}{M} \sum_{m=1}^M \tilde{w}_t^{(m)}\]
+    where $\tilde{w}_t^{(m)}$ are the \emph{unnormalized} weights.
     }
 }
 
