@@ -674,8 +674,8 @@ which suggests the following strategy:
 \vspace{0.2in} \pause
 
 \begin{enumerate}
-\item Run the MCMC sampler to obtain draws $(\sigma^2,\phi)^{(g)} \sim p(\sigma^2,\phi|y)$
-\item After burn-in and for $g=1,\ldots,G$, sample $w^{(g)}\sim p(w|(\sigma^2,\phi)^{(g)},y)$.
+\item Run the MCMC sampler to obtain draws $(\sigma^2,\phi)^{(m)} \sim p(\sigma^2,\phi|y)$
+\item After burn-in and for $m=1,\ldots,M$, sample $w^{(m)}\sim p(w|(\sigma^2,\phi)^{(m)},y)$.
 \end{enumerate}
 \end{frame}
 
@@ -698,14 +698,14 @@ which suggests the following strategy:
 
 
 \frame{\frametitle{Prediction}
-For prediction at points $s_{01},\ldots,s_{0m}$ and denoting $Y_0=(Y(s_{01}),\ldots,Y(s_{0m}))^\top$ and design matrix $X_0$ having rows $x(s_{0j})^\top$, \pause we have the following relationship
+For prediction at points $s_{01},\ldots,s_{0L}$ and denoting $Y_0=(Y(s_{01}),\ldots,Y(s_{0L}))^\top$ and design matrix $X_0$ having rows $x(s_{0\ell})^\top$, \pause we have the following relationship
 \[ 
 p(y_0|y,X,X_0) = 
 \int p(y_0|y,\theta,X_0) p(\theta|y,X) d\theta \pause 
-\approx \frac{1}{G} \sum_{g=1}^G p(y_0|y,\theta^{(g)},X_0). 
+\approx \frac{1}{M} \sum_{m=1}^M p(y_0|y,\theta^{(m)},X_0). 
 \]
-\pause It is more common to take draws $y_0^{(g)} \sim p(y_0|y,\theta^{(g)},X_0)$ and estimate the predictive distribution using
-\[ p(y_0|y,X,X_0)  \approx \frac{1}{G}  \sum_{g=1}^G \delta_{y_0^{(g)}} \]
+\pause It is more common to take draws $y_0^{(m)} \sim p(y_0|y,\theta^{(m)},X_0)$ and estimate the predictive distribution using
+\[ p(y_0|y,X,X_0)  \approx \frac{1}{M}  \sum_{m=1}^M \delta_{y_0^{(m)}} \]
 \pause where $p(y_0|y,\theta,X_0)$ has a conditional normal distribution.
 }
 
@@ -756,7 +756,9 @@ Y(s) \sim Po(e^{x(s)^\top\beta + w(s)}).
 
 \vspace{0.2in} \pause
 
-For GLMs (other than linear models), $w(s)$ cannot be integrated out \pause and therefore a common MCMC strategy is
+For GLMs (other than linear models), $w(s)$ cannot be integrated out 
+\pause 
+and therefore a common Gibbs sampling strategy is
 \begin{enumerate}
 \item Sample $\beta|\ldots$.
 \item Sample $w|\ldots$.
