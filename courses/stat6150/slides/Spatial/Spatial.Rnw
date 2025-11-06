@@ -17,10 +17,7 @@ options(width=100)
 @
 
 <<libraries, message=FALSE, warning=FALSE, cache=FALSE>>=
-library("ggplot2")
-# library(plyr)
-library("dplyr")
-# library(reshape2)
+library("tidyverse"); theme_set(theme_bw())
 library("maps")
 library("spBayes")
 library("fields")
@@ -28,6 +25,7 @@ library("gstat")
 library("geoR")
 library("GGally")
 library("MBA")
+library("mcmcse")
 @
 
 <<set_seed, echo=FALSE>>=
@@ -179,7 +177,7 @@ when $s,s+h\in\mathcal{D}$. \pause We call $2\gamma(h)$ the \alert{variogram} an
 \vspace{0.2in} \pause
 
 \begin{definition}
-A process $Y(s)$ is \alert{isotropic} if the semivariogram function depends only on $||h||$, the length of the separation vector. Otherwise the process is \alert{anisotropic} as it depends on the direction.
+A process $Y(s)$ is \alert{isotropic} if the semivariogram function depends only on $||h||$, the length of the separation vector. Otherwise the process is \alert{anisotropic} if it depends on the direction (rather than just the length/distance.
 \end{definition}
 
 \end{frame}
@@ -413,7 +411,7 @@ If we constrain ourselves to isotropic models, the Mat\'{e}rn class is suggested
 \[ Var[w] = \sigma^2 H(\phi) \qquad Var[\epsilon] = \tau^2 \mathrm{I} \]
 \pause where $H$ is a correlation matrix with $H_{ij}=\rho(s_i-s_j;\phi)$ and $\rho$ is a valid isotropic correlation function on $\mathbb{R}^r$, i.e. Mat\'{e}rn:
 \[ \rho(u;\nu,\phi) = \frac{(u/\phi)^\nu K_\nu(u/\phi)}{2^{\nu-1}\mathrm\Gamma(\nu)} \]
-as defined in {\tt geoR:matern}.
+as defined in {\tt geoR::matern}.
 \pause The overall mean is modeled separately and uses covariates $x(s)$ via \[\mu(s)=x(s)^\top\beta.\]
 }
 
@@ -451,7 +449,7 @@ d$Species = plyr::revalue(d$Species,
                             SF = 'Silver Fir',
                             WH = 'Western Hemlock'))
 
-g = ggplot(d, aes(East_m, North_m, size=DBH_cm)) + theme_bw()
+g = ggplot(d, aes(East_m, North_m, size=DBH_cm)) 
 g + geom_point(alpha=I(0.5))
 @
 \end{frame}
@@ -615,16 +613,14 @@ nreps = dim(r$p.theta.samples)[1]
 \begin{frame}[fragile]
 \frametitle{}
 <<theta_posteriors, dependson='spLM_run', echo=TRUE>>=
-r$p.theta.samples[burnin:nreps,] %>%
-  as.data.frame %>%
-  GGally::ggpairs() +
-  theme_bw()
+r$p.theta.samples[burnin:nreps,] |>
+  as.data.frame() |>
+  GGally::ggpairs()
 @
 \end{frame}
 
-
 \begin{frame}[fragile]
-\frametitle{Traceplot 2s}
+\frametitle{Traceplots}
 <<beta_traceplots, dependson='spLM_run', echo=TRUE>>=
 plot(r$p.beta.samples, density=FALSE)
 @
@@ -640,11 +636,33 @@ summary(r$p.theta.samples)
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Monte Carlo Standard Error}
+<<theta_mcmcse, dependson='spLM_run', echo=TRUE>>=
+r$p.theta.samples |>
+  as.data.frame() |>
+  summarize(across(everything(), mcmcse::mcse))
+@
+\end{frame}
+
+
+\begin{frame}[fragile]
 \frametitle{Summary statistics 2}
 <<beta_summary, dependson='spLM_run', echo=TRUE>>=
 summary(r$p.beta.samples)
 @
 \end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Monte Carlo Standard Error}
+<<beta_mcmcse, dependson='spLM_run', echo=TRUE>>=
+r$p.beta.samples |>
+  as.data.frame() |>
+  summarize(across(everything(), mcmcse::mcse))
+@
+\end{frame}
+
+
 
 
 \begin{frame}
@@ -668,7 +686,7 @@ which suggests the following strategy:
 % \frametitle{spBayes}
 % <<spLM_beta, dependson='spLM_run'>>=
 % w = spRecover(r, verbose=FALSE)
-% d_w = d[,c('East_m','North_m')] %>%
+% d_w = d[,c('East_m','North_m')] |>
 %   mutate(w_hat=apply(w$p.w.recover.samples, 1, mean),
 %          w_sd = apply(w$p.w.recover.samples, 1, sd))
 % d_w$w_hat[d_w$w_hat < -1e-5] = NA
