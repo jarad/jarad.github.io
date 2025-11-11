@@ -18,9 +18,8 @@ options(width=100)
 @
 
 <<libraries, message=FALSE, warning=FALSE, cache=FALSE>>=
-library("tidyverse")
+library("tidyverse"); theme_set(theme_bw())
 
-library("ggplot2")
 library("grid")
 library("gridExtra")
 library("hexbin")
@@ -64,7 +63,7 @@ Suppose we have a set of $H$ categories and we label these $1,\ldots,H$. \pause 
 \begin{frame}
 \frametitle{Multinomial distribution}
 
-If we count the number of times the consumer chose each category, i.e. 
+If we count the number of times consumers choose each category, i.e. 
 \[ 
 Y_h = \sum_{i=1}^n \I(Z_i=h),
 \]
@@ -149,10 +148,10 @@ Some possible default priors are
 \frametitle{Complicated distributions}
 <<rnaseq, message=FALSE>>=
 library("edgeR")
-d = read.table("rna_seq.txt", header=TRUE)
+d <- read.table("rna_seq.txt", header=TRUE)
 
 # Keep only total columns
-d = d[,c(1, grep("total", names(d)))]
+d <- d[,c(1, grep("total", names(d)))]
 
 
 #regmatches(names(d), regexpr('_[B,M]{1,2}\\.', names(d)))
@@ -177,11 +176,11 @@ design = cbind(1,
                ifelse(variety=='B73xMo17', 1, ifelse(variety=='Mo17xB73',-1,0)))
 
 # GLM fit using edgeR
-fit = d[,-1] %>% 
-  DGEList() %>%
-  calcNormFactors %>%
-  estimateCommonDisp %>%
-  estimateGLMTagwiseDisp(design) %>%
+fit = d[,-1] |>
+  DGEList() |>
+  calcNormFactors() |>
+  estimateCommonDisp() |>
+  estimateGLMTagwiseDisp(design) |>
   glmFit(design)
 
 # Calculate gene-specific estimates for phi, alpha, delta, and psi
@@ -195,7 +194,7 @@ hat = data.frame(gene = 1:length(fit$dispersion),
 hat$gene = d$GeneID
 @
 
-<<rnaseq_plot, dependson='rnaseq', message=FALSE, fig.keep='last', fig.height=10, fig.width=12>>=
+<<rnaseq_plot, dependson='rnaseq', message=FALSE, fig.keep='last', fig.height=10, fig.width=12,warning=FALSE>>=
 parms = names(hat)[-1]
 plots = list()
 
@@ -208,7 +207,6 @@ for (i in 1:n) {
     if (i==j) {
       plots[[p]] = ggplot(hat, aes_string(parms[i])) + 
         geom_histogram(fill = 'gray') +
-        theme_bw() + 
         labs(x = parse(text = parms[i]))
     }
     if (i<j) {   
@@ -237,7 +235,7 @@ Let's focus on modeling the univariate distribution for $\hat\phi$
 
 <<phi, dependson='rnaseq', message=FALSE>>=
 ggplot(hat, aes(phi)) + 
-  geom_histogram(aes(y=..density..)) +
+  geom_histogram(aes(y=after_stat(density))) +
   theme_bw()
 @
 \end{frame}
@@ -252,7 +250,7 @@ ggplot(hat, aes(phi)) +
 \begin{frame}
 \frametitle{Finite mixture}
 
-A model for the marginal distribution for $Y_i=\hat\phi_i$ is
+A finite mixture model for the marginal distribution for $Y_i=\hat\phi_i$ is
 
 \[ 
 Y_i \stackrel{ind}{\sim} \sum_{h=1}^H \pi_h N(\mu_h, \sigma_h^2)
@@ -318,7 +316,7 @@ P(\zeta_i=h|\ldots) \propto \pi_h N(y_i; \mu_h, \sigma_h^2)
 \]
 \item Jointly sample $\pi$ and $\mu,\sigma^2$ as they are conditionally independent.
   \begin{enumerate}\tiny
-  \item Sample $\pi \sim Dir(a+Z)$ where $n=(Z_1,\ldots,Z_H)$ and $Z_h = \sum_{i=1}^n \I(\zeta_i=h)$. 
+  \item Sample $\pi \sim Dir(a+Z)$ where $Z=(Z_1,\ldots,Z_H)$ and $Z_h = \sum_{i=1}^n \I(\zeta_i=h)$. 
   \item For $h=1,\ldots,H$, sample $\mu_h,\sigma_h^2$ from their full conditional (as these are conditionally independent across $h$):
 \[ 
 \sigma_h^2 \stackrel{ind}{\sim} IG(c'_h, d'_h) \quad \mu_h|\sigma_h^2 \stackrel{ind}{\sim} N(m_h', v_h'^2\sigma_h^2) 
@@ -378,12 +376,14 @@ model {
 
 <<jags_data, dependson='rnaseq', echo=TRUE>>=
 tmp = hat[sample(nrow(hat), 1000),]
-dat = list(n=nrow(tmp), H=3, y=tmp$phi, a=rep(1,3))
+dat = list(n = nrow(tmp), H = 3, y = tmp$phi, a = rep(1,3))
 @
 
 <<jags_run, dependson=c('jags','jags_data'), echo=TRUE, results='hide'>>=
 jm = jags.model(textConnection(jags_model), data = dat, n.chains = 3)
-r = coda.samples(jm, c('mu','sigma','pi'), 1e3)
+r = coda.samples(jm, 
+                 variable.names = c('mu','sigma','pi'), 
+                 n.iter = 1e4)
 @
 \end{frame}
 
@@ -466,17 +466,19 @@ model {
     sigma[i] <- 1/sqrt(tau[i])
   }
 
-  mu[1:H] <- sort(mu0)
+  mu[1:H] <- sort(mu0)         # sort the means
   pi ~ ddirich(a)
 }"
 @
 
 <<jags2_run, dependson=c('jags_data', 'jags2'), echo=TRUE, results='hide'>>=
 jm = jags.model(textConnection(jags_model), data = dat, n.chains = 3)
-r = coda.samples(jm, c('mu','sigma','pi'), 1e3)
+r = coda.samples(jm, 
+                 variable.names = c('mu','sigma','pi','zeta'), 
+                 n.iter = 1e4, 
+                 thin = 10)
 @
 \end{frame}
-
 
 \begin{frame}[fragile]
 \frametitle{Convergence diagnostics}
@@ -495,53 +497,65 @@ plot(r, density=FALSE)
 \end{frame}
 
 
-
 \begin{frame}[fragile]
 \frametitle{Posterior on data density}
-<<posterior_density, dependson='jags2_run'>>=
-extract_draws <- function(x) {
-  data.frame(iteration = start(r):end(r),
-             chain = rep(1:3, each=end(r)-start(r)+1),
-             value = unlist(r[,x$parameter])) 
+<<posterior_draws, dependson='jags2_run'>>=
+extract_draws <- function(samples) {
+  # samples is an mcmc.list object
+  draws_list <- lapply(seq_along(samples), function(chain_idx) {
+    chain_matrix <- as.matrix(samples[[chain_idx]])
+    n_iter <- nrow(chain_matrix)
+    
+    # Create a data.frame for this chain
+    df_chain <- data.frame(
+      chain       = chain_idx,
+      iteration   = seq_len(n_iter),
+      chain_matrix,
+      check.names = FALSE,
+      row.names   = NULL
+    )
+    
+    return(df_chain)
+  })
+  
+  # Combine all chains
+  draws_df <- do.call(rbind, draws_list)
+  
+  return(draws_df)
 }
 
-draws <- data.frame(parameter = varnames(r)) %>% 
-  group_by(parameter) %>%
-  do(extract_draws(.)) %>%
-  pivot_wider(
-    names_from = parameter,
-    values_from = value
+draws <- extract_draws(r) 
+saveRDS(draws, file='jags2_finite_mixture_draws.rds')
+@
+
+<<posterior_density, dependson='posterior-draws'>>=
+d <- draws |>
+  select(starts_with('mu['), starts_with('sigma['), starts_with('pi[')) |>
+  mutate(row_id = row_number()) |>        # optional: keep original row id
+  crossing(xx = seq(-3, 10, by = 0.1)) |>
+  mutate(
+    density = `pi[1]`*dnorm(xx, `mu[1]`, `sigma[1]`) + 
+              `pi[2]`*dnorm(xx, `mu[2]`, `sigma[2]`) + 
+              `pi[3]`*dnorm(xx, `mu[3]`, `sigma[3]`)
   )
 
-
-get_density <- function(x) {
-  xx = seq(-3, 10, by=0.1)
-  data.frame(xx = xx,
-             yy = 
-               x$`pi[1]`*dnorm(xx, x$`mu[1]`, x$`sigma[1]`) + 
-               x$`pi[2]`*dnorm(xx, x$`mu[2]`, x$`sigma[2]`) + 
-               x$`pi[3]`*dnorm(xx, x$`mu[3]`, x$`sigma[3]`))
-}
-
-d <- draws %>%
-  group_by(iteration,chain) %>%
-  do(get_density(.))
-
-sm = ddply(d, .(xx), summarize, 
-           mean=mean(yy), sd=sd(yy),
-           lb = quantile(yy, .025),
-           ub = quantile(yy, .975))
+sm <- d |>
+  group_by(xx) |>
+  summarize(
+    mean = mean(density),
+    sd   = sd(density),
+    lb   = quantile(density, 0.025),
+    ub   = quantile(density, 0.975)
+  )
 @
 
 <<posterior_density_plot, dependson=c('posterior_density','jags_data'), results='hide'>>=
 ggplot(data.frame(x=c(-3,10)), aes(x)) + 
-  geom_histogram(data=tmp, aes(x=phi, y=..density..), 
+  geom_histogram(data=tmp, aes(x=phi, y=after_stat(density)), 
                  binwidth=0.2, alpha=0.5) +
   geom_ribbon(data=sm, aes(x=xx, ymin=lb, ymax=ub), 
               fill='blue', alpha=0.5) +
-  #  geom_line() +
-  labs(x='x', y='density') +
-  theme_bw()
+  labs(x='x', y='density') 
 @
 \end{frame}
 
@@ -556,23 +570,26 @@ Group membership can be obtained using the $\zeta_i$, e.g.
 P(\mbox{gene $i$ in cluster $h$}) = P(\zeta_i=h|y) \approx \sum_{m=1}^M \I\left(\zeta_i^{(m)} = h\right).
 \]
 
-<<clustering, dependson=c('jags2_run'), results='hide'>>=
-jm = jags.model(textConnection(jags_model), data = dat, n.chains = 3)
-r = coda.samples(jm, c('zeta'), 1e3)
-@
 
-<<clustering_results, dependson='clustering'>>=
-draws = ddply(data.frame(parameter=varnames(r)), .(parameter), function(x) {
-  data.frame(iteration = start(r):end(r),
-             chain = rep(1:3, each=end(r)-start(r)+1),
-             value = unlist(r[,x$parameter])) 
-}) 
+<<clustering_results, dependson='jags2_run'>>=
+zeta <- draws |>
+  select(starts_with('zeta[')) 
 
-sm = ddply(draws, .(parameter), function(x) {
-  data.frame(p1 = mean(x$value==1), 
-             p2 = mean(x$value==2),
-             p3 = mean(x$value==3))
-})
+draws <- zeta |>
+  pivot_longer(cols = everything(), 
+               names_to = 'parameter', 
+               values_to = 'value') |>
+  mutate(parameter = gsub('zeta\\[|\\]', '', parameter),
+         parameter = as.integer(parameter))
+
+sm <- draws |>
+  group_by(parameter) |>
+  summarize(
+    p1 = mean(value == 1),
+    p2 = mean(value == 2),
+    p3 = mean(value == 3)
+  )
+
 head(sm)
 @
 \end{frame}
@@ -586,19 +603,32 @@ Genes can then be clustered by assigning them to a group based on their posterio
 \mbox{argmax}_h P(\zeta_i=h|y).
 \]
 
-<<clustering_final, dependson=c("clustering_results"),fig.height=3>>=
-cluster = ddply(sm, .(parameter), function(x) data.frame(group=which.max(x[,-1])))
-library(gtools)
-ordr = mixedorder(as.character(cluster$parameter))
-# ggplot(cbind(cluster[ordr,], tmp), aes(x=phi,y=..density..)) +
-#   geom_histogram(binwidth=0.2, alpha=0.5) +
-#   facet_wrap(~group) +
-#   theme_bw()
+<<clustering_final, dependson=c("clustering_results","jags_data"),fig.height=3>>=
+cluster <- sm |>
+  pivot_longer(cols = -parameter, 
+               names_to = 'group', 
+               values_to = 'probability') |>
+  group_by(parameter) |>
+  slice_max(order_by = probability, n = 1) |>
+  ungroup() |>
+  mutate(
+    group = gsub("p", "", group),
+    phi_hat = tmp$phi)
+
+ggplot(cluster, 
+       aes(x = phi_hat)) +
+  geom_histogram(aes(y = after_stat(density)), 
+                 binwidth = 0.1) +
+  facet_wrap(~group, ncol = 1,
+             scales = "free_y",
+             labeller = label_both) +
+  labs(x = expression(hat(phi)), 
+       y = 'Density')
 @
 
-\vspace{0.2in} \pause
+\pause
 
-Unfortunately clustering is extremely sensitive to the parametric model chosen, e.g. normal in this example, and the cluster could change dramatically with a different choice, e.g. $t$. 
+Clustering is extremely sensitive to the parametric model chosen, e.g. normal in this example, and the cluster could change dramatically with a different choice, e.g. $t$. 
 \end{frame}
 
 
@@ -637,7 +667,7 @@ do.call("grid.arrange", c(plots[c(1,5,6,25)], ncol=2))
 \begin{frame}
 \frametitle{Finite mixture}
 
-A model for the joint distribution for $Y_i=(\phi_i,\psi)^\top$ is
+A model for the joint distribution for $Y_i=(\phi_i,\psi_i)^\top$ is
 
 \[ 
 Y_i \stackrel{ind}{\sim} \sum_{h=1}^H \pi_h N(\mu_h, \mySigma_h)
@@ -664,21 +694,16 @@ where $\zeta\sim Cat(H,\pi)$ is a categorical random variable with $P(\zeta=h) =
 Let's assume 
 \[ \begin{array}{rl}
 \pi &\sim Dir(a) \\
-\mu_h|\Sigma_h & \stackrel{ind}{\sim} N_p(m_h, v_h^2\mySigma_h) \\
+\mu_h|\Sigma_h & \stackrel{ind}{\sim} N_p(\mu_h, v_h^2\mySigma_h) \\
 \mySigma_h &\stackrel{ind}{\sim} IW(D_h,c_h)
 \end{array} \]
-where $c_h>p-1$ is the degrees of freedom and $D$ is the scale matrix. \pause The mean of this distribution is $D_h/(c_h-p-1)$ for $c_h>p+1$. 
+where $c_h>p-1$ is the degrees of freedom and $D$ is the scale matrix. 
+\pause 
+The mean of this distribution is $D_h/(c_h-p-1)$ for $c_h>p+1$. 
 
-% \vspace{0.2in} \pause
-% 
-% Commonly, we have $m_h=m$, $v_h=v$, $c_h=c$, and $D_h=D$. \pause If the data have been standardized (scaled and centered), a reasonable default prior is 
-% \begin{itemize}
-% \item $m=0$, 
-% \item $v=1$, 
-% \item $c=2$, 
-% \item $d=4$, (BDA3 pg 535) and
-% \item $a$ is $1/H$ (BDA3 pg 536). 
-% \end{itemize}
+\vspace{0.2in} \pause
+
+
 
 \end{frame}
 
@@ -757,7 +782,7 @@ dat$mu0 = c(3,0)
 jm = jags.model(textConnection(joint_mixture_model), 
                 data = dat, 
                 n.chains = 3)
-r = coda.samples(jm, c('pi','mu','Sigma'), 1e3)
+r = coda.samples(jm, variable.names = c('pi','mu','Sigma'), n.iter = 1e4)
 @
 \end{frame}
 
@@ -771,7 +796,7 @@ r = coda.samples(jm, c('pi','mu','Sigma'), 1e3)
 %   data.frame(iteration = start(r):end(r),
 %              chain = rep(1:3, each=end(r)-start(r)+1),
 %              value = unlist(r[,x$parameter])) 
-% }) %>%
+% }) |>
 %   dcast(iteration+chain~parameter)
 % 
 % library(mvtnorm)
