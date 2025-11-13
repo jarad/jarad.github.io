@@ -344,10 +344,13 @@ where $\theta_h^* \ind G_0$ and $\pi \sim \mbox{stick}(a)$.
 \frametitle{Finite approximation to the stick-breaking representation}
 
 For some $\epsilon>0$, 
-there exists an $H$ such that $\sum_{h=H}^\infty \pi_h < \epsilon$ and 
-components $H$ and beyond can reasonably be ignored. 
-\pause 
-The resulting model is 
+there exists an $H$ such that $P\left(\sum_{h=H}^\infty \pi_h < \epsilon\right) \approx 1$ and 
+components beyond $H$ can reasonably be ignored with the remaining probability
+given to component $H$. 
+
+\vspace{0.2in} \pause 
+
+Thus, a finite approximation to the stick-breaking representation is
 \[ 
 Y_i \ind p(\cdot|\theta_i), \quad \theta_i \ind \sum_{h=1}^H \pi_h \delta_{\theta_h^*}
 \]
@@ -378,7 +381,7 @@ A DP mixture model for the marginal distribution for $Y_i=\hat\phi_i$ is
 
 \[ 
 Y_i \ind N(\mu_i, \sigma_i^2) \quad 
-\left(\begin{array}{cc} \mu_i \\ \sigma_i^2 \end{array} \right) \sim \sum_{h=1}^H \pi_h \delta_{(\mu_h^*,\sigma_h^{2*})}
+\left(\begin{array}{cc} \mu_i \\ \sigma_i^2 \end{array} \right) \ind \sum_{h=1}^H \pi_h \delta_{(\mu_h^*,\sigma_h^{2*})}
 \]
 where $\sum_{h=1}^H \pi_h = 1$. 
 
