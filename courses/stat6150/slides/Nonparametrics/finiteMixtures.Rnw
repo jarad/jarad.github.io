@@ -389,7 +389,7 @@ r = coda.samples(jm,
 
 
 \begin{frame}[fragile]
-\frametitle{Convergence diagnostics}
+\frametitle{Convergence diagnostics - Potential Scale Reduction Factor}
 <<jags_convergence, dependson='jags_run', echo=TRUE>>=
 gelman.diag(r)
 gelman.diag(r, multivariate=FALSE)
@@ -398,7 +398,7 @@ gelman.diag(r, multivariate=FALSE)
 
 
 \begin{frame}[fragile]
-\frametitle{Convergence diagnostics (2)}
+\frametitle{Convergence diagnostics - Traceplots}
 <<jags_convergence2, dependson='jags_run', echo=TRUE>>=
 plot(r, density=FALSE)
 @
