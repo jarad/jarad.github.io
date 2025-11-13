@@ -39,12 +39,12 @@ set.seed(2)
 \frame{\maketitle}
 
 
-\section{Bayesian nonparametrics}
+\section{Bayesian density estimation}
 
 \begin{frame}
-\frametitle{Bayesian nonparametrics}
+\frametitle{Bayesian density estimation}
 
-There are two main approaches to Bayesian nonparametrics for density estimation
+There are two main approaches to Bayesian density estimation
 \begin{itemize}[<+->]
 \item Dirichlet process and
 \item Polya trees
@@ -216,14 +216,14 @@ E[\mathcal{G}(A)|y] = \left( \frac{a}{a+n} \right)G_0(A) + \left( \frac{n}{a+n} 
 \begin{frame}
 \frametitle{Stick-breaking representation}
 
-A constructive representation of the Dirichlet process is the stick-breaking 
-representation. 
-\pause 
-Assume $\mathcal{G}\sim DP(aG_0)$, 
-then 
+If $\mathcal{G}\sim DP(aG_0)$, 
+then the stick-breaking representation of $\mathcal{G}$ is
 \[ 
-\mathcal{G}(\cdot) = \sum_{h=1}^\infty \pi_h \delta_{\theta_h}(\cdot)
+\mathcal{G}(A) 
+= \sum_{h=1}^\infty \pi_h \delta_{\theta_h}(A) \pause
+= \sum_{h=1}^\infty \pi_h \mathrm{I}(\theta_h \in A) 
 \]
+\pause
 where $\pi \sim \mbox{stick}(a)$ 
 \pause 
 and $\theta_h\ind G_0$.
@@ -277,8 +277,6 @@ text(mp,  0.1, expression(theta[1], theta[2], theta[3], theta[4], theta[5], ...)
 
 \begin{frame}
 \frametitle{Realizations from a DP}
-Base measure is a standard normal. Realizations are across the columns and
-values for a are down the rows.
 <<stick_breaking_realizations, dependson='stick_breaking', warning=FALSE>>=
 rdp = function(alpha, rP0, H = 10000) {
     theta = rP0(H)
@@ -300,7 +298,11 @@ d = ddply(expand.grid(alpha = 10^seq(-2,2)), .(alpha), function(x) {
 ggplot(d, aes(x=theta, weight=pi)) +
   geom_histogram(aes(y=after_stat(density)), binwidth=0.1) + 
   facet_grid(alpha ~ .n, scales='free_y', labeller = label_both) + 
-  stat_function(fun=dnorm, color='red') 
+  stat_function(fun=dnorm, color='red') +
+  labs(title = "Approximation to stick-representation with 10,000 draws",
+       subtitle = "Base measure is a standard normal (density in red)",
+       x = expression(theta),
+       y = "Density")
 @
 \end{frame}
 
