@@ -3,7 +3,7 @@
 \input{../frontmatter}
 \input{../commands}
 
-\title{Bayesian nonparametrics}
+\title{Dirichlet process}
 
 
 <<options, results='hide', echo=FALSE, purl=FALSE>>=
@@ -21,7 +21,7 @@ options(width=100)
 library("plyr")
 library("dplyr")
 # library("reshape2")
-library("ggplot2")
+library("ggplot2"); theme_set(theme_bw())
 library("grid")
 library("gridExtra")
 
@@ -58,6 +58,18 @@ random effects distributions, etc.
 
 \end{frame}
 
+
+\begin{frame}
+\frametitle{Bayesian density estimation through Dirichlet Process mixtures}
+
+Key phrases:
+\begin{itemize}
+\item Dirichlet process (DP)
+\item Dirichlet process mixture (DPm)
+\item Stick-breaking representation
+\item Chinese restaurant process
+\end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{Motivation}
@@ -107,10 +119,13 @@ hat = data.frame(gene = 1:length(fit$dispersion),
                  psi   = log(fit$dispersion))
 
 hat$gene = d$GeneID
+@
 
-ggplot(hat, aes(phi)) + 
-  geom_histogram(aes(y=..density..)) +
-  theme_bw()
+<<rnaseq-plot, dependson='rnaseq',echo=FALSE>>=
+ggplot(hat, aes(x = phi)) + 
+  geom_histogram(aes(y=after_stat(density)), binwidth=0.2) +
+  labs(x = expression(hat(phi)), 
+       y = "Density") 
 @
 \end{frame}
 
@@ -118,13 +133,19 @@ ggplot(hat, aes(phi)) +
 \begin{frame}
 \frametitle{Goal}
 Let $Y_i$ come from an unknown probability measure $\mathcal{G}$, 
-i.e. $Y_i\sim \mathcal{G}$. 
+i.e. 
+\[Y_i\sim \mathcal{G}.\]
 \pause 
 As a Bayesian, the natural approach is to put a prior on $\mathcal{G}$. 
 \pause 
-That is, we want to make statements like 
+That is, we want to make prior statements like
 \[ 
 P(Y_i \in A) = \mathcal{G}(A)
+\]
+\pause
+and posterior statements like 
+\[ 
+P\left(\tilde{Y} \in A|y\right) = \mathcal{G}_y(A)
 \]
 for any set $A$. 
 \end{frame}
@@ -134,31 +155,32 @@ for any set $A$.
 \begin{frame}
 \frametitle{Dirichlet process}
 
-One approach is to use a Dirichlet process (Ferguson 1973). \pause We write 
+One approach is to use a Dirichlet process (Ferguson 1973). 
+\pause 
+We write 
 \[ 
 \mathcal{G} \sim DP(aG_0)
 \]
 where 
 \begin{itemize}[<+->]
 \item $a>0$ is concentration (or total mass) parameter and
-\item $G_0$ is the base measure, 
-i.e. a probability distribution defined on the support of $\mathcal{G}$. 
+\item $G_0$ is the base (probability) measure. 
 \end{itemize}
 
-\vspace{0.2in} \pause
+\pause
 
-For any partition $A_1,\ldots,A_K$ of the sample space $S$, 
+For any finite partition $A_1,\ldots,A_K$ of the sample space $S$, 
 \pause 
-the probability vector $[\mathcal{G}(A_1),\ldots,\mathcal{G}(A_K)]$ 
+the probability vector $[\mathcal{G}(A_1),\,\ldots,\,\mathcal{G}(A_K)]$ 
 \pause 
-follows a Dirichlet distribution, i.e.
+follows this Dirichlet distribution 
 \[ 
-[\mathcal{G}(A_1),\ldots,\mathcal{G}(A_K)] \sim Dir([aG_0(A_1),\ldots,aG_0(a_K)]).
+[\mathcal{G}(A_1),\,\ldots,\,\mathcal{G}(A_K)] \sim Dir(\,[aG_0(A_1),\,\ldots,\,aG_0(A_K)]\,).
 \]
-Thus 
+Thus for any set $A$ in the partition:
 \begin{itemize}[<+->]
-\item $E[\mathcal{G}(A_1)] = G_0(A_1)$ and 
-\item $Var[\mathcal{G}(A_1)] = \frac{G_0(A_1)[1-G_0(A_1)]}{1+a}$.
+\item $E[\mathcal{G}(A)] = G_0(A)$ and 
+\item $Var[\mathcal{G}(A)] = \frac{G_0(A)[1-G_0(A)]}{1+a}$.
 \end{itemize}
 \end{frame}
 
@@ -245,7 +267,8 @@ midpoint = function(x) {
     mp
 }
 mp = midpoint(c(0, cpi, 1))
-text(mp, -0.3, expression(pi[1], pi[2], pi[3], pi[4], pi[5], ...))
+text(mp, -0.1, expression(pi[1], pi[2], pi[3], pi[4], pi[5], ...))
+text(mp,  0.1, expression(theta[1], theta[2], theta[3], theta[4], theta[5], ...))
 @
 
 \end{frame}
@@ -256,7 +279,7 @@ text(mp, -0.3, expression(pi[1], pi[2], pi[3], pi[4], pi[5], ...))
 \frametitle{Realizations from a DP}
 Base measure is a standard normal. Realizations are across the columns and
 values for a are down the rows.
-<<stick_breaking_realizations, dependson='stick_breaking'>>=
+<<stick_breaking_realizations, dependson='stick_breaking', warning=FALSE>>=
 rdp = function(alpha, rP0, H = 10000) {
     theta = rP0(H)
     v = rbeta(H, 1, alpha)
@@ -268,17 +291,16 @@ plot_rdp = function(rdp, ...) {
     plot(rdp$theta, rdp$pi, type = "h", ...)
 }
 
-d = ddply(expand.grid(alpha=10^seq(-2,2)), .(alpha), function(x) {
+d = ddply(expand.grid(alpha = 10^seq(-2,2)), .(alpha), function(x) {
   rdply(4, function() {
     rdp(x$alpha, rnorm)
   })
 })
 
 ggplot(d, aes(x=theta, weight=pi)) +
-  geom_histogram(aes(y=..density..), binwidth=0.1) + 
-  facet_grid(alpha~.n, scales='free_y') + 
-  stat_function(fun=dnorm, color='red') +
-  theme_bw()
+  geom_histogram(aes(y=after_stat(density)), binwidth=0.1) + 
+  facet_grid(alpha ~ .n, scales='free_y', labeller = label_both) + 
+  stat_function(fun=dnorm, color='red') 
 @
 \end{frame}
 
@@ -287,10 +309,12 @@ ggplot(d, aes(x=theta, weight=pi)) +
 \begin{frame}
 \frametitle{DP mixture}
 
-If we have an absolutely continuous distribution we are trying to approximate, 
-then a DP is not reasonable. 
+The stick-breaking representation shows that a DP is almost surely discrete.
+\pause
+Any data we model where we use a DP prior on the data distribution, 
+will result in a discrete distribution for the data. 
 \pause 
-Thus, we may want to use a \alert{DP mixture}, i.e. 
+To model continuous data, we may want to use a \alert{DP mixture}, i.e. 
 \[ 
 Y_i \ind p(\cdot|\theta_i), 
 \quad 
@@ -300,7 +324,9 @@ Y_i \ind p(\cdot|\theta_i),
 \]
 for some parametric model $p(\cdot|\theta)$. 
 
-Alternatively, if we use the stick-breaking construction, we have 
+\vspace{0.2in} \pause
+
+Using the stick-breaking construction, we have 
 \[ 
 Y_i \ind p(\cdot|\theta_i), 
 \qquad 
@@ -336,9 +362,17 @@ where
 
 \subsection{Normal example}
 \begin{frame}
+\frametitle{Recall the RNA-seq example}
+<<echo=FALSE>>=
+<<rnaseq-plot>>
+@
+\end{frame}
+
+
+\begin{frame}
 \frametitle{Normal example}
 
-A DP mixture model for the marginal distribution for $Y_i=\phi_i$ is
+A DP mixture model for the marginal distribution for $Y_i=\hat\phi_i$ is
 
 \[ 
 Y_i \ind N(\mu_i, \sigma_i^2) \quad 
@@ -454,7 +488,9 @@ dat = list(n=nrow(tmp), H=25, y=tmp$phi, a=1)
 
 <<jags_run, dependson=c('dp_normal_blocked_model','jags_data'), echo=TRUE, results='hide'>>=
 jm = jags.model(textConnection(dp_normal_blocked), data = dat, n.chains = 3)
-r = jags.samples(jm, c('mu','sigma','pi','zeta'), 1e3)
+r = jags.samples(jm, 
+                 variable.names = c('mu','sigma','pi','zeta'), 
+                 n.iter = 1e3) # up to 1e4
 @
 \end{frame}
 
@@ -463,7 +499,7 @@ r = jags.samples(jm, c('mu','sigma','pi','zeta'), 1e3)
 \begin{frame}
 \frametitle{Monitor convergence of density}
 
-As previously discussed, the model as constructed as identifiability problems 
+As previously discussed, the model as constructed has identifiability problems 
 among the $\pi_h$, $\mu_h^*$, and $\sigma_h^{2*}$ due to label switching.
 \pause
 What is identified in the model is the value of the density at any particular value. 
@@ -560,9 +596,15 @@ sm = ddply(d, .(x), summarize,
            lb = quantile(density, .025),
            ub = quantile(density, .975))
 ggplot(sm, aes(x)) + 
-  geom_histogram(data=tmp, aes(x=phi, y=..density..), binwidth=0.2, alpha=0.5) + 
-  geom_ribbon(aes(ymin=lb, ymax=ub), fill='blue', alpha=0.5) +
-  theme_bw()
+  geom_histogram(data = tmp, 
+                 aes(x = phi, 
+                     y = after_stat(density)), 
+                 binwidth = 0.2, 
+                 alpha = 0.5) + 
+  geom_ribbon(aes(ymin = lb, ymax = ub), 
+              fill = 'blue', alpha = 0.5) +
+  labs(x = expression(hat(phi)), 
+       y = "Density")
 @
 
 
@@ -577,7 +619,7 @@ ggplot(sm, aes(x)) +
 Rather than utilizing the finite approximation to the DP, we can use the DP directly, by marginalizing out $\mathcal{G}$. \pause
 This results in a prior directly on $\theta_1,\ldots,\theta_n$ via 
 \[ 
-\theta_i|\theta_1,\ldots,\theta_{i-1} \sim \left( \frac{a}{a+i-1} \right)G_0(\theta_i) + \sum_{j=1}^{i-1} \left(\frac{1}{a+i-1} \right) \delta_{\theta_j}
+\theta_i|\theta_1,\ldots,\theta_{i-1} \sim \left( \frac{a}{a+[i-1]} \right)G_0(\theta_i) + \sum_{j=1}^{i-1} \left(\frac{1}{a+[i-1]} \right) \delta_{\theta_j}
 \]
 
 \pause
@@ -590,7 +632,7 @@ or, equivalently,
 \[ 
 \theta_i| \theta_{-i} \sim \left( \frac{a}{a+n-1} \right)G_0(\theta_i) + \sum_{h=1}^{H^{(-i)}} \left(\frac{n_h^{(-i)}}{a+n-1} \right) \delta_{\theta_h^*}
 \]
-where $H^{(-i)}$ is the number of components without $i$ and $n_h^{(-i)}$ is the number of observations in each component without $i$. 
+where $H^{(-i)}$ is the number of components without the $i$th observation and $n_h^{(-i)}$ is the number of observations in each component without the $i$th observation. 
 \end{frame}
 
 
@@ -881,7 +923,7 @@ and thus have $t$ distribution for the $\theta_{ch}^*$, but now the MCMC is more
 From \href{https://cran.r-project.org/web/views/Bayesian.html}{CRAN Task View: Bayesian Inference}, the packages that contain Dirichlet process related Bayesian nonparametrics are 
 \begin{itemize}
 \item bayesm
-\item DPpackage
+\item DPpackage (has been removed)
 \item growcurves
 \item PReMiuM
 \end{itemize}
@@ -889,43 +931,43 @@ From \href{https://cran.r-project.org/web/views/Bayesian.html}{CRAN Task View: B
 \end{frame}
 
 
-\begin{frame}[fragile]
-\frametitle{Density estimation in the DPpackage}
-<<DPpackage_density_estimation, dependson='rnaseq', echo=TRUE, eval=FALSE>>=
-library("DPpackage")
-prior = list(alpha=1,
-             m1 = 2,
-             k0 = 1/3,
-             nu1 = 0.2,
-             psiinv1=diag(0.2,1))
-
-mcmc = list(nburn=1000, nsave=10000, nskip=10, ndisplay=100)
-
-state = NULL # initial state
-
-dp = DPdensity(y = hat$phi,
-               prior = prior,
-               mcmc = mcmc,
-               state=state, 
-               status=TRUE)
-@
-\end{frame}
-
-
-
-\begin{frame}[fragile]
-\frametitle{Density estimation in the DPpackage}
-<<DPpackage_other_functions, echo=TRUE, eval=FALSE>>=
-?DPlmm
-?DPglmm
-?DPMlmm
-?PMglmm
-?DPolmm
-?HDPMdensity
-
-?PTdensity
-@
-\end{frame}
+% \begin{frame}[fragile]
+% \frametitle{Density estimation in the DPpackage}
+% <<DPpackage_density_estimation, dependson='rnaseq', echo=TRUE, eval=FALSE>>=
+% library("DPpackage")
+% prior = list(alpha=1,
+%              m1 = 2,
+%              k0 = 1/3,
+%              nu1 = 0.2,
+%              psiinv1=diag(0.2,1))
+% 
+% mcmc = list(nburn=1000, nsave=10000, nskip=10, ndisplay=100)
+% 
+% state = NULL # initial state
+% 
+% dp = DPdensity(y = hat$phi,
+%                prior = prior,
+%                mcmc = mcmc,
+%                state=state, 
+%                status=TRUE)
+% @
+% \end{frame}
+% 
+% 
+% 
+% \begin{frame}[fragile]
+% \frametitle{Density estimation in the DPpackage}
+% <<DPpackage_other_functions, echo=TRUE, eval=FALSE>>=
+% ?DPlmm
+% ?DPglmm
+% ?DPMlmm
+% ?PMglmm
+% ?DPolmm
+% ?HDPMdensity
+% 
+% ?PTdensity
+% @
+% \end{frame}
 
 
 
