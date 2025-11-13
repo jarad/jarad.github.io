@@ -11,7 +11,7 @@ group: navigation
 - Fall
   - [STAT 6150](stat6150)
 - Spring 2025
-  - STAT 4610X - Sports Analytics
+  - [STAT 4610X - Sports Analytics](https://isusportsanalytics.netlify.app/)
   - DS 4010 - Data Science Capstone
 - Fall 2024
   - [STAT 5870-1/A (Eng)](stat5870Eng)
