@@ -25,7 +25,7 @@ options(width=100)
 library("plyr")
 library("dplyr")
 library("reshape2")
-library("ggplot2")
+library("ggplot2"); theme_set(theme_bw())
 
 library("smfsb")
 @
@@ -125,6 +125,9 @@ set.seed(2)
 \frametitle{Stochastic kinetic models}
 	\setkeys{Gin}{width=0.8\textwidth}
 	Imagine a \emph{well-mixed} system in \emph{thermal equilibrium} with
+	
+	\vspace{0.1in}
+	
 	\begin{itemize}[<+->]
 	\item $N$ species: $S_1,\ldots,S_N$ with
 	\item number of molecules $X_1,\ldots,X_N$ with elements $X_j\in\mathbb{Z}^+$
@@ -344,17 +347,17 @@ print(g)
 \frametitle{Inference}
 	Inference is still performed based on the likelihood
 	\[ L(\theta) = p(y|\theta) \pause = p(t,y)  \]
-	\pause but this is the solution to the \alert{chemical master equation}
+	\pause but the likelihood is the solution to the \alert{chemical master equation}:
 	\[
 	\frac{\partial}{\partial t}p(t,y) = \sum_{j=1}^M \big(a_j(y-v_m)p(t,y-v_m)- a_j(y)p(t,y)\big)
 	\]
 	
-	\vspace{0.2in}
-	
-	\pause For constitutive production $h(X_t)=1$ and $a(X_t)=\theta$, \pause
+\pause 
+
+For constitutive production, $h(X_t)=1$ and $a(X_t)=\theta$, \pause
 	we still have 
 	\[ L(\theta) \propto  \theta^{n} \exp\left(-\theta I \right) \]
-	\pause with 	\[ n= y_T-y_0 \qquad I = \int_0^T 1 dt = T \]
+	\pause with 	\[ n= y_T-y_0 \qquad I = \int_0^T 1\, dt = T \]
 \end{frame}
 
 
@@ -371,7 +374,7 @@ g + xlim(30,31)
 	
 	\begin{itemize}
 	\item How many reactions occurred in the interval $[30,31]$? \pause
-	\item What is $\int_{30}^{31} X_{SE} dt$?
+	\item What is $\int_{30}^{31} X_{SE}\, dt$?
 	\end{itemize}
 \end{frame}
 
@@ -384,7 +387,7 @@ g + xlim(30,31)
 	where 
 	\[ \begin{array}{ll}
 	n_j &= \sum_{i=1}^n \mathrm{I}(r_i=j) \\
-	I_j &= \int_0^T h_j(X_t) dt = \sum_{i=1}^n h_j(X_{t_{i-1}}) (t_i-t_{i-1}) + h_j(X_{t_n})[T- t_n]
+	I_j &= \int_0^T h_j(X_t) \, dt = \sum_{i=1}^n h_j(X_{t_{i-1}}) (t_i-t_{i-1}) + h_j(X_{t_n})[T- t_n]
 	\end{array} \]
 	
 	\vspace{0.2in} \pause
@@ -466,7 +469,11 @@ print(g)
 \begin{frame}
 \frametitle{Gibbs sampling}
 	Our objective is samples from the posterior 
-	\[ p(\theta|y) =\int p(\theta,X|y) dX \propto \int p(y|X)p(X|\theta)p(\theta) dX \]
+\[ 
+p(\theta,X|y) \propto p(y|X)p(X|\theta)p(\theta) \pause = 
+\left[ \prod_{t=1}^n \mathrm{I}(y_t=X_t) \right] p(X|\theta)p(\theta) 
+\]
+where $p(\theta|y)$ is the marginal of $p(\theta,X|y)$.
 	
   \vspace{0.2in} \pause 
   
@@ -516,8 +523,9 @@ print(g)
 
 \subsection{The Approximation}
 \frame{\frametitle{Approximate Bayesian computation (ABC)}
-	Our \only<2->{\alert{approximate }}objective is samples from the posterior 
-	\[ p(\theta|\alt<1>{y}{\rho\le \epsilon}) \pause\pause =\int p(\theta,X|\rho\le \epsilon) dX \pause \propto \int \mathrm{I}(\rho\le \epsilon)p(X|\theta)p(\theta) dX \]
+	Our \only<2->{\alert{approximate }} objective is samples from the posterior 
+\[ 
+p(\theta|\alt<1>{y}{\rho\le \epsilon}) \pause\pause =\int p(\theta,X|\rho\le \epsilon) dX \pause \propto \int \mathrm{I}(\rho\le \epsilon)p(X|\theta)p(\theta) dX \]
 	\pause where $\rho=\rho(y,X)$ is a measure of the difference between your data $y$ and simulations $X$.
 	
 	\vspace{0.2in} \pause
