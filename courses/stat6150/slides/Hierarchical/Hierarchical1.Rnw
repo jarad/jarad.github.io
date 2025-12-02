@@ -39,10 +39,7 @@ options(width=100)
 @
 
 <<libraries, echo=FALSE, message=FALSE, warning=FALSE>>=
-library(ggplot2); theme_set(theme_bw())
-library(plyr)
-library(dplyr)
-library(reshape2)
+library(tidyverse); theme_set(theme_bw())
 @
 
 <<set_seed, echo=FALSE>>=
@@ -57,9 +54,12 @@ set.seed(2)
 \frametitle{Normal model with normal prior}
 
 Consider the model
-\[ Y \sim N(\theta,V) \]
-with prior
-\[ \theta \sim N(m,C) \]
+\[ 
+Y \sim N(\theta,V) 
+\quad \mbox{with prior}
+\quad
+\theta \sim N(m,C) 
+\]
 
 \vspace{0.1in} \pause
 
@@ -83,34 +83,40 @@ then $\theta|y \sim N(y/2, 1/2)$.
 Suppose \alert{$y = 1$}, then we have
 
 <<colors_and_lines>>=
-colors = c(prior = "#56B4E9",
-           likelihood = "#E69F00",
-           posterior = "#009E73",
-           mle = "#808080",
-           map_normal = "#56B4E9",
-           map_t = "#E69F00",
+colors = c(prior       = "#56B4E9",
+           likelihood  = "#E69F00",
+           posterior   = "#009E73",
+           mle         = "#808080",
+           map_normal  = "#56B4E9",
+           map_t       = "#E69F00",
            map_laplace = "#009E73")
-linetypes = c(prior = 2,
-              likelihood = 1,
-              posterior = 3,
-              mle = 1,
-              map_normal = 2,
-              map_t = 3,
+
+linetypes = c(prior       = 2,
+              likelihood  = 1,
+              posterior   = 3,
+              mle         = 1,
+              map_normal  = 2,
+              map_t       = 3,
               map_laplace = 4)
 @
 
 
 <<normal_model_normal_prior, fig.width=7>>=
 y = 1
-d = data.frame(x=seq(-2,3,by=.01)) |>
-  mutate(prior = dnorm(x),
-         likelihood = dnorm(x,y),
-         posterior = dnorm(x,y/2,sqrt(1/2))) |>
-  melt(id.var='x', variable.name='distribution', value.name='density')
+d = data.frame(theta = seq(-2, 3,by = .01)) |>
+  mutate(prior      = dnorm(theta),
+         likelihood = dnorm(y, theta),
+         posterior  = dnorm(theta, y/2, sqrt(1/2))) |>
+  pivot_longer(cols      = -theta, 
+               names_to  = "distribution",
+               values_to = "density")
 
-ggplot(d, aes(x,density, color=distribution, linetype=distribution)) +
+ggplot(d, aes(x        = theta, 
+              y        = density, 
+              color    = distribution, 
+              linetype = distribution)) +
   geom_line() +
-  labs(x=expression(theta)) +
+  labs(x = expression(theta)) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -124,15 +130,20 @@ Now suppose \alert{$y = 10$}, then we have
 
 <<normal_model_normal_prior2, fig.width=7>>=
 y = 10
-d = data.frame(theta=seq(-2,12,by=.01)) |>
-  mutate(prior = dnorm(theta),
-         likelihood = dnorm(theta,y),
-         posterior = dnorm(theta,y/2,sqrt(1/2))) |>
-  melt(id.var='theta', variable.name='distribution', value.name='density')
+d = data.frame(theta = seq(-2, 12, by = .01)) |>
+  mutate(prior      = dnorm(theta),
+         likelihood = dnorm(theta, y),
+         posterior  = dnorm(theta, y/2, sqrt(1/2))) |>
+  pivot_longer(cols      = -theta, 
+               names_to  = "distribution",
+               values_to = "density")
 
-ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
+ggplot(d, aes(x        = theta,
+              y        = density, 
+              color    = distribution, 
+              linetype = distribution)) +
   geom_line() +
-  labs(x=expression(theta)) +
+  labs(x = expression(theta)) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -231,20 +242,25 @@ f = Vectorize(function(theta, y = 1, V = 1, v = 1, m = 0, C = 1, log = FALSE) {
 
 \begin{frame}
 \frametitle{Normal model with $t$ prior (cont.)}
-Let $v=1$, $m=0$, $V=C=1$ and \alert{$y = 1$}. 
+Let $v = 1$, $m = 0$, $V = C = 1$ and \alert{$y = 1$}. 
 \pause Then
 
 <<normal_model_t_prior2>>=
 y = 1
-d = data.frame(theta=seq(-2,3,by=.01)) |>
-  mutate(prior = my_dt(theta, 1),
+d = data.frame(theta = seq(-2, 3, by = .01)) |>
+  mutate(prior      = my_dt(theta, 1),
          likelihood = dnorm(y,theta),
-         posterior = f(theta,y=y)/py$value) |>
-  melt(id.var='theta', variable.name='distribution', value.name='density')
+         posterior  = f(theta, y = y) / py$value) |>
+  pivot_longer(cols      = -theta, 
+               names_to  = "distribution",
+               values_to = "density")
 
-ggplot(d, aes(theta,density, color=distribution, linetype=distribution)) +
+ggplot(d, aes(x        = theta,
+              y        = density, 
+              color    = distribution, 
+              linetype = distribution)) +
   geom_line() +
-  labs(x=expression(theta)) +
+  labs(x = expression(theta)) +
   scale_color_manual(values = colors, limits = force) +
   scale_linetype_manual(values = linetypes, limits = force)
 @
@@ -260,16 +276,20 @@ Let $v=1$, $m=0$, $V=C=1$, and \alert{$y = 10$}.
 Then
 
 <<normal_model_t_prior3>>=
-y = 10
-py = integrate(function(x) f(x, y), -Inf, Inf)
-d = data.frame(theta=seq(-2, 12, by = .1)) |>
+y  = 10
+py = integrate(function(theta) f(theta, y), -Inf, Inf)
+d  = data.frame(theta = seq(-2, 12, by = .1)) |>
   mutate(prior      = my_dt(theta, 1),
          likelihood = dnorm(y,theta),
          posterior  = f(theta,y = y) / py$value) |>
-  melt(id.var='theta', variable.name='distribution', value.name='density')
+  pivot_longer(cols = -theta, 
+               names_to = "distribution",
+               values_to = "density")
 
-ggplot(d, aes(theta, density, 
-              color = distribution, linetype = distribution)) +
+ggplot(d, aes(x        = theta, 
+              y        = density, 
+              color    = distribution, 
+              linetype = distribution)) +
   geom_line() +
   labs(x = expression(theta)) +
   scale_color_manual(values = colors, limits = force) +
@@ -287,18 +307,32 @@ Let's take a look at the \emph{maximum a posteriori} (MAP) estimates as a functi
 \pause
 
 <<normal_model_map>>=
-mx = 5
-map = adply(seq(-mx, mx, length = 101), 1, function(d){
-  o = optimize(function(x) f(x, d), c(-mx, mx), maximum = TRUE)
-  data.frame(
-    y = d, 
-    map_t = o$maximum, 
-    mle = d, 
-    map_normal = d/2)
-})[,-1] |>
-  melt(id.vars='y', variable.name='model', value.name = 'theta')
+range_y <- 5
+map_t <- Vectorize(function(y) {
+  optimize(function(theta) f(theta, y), 
+               c(y - range_y, y + range_y), 
+               maximum = TRUE)$maximum
+})
 
-ggplot(map, aes(y, theta, color = model, linetype = model)) +
+
+map <- data.frame(
+  y = seq(from   = 0, 
+          to     = range_y, 
+          length = 101)
+) |>
+  mutate(
+    mle        = y,
+    map_normal = y / 2,
+    map_t      = map_t(y)
+  ) |>
+  pivot_longer(cols      = -y, 
+               names_to  = "model",
+               values_to = "theta")
+
+ggplot(map, aes(x        = y, 
+                y        = theta, 
+                color    = model, 
+                linetype = model)) +
   geom_line() +
   labs(x = expression(y), y = expression(hat(theta))) +
   scale_color_manual(values = colors, limits = force) +
