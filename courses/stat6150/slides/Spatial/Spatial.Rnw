@@ -394,7 +394,7 @@ p(\theta|y) \propto p(y|\theta)p(\theta).
 
 Suppose we assume the Mat\'{e}rn covariance function and a common mean $\mu$ so that $\theta = (\mu,\nu, \phi, \tau^2, \sigma^2)$. \pause Then we have
 \[
-p(\mu,\nu,\phi,\tau^2,\sigma^2|y) \propto N(y;\mu,\mySigma)p(\mu,\nu, \phi, \tau^2, \sigma^2)
+p(\mu,\nu,\phi,\tau^2,\sigma^2|y) \propto N_n(y;\mu,\mySigma)p(\mu,\nu, \phi, \tau^2, \sigma^2)
 \]
 \pause
 where $\mySigma$ is constructed from the parameters $\nu$, $\phi$, $\tau^2$, and $\sigma^2$ and the distances between locations, e.g. $||s_1-s_2||$.
@@ -404,29 +404,41 @@ where $\mySigma$ is constructed from the parameters $\nu$, $\phi$, $\tau^2$, and
 
 
 
-\frame{\frametitle{}
-Consider point-referenced data at spatial locations $s_1,\ldots,s_n$, model this data as
-\[ Y(s) = \mu(s)+w(s)+\epsilon(s) \]
+\begin{frame}
+\frametitle{}
+
+Consider point-referenced data at spatial locations $s_1,\ldots,s_n$, model these data as
+
+\[ Y(s) = \mu(s) + w(s) + \epsilon(s) \]
+
 If we constrain ourselves to isotropic models, the Mat\'{e}rn class is suggested as a general tool (Banerjee pg. 37). \pause If $w=(w(s_1),\ldots,w(s_n))^\top$ and $\epsilon=(\epsilon(s_1),\ldots,\epsilon(s_n))^\top$, then a general model is \pause
 \[ Var[w] = \sigma^2 H(\phi) \qquad Var[\epsilon] = \tau^2 \mathrm{I} \]
 \pause where $H$ is a correlation matrix with $H_{ij}=\rho(s_i-s_j;\phi)$ and $\rho$ is a valid isotropic correlation function on $\mathbb{R}^r$, i.e. Mat\'{e}rn:
 \[ \rho(u;\nu,\phi) = \frac{(u/\phi)^\nu K_\nu(u/\phi)}{2^{\nu-1}\mathrm\Gamma(\nu)} \]
 as defined in {\tt geoR::matern}.
 \pause The overall mean is modeled separately and uses covariates $x(s)$ via \[\mu(s)=x(s)^\top\beta.\]
-}
+\end{frame}
 
-\frame{\frametitle{Bayesian estimation for spatial random effects}
-Let $\theta=(\beta,\sigma^2,\tau^2,\phi)$, then parameter estimates may be obtained from the posterior distribution:
+
+\begin{frame}
+\frametitle{Bayesian estimation for spatial random effects}
+
+Let $\theta = (\beta, \sigma^2, \tau^2, \phi)$, 
+
+then parameter estimates may be obtained from the posterior distribution:
+
 \[ p(\theta|y) \propto p(y|\theta) p(\theta) \]
+
 \pause where
-\[ Y|\theta \sim N(X\beta, \sigma^2 H(\phi)+\tau^2\mathrm{I}).\]
+
+\[ Y|\theta \sim N_n(X\beta, \sigma^2 H(\phi)+\tau^2\mathrm{I}).\]
 
 \vspace{0.2in} \pause
 
 Typically, independent priors are chosen so that
 \[ p(\theta) = p(\beta)p(\sigma^2)p(\tau^2)p(\phi). \]
 As a general rule, non-informative priors can be chosen for $\beta$, e.g. $p(\beta)\propto 1$. \pause However, improper (or vague proper) priors for the variance parameters can lead to improper (or computationally improper) posteriors.
-}
+\end{frame}
 
 
 
@@ -1032,7 +1044,7 @@ The Leroux et al. (1999) CAR tries to ameliorate these issues.
 \pause 
 The joint distribution is 
 \[
-Y \sim N(0, \tau^2[\rho(D_w-W)+(1-\rho)\I]^{-1})
+Y \sim N_n(0, \tau^2[\rho(D_w-W)+(1-\rho)\I]^{-1})
 \]
 \pause
 and the conditional distributions are 
