@@ -22,7 +22,7 @@ options(width=100)
 @
 
 <<libraries, echo=FALSE, message=FALSE, warning=FALSE>>=
-library("tidyverse")
+library("tidyverse"); theme_set(theme_bw())
 library("gridExtra")
 @
 
@@ -35,7 +35,7 @@ set.seed(2)
 \begin{frame}
 \frametitle{(Logarithmically) Concave Univariate Function}
 
-A function $p(\theta)$ is concave if 
+A function $p(\theta)$ is \alert{concave} if 
 $$ p((1-t)x+t\, y) \ge (1-t) p(x) + t\, p(y) $$
 for any $0\le t\le 1$.
 
@@ -48,9 +48,10 @@ axis(2, c(dnorm(c(-2,1), log=T)), labels=c('p(x)','p(y)'))
 segments(-2,dnorm(-2, log=T), 1, dnorm(1, log=T))
 @
 
-If $p(x)$ is twice differentiabe, then $p(x)$ is concave if and only if $p''(x) \le 0$.
+If $p(x)$ is twice differentiable, 
+then $p(x)$ is \alert{concave} if and only if $p''(x) \le 0 \, \forall \, x$.
 
-A function $p(x)$ is log-concave if $\log p(x)$ is concave.
+A function $p(x)$ is \alert{log-concave} if $\log p(x)$ is concave.
 \end{frame}
 
 
@@ -66,17 +67,18 @@ $X\sim Ca(0,1)$ has a non-log-concave density since
 $$ \frac{d^2}{dx^2} \log \frac{1}{1+x^2} = \frac{d}{dx} \frac{-2x}{1+x^2} = \frac{2(x^2-1)}{(1+x^2)^2}. $$
 
 <<cauchy, out.width='.4\\linewidth'>>=
-d = data.frame(x=seq(0,5,length=101)) %>%
+d <- data.frame(x = seq(0, 5, length = 101)) |>
   mutate(normal = dnorm(x),
          cauchy = dcauchy(x),
          exponential = dexp(x))
 
-ggplot(d %>% tidyr::gather(distribution,density,-x),
-       aes(x,density,color=distribution, 
-           group=distribution, linetype=distribution)) + 
+ggplot(d |> tidyr::gather(distribution, density, -x),
+       aes(x = x, y = density, 
+           color    = distribution, 
+           group    = distribution, 
+           linetype = distribution)) + 
   geom_line() +
-  scale_y_log10() +
-  theme_bw()
+  scale_y_log10() 
 @
 \end{frame}
 
@@ -86,7 +88,7 @@ ggplot(d %>% tidyr::gather(distribution,density,-x),
 \begin{frame}
 \frametitle{Log-concave distributions}
 \begin{itemize}
-\item Log-concave distributions
+\item Log-concave densities
   \begin{itemize}
   \item normal
   \item exponential
@@ -96,7 +98,7 @@ ggplot(d %>% tidyr::gather(distribution,density,-x),
   \item Wishart ($n\ge p+1$)
   \item Dirichlet (all parameters $\ge 1$)
   \end{itemize}
-\item Non-log-concave distributions
+\item Non-log-concave densities
   \begin{itemize}
   \item Log-normal
   \item Student $t$
@@ -160,10 +162,10 @@ Suppose we are interested in sampling from a target distribution $p(\theta|y)$ u
 
 To use this algorithm, we must find 
 $$ 
-M \ge \frac{p(\theta|y)}{q(\theta)} \forall \theta
+M \ge \frac{p(\theta|y)}{q(\theta)} \,\forall\, \theta
 $$
 where the optimal $M$ is $\mbox{sup}_\theta p(\theta|y)/q(\theta)$.
-
+\pause
 Rejection sampling performs the following
 
 \begin{enumerate}
@@ -188,27 +190,28 @@ $$
 $$
 
 <<envelope, fig.width=14>>=
-o = optimize(function(x) 2*dnorm(x)/dexp(x), c(0,10), maximum=TRUE)
-M = o$objective
+o <- optimize(function(x) 2 * dnorm(x) / dexp(x), c(0, 10), maximum = TRUE)
+M <- o$objective
 
-d = data.frame(x=seq(0,3,by=.01)) %>%
+d <- data.frame(x = seq(0, 3, by = .01)) |>
   mutate('N^+(0,1)' = 2*dnorm(x),
-         'Exp(1)' = dexp(x),
+         'Exp(1)'   = dexp(x),
          'M*Exp(1)' = M*dexp(x))
 
-g1 = ggplot(d %>% tidyr::gather(distribution,density,-x),
-       aes(x, density, group=distribution, color=distribution, linetype=distribution)) + 
+g1 <- ggplot(d |> tidyr::gather(distribution, density, -x),
+       aes(x = x, y = density, 
+           group    = distribution, 
+           color    = distribution, 
+           linetype = distribution)) + 
   geom_line() + 
-  theme_bw() + 
   theme(legend.position='bottom')
 
-g2 = g1 + 
+g2 <- g1 + 
   scale_y_log10() +
-  theme_bw() + 
   theme(legend.position='none') +
   labs(y='log density')
 
-grid.arrange(g1, g2, nrow=1)
+grid.arrange(g1, g2, nrow = 1)
 @
 \end{frame}
 
@@ -216,22 +219,22 @@ grid.arrange(g1, g2, nrow=1)
 \begin{frame}
 \frametitle{Rejection sampling example}
 <<rejection_sampling_example, dependson='envelope'>>=
-n = 100
-s = data.frame(i = 1:n, x=rexp(n)) %>%
-  mutate(y=runif(n)*M*dexp(x),
-         accept=y<2*dnorm(x)) 
+n <- 100
+s <- data.frame(i = 1:n, x = rexp(n)) |>
+  mutate(y      = runif(n) * M * dexp(x),
+         accept = y < 2 * dnorm(x)) 
 
-lines <- data.frame(x = seq(0, 5, by = 0.1)) %>%
+lines <- data.frame(x = seq(0, 5, by = 0.1)) |>
   mutate(envelop = M*exp(-x),
-         density = 2*dnorm(x)) %>%
+         density = 2*dnorm(x)) |>
   pivot_longer(-x, names_to = "type", 
-               values_to = "y") %>%
+               values_to = "y") |>
   mutate(accept = type == "density")
 
 ggplot(s, aes(x, y, color=accept, shape=accept)) + 
   geom_point() + 
   geom_line(data = lines) + 
-  labs(y='M*Exp(x;1)') + 
+  labs(y = 'M*Exp(x;1)') + 
   theme_bw()
 @
 \end{frame}
@@ -244,7 +247,7 @@ ggplot(s, aes(x, y, color=accept, shape=accept)) +
 Idea: build a piece-wise linear envelope to the log-density as a proposal distribution
 
 <<out.width='0.6\\linewidth'>>=
-opar = par(mar=c(0,0,4,0)+.1, mfrow=c(1,2))
+opar <- par(mar=c(0,0,4,0)+.1, mfrow=c(1,2))
 curve(dnorm(x, log=T), -4, 4, lwd=2, axes=F, frame=T, ylim=c(-10,0),
       main="log density")
 deriv = function(x) -x

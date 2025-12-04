@@ -289,7 +289,7 @@ legend('topright', c('Current','Proposed'), pch=c(19,8), col=c('red','black'))
 
 
 \begin{frame}[fragile]
-\frametitle{R code}
+\frametitle{}
 <<slice2, echo=TRUE>>=
 slice2 = function(n, init_theta, like, qprior) {
     u = theta = rep(NA, n)
