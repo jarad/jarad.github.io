@@ -31,9 +31,9 @@ Originally, I am from [Duluth, Minnesota](https://duluthmn.gov/ "Duluth, Minneso
 
 -->
 
-## Fall 2025 Courses ([all courses](courses/))
+## Spring 2026 Courses ([all courses](courses/))
 
-  - [STAT 6150](courses/stat6150)
+  - DS 4010 - Data Science Capstone
 
 ## Contact
 

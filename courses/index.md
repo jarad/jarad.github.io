@@ -8,7 +8,9 @@ group: navigation
 
 ## Regular courses
 
-- Fall
+- Spring 2026 
+  - [DS 4010 - Data Science Capstone]
+- Fall 2025
   - [STAT 6150](stat6150)
 - Spring 2025
   - [STAT 4610X - Sports Analytics](https://isusportsanalytics.netlify.app/)
