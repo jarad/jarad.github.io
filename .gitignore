@@ -50,3 +50,6 @@ courses/stat615/slides/*.pdf
 courses/stat615/homework/*.pdf
 
 .bundle/
+
+# MS Office temp files
+~$*
