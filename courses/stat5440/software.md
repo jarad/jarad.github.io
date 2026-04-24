@@ -14,6 +14,7 @@ This page provides links to those software pages.
 - [Stan](http://mc-stan.org/)
 - [LiBbi](http://libbi.org/)
 - [NIMBLE](https://r-nimble.org/)
+- [BlackJAX](https://github.com/blackjax-devs/blackjax)
 
 There are also many R interfaces (or standalone R packages) for the various 
 software packages. A list of the packages we will use is provided here, but a 
