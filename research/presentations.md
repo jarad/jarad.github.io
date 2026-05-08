@@ -11,8 +11,8 @@ who might be interested in looking at the material after the conference.
 If there is a talk/poster that is missing, please email me <niemi@iastate.edu>.
 
 - 2026
-  - SIAM UQ 2026
   - [BOSS 2026](presentations/JaradNiemi_BOSS2026.pptx)
+  - [SIAM UQ 2026](presentations/JaradNiemi_SIAMUQ2026.pptx)
 - 2025
   - [UNMC 2025](presentations/JaradNiemi_UNMC2025.pptx)
   - [MCW 2025](presentations/JaradNiemi_MCW2025.pptx)
