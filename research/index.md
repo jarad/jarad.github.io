@@ -27,8 +27,8 @@ group: navigation
 
 ## Recent presentations ([All Presentations](presentations.html))
 
-- [UNMC 2025](presentations/JaradNiemi_UNMC2025.pptx)
-- [MCW 2025](presentations/JaradNiemi_MCW2025.pptx)
+- [BOSS 2026](presentations/JaradNiemi_BOSS2026.pptx)
+- [SIAM UQ 2026](presentations/JaradNiemi_SIAMUQ2026.pptx)
 
 ## Some software ([Additional software](software.html))
 
