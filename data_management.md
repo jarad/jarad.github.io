@@ -20,6 +20,7 @@ To construct this page, I used many sources including
 
 - [NOAA - Data Management Best Practices](http://www.ncddc.noaa.gov/activities/science-technology/data-management/)
 - [ESA Bulletin - Some Simple Guidelines for Effective Data Management](http://www.esajournals.org/doi/abs/10.1890/0012-9623-90.2.205)
+- [Data Organization in Spreadsheets](https://www.tandfonline.com/doi/full/10.1080/00031305.2017.1375989)
 
 
 ## What is raw data?
@@ -96,4 +97,3 @@ For the purpose of this page,
 Unlike the relatively strict ``rules'' for raw data, tidy data can be any format you want. 
 I know many individuals use Excel to produce summary statistics, figures, and tables.
 Although this is fine, I suggest a scripting language, e.g. R or SAS, that will allow you to easily recreate those statistics, figures, and tables if errors in the raw data are found. 
-
