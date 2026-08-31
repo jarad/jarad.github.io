@@ -31,9 +31,9 @@ Originally, I am from [Duluth, Minnesota](https://duluthmn.gov/ "Duluth, Minneso
 
 -->
 
-## Spring 2026 Courses ([all courses](courses/))
+## Fall 2026 Courses ([all courses](courses/))
 
-  - DS 4010 - Data Science Capstone
+  - [DS 3030 - Concepts and Applications of Machine Learning](courses/ds3030)
 
 ## Contact
 

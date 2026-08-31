@@ -8,8 +8,10 @@ group: navigation
 
 ## Regular courses
 
+- Fall 2026
+  - [DS 3030](ds3030)
 - Spring 2026 
-  - [DS 4010 - Data Science Capstone]
+  - DS 4010 - Data Science Capstone
 - Fall 2025
   - [STAT 6150](stat6150)
 - Spring 2025
