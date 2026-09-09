@@ -24,7 +24,7 @@ This course will utilize the statistical software
 
 ## Relevant course pages
 
-- [Slides](slides)
+- [Notes](https://jarad.me/DS3030/)
 
 ## Course Description
 
