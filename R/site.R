@@ -7,12 +7,24 @@
 # ---- locating the CV data ---------------------------------------------------
 
 # CV_DIR wins; otherwise _cv (where the GitHub Action checks it out) or a
-# sibling clone at ../cv
+# sibling clone at ../cv. A clone only counts if it has R/cvdata.R, which a
+# cv checkout from before that file existed (an old master) does not.
 cv_dir = function() {
-  for (d in c(Sys.getenv("CV_DIR"), "_cv", "../cv"))
-    if (nzchar(d) && file.exists(file.path(d, "R", "cvdata.R"))) return(normalizePath(d))
-  stop("Cannot find the cv repository. Clone https://github.com/jarad/cv ",
-       "next to this repository, or set CV_DIR to its location.")
+  tried = character(0)
+  # tolerate quotes, a trailing carriage return from a Windows editor, and ~
+  env = path.expand(gsub('^["\']|["\']$', "", trimws(Sys.getenv("CV_DIR"))))
+  for (d in c(env, "_cv", "../cv")) {
+    if (!nzchar(d)) next
+    if (file.exists(file.path(d, "R", "cvdata.R"))) return(normalizePath(d))
+    tried = c(tried, if (!dir.exists(d)) paste0("  ", d, ": no such folder")
+                     else paste0("  ", d, ": exists, but has no R/cvdata.R ",
+                                 "(is the cv clone on an old branch? try `git pull`)"))
+  }
+  stop("Cannot find the cv repository.\n",
+       "CV_DIR is ", if (nzchar(Sys.getenv("CV_DIR"))) paste0('"', Sys.getenv("CV_DIR"), '"') else "not set", ".\n",
+       "Looked in:\n", paste(tried, collapse = "\n"), "\n",
+       "Clone https://github.com/jarad/cv next to this repository, or set CV_DIR ",
+       "in _environment.local to the folder containing its data/ and R/.", call. = FALSE)
 }
 CV = cv_dir()
 source(file.path(CV, "R", "cvdata.R"))
