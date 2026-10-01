@@ -24,10 +24,17 @@ from. To change one of those lists, change the CV data.
 
 ## Previewing locally
 
-Clone `jarad/cv` next to this repository (or set `CV_DIR` to wherever it is),
-then
+The site looks for the cv repository in `CV_DIR`, then `_cv/`, then `../cv`.
+The simplest setup is to clone it next to this repository, so nothing needs
+setting:
 
+    git clone https://github.com/jarad/cv ../cv
     quarto preview
+
+If your clone lives elsewhere, put its path in `_environment.local` (which is
+not committed); Quarto reads it on every render and preview:
+
+    CV_DIR=/path/to/cv
 
 R needs only `knitr` and `rmarkdown`.
 
