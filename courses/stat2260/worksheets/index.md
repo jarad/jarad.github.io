@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 226
-tagline: worksheet
+subtitle: worksheet
 ---
-{% include JB/setup %}
 
 Below are worksheets
 

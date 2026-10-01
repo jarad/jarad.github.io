@@ -1,55 +1,31 @@
-_site/*
-_theme_packages/*
+# Quarto
+/_site/
+/.quarto/
+/_freeze/
 
-Thumbs.db
-.DS_Store
+# the cv repository, checked out here by the GitHub Action
+/_cv/
 
-!.gitkeep
-
-Gemfile.lock
-.jekyll-metadata
-.rbenv-version
-.rvmrc
-
+# R
+.Rhistory
 .Rproj.user
-
 *.Rproj
+*cache/
+*figure/
 
-# knitr aux files
+# LaTeX auxiliary files from the course materials
 *.tex
-
 !courses/stat401A/syllabus.tex
-
 *.log
 *.nav
 *.snm
 *.synctex.gz
 *.toc
 *.vrb
-
-# LaTeX auxiliary files
 *.aux
 *.out
 
-# R auxiliary files
-*.Rhistory
-
-*cache/
-*figure/
-
-# derivative figure directories
-courses/stat401A/slides/figure
-courses/stat544/slides/figure
-courses/stat615/slides/figure
-
-# some particular files
-courses/stat544/syllabus.pdf
-courses/stat544/slides/stat544.zip
-courses/stat615/syllabus.pdf
-courses/stat615/slides/*.pdf
-courses/stat615/homework/*.pdf
-
-.bundle/
-
-# MS Office temp files
+# OS and editor
+Thumbs.db
+.DS_Store
 ~$*

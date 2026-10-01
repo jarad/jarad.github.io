@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: slides
+subtitle: slides
 ---
-{% include JB/setup %}
 
 Below are source (Rnw) and handouts for all course lectures. 
 In order to compile these documents, you will need the 

@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 401 (Engineering)
-tagline: slides
+subtitle: slides
 ---
-{% include JB/setup %}
 
 Below are slides (.pdf).
 

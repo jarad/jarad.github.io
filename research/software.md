@@ -4,7 +4,6 @@ title: Software
 header: Software
 group: 
 ---
-{% include JB/setup %}
 
 This page contains link to software that I or my students have created. 
 Most of this software is proof-of-principle rather than production quality 

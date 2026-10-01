@@ -1,0 +1,72 @@
+name: Build and publish website
+
+# Builds the site from this repository plus the CV data in jarad/cv.
+# Every push and pull request is built, so a broken page is caught before it
+# is merged; only master is published. The nightly run picks up changes made
+# to the CV data since the last build.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 9 * * *"   # 3:17/4:17 a.m. in Ames
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # A branch here is built against the same-named branch of jarad/cv when
+      # there is one, so a change that spans both repositories can be checked
+      # before either is merged. Otherwise, and always on master, cv's master.
+      - name: Choose the CV branch
+        id: cv
+        run: |
+          ref="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          if [ "$ref" != "master" ] && git ls-remote --exit-code --heads https://github.com/jarad/cv "$ref" > /dev/null; then
+            echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=master" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: jarad/cv
+          ref: ${{ steps.cv.outputs.ref }}
+          path: _cv
+
+      - name: Install R
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends r-base-core r-cran-knitr r-cran-rmarkdown
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render
+        run: quarto render
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

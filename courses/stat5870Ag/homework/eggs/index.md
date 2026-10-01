@@ -1,9 +1,7 @@
 ---
 layout: page
 title: "Crustacean question"
-description: ""
 ---
-{% include JB/setup %}
 
 <head>
     <script type="text/javascript"

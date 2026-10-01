@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 401 (Engineering)
-tagline: practice problems
+subtitle: practice problems
 ---
-{% include JB/setup %}
 
 This page is devoted to additional practice problems for course content. 
 Please email me know if any of these links are broken or if they end up not 

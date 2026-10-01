@@ -1,9 +1,8 @@
 ---
 layout: page
 title: DS 3030
-tagline: Concepts and Applications of Machine Learning
+subtitle: Concepts and Applications of Machine Learning
 ---
-{% include JB/setup %}
 
 
 

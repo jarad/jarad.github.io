@@ -1,0 +1,71 @@
+project:
+  type: website
+  output-dir: _site
+  # Only these are rendered. Everything else a page links to (course files,
+  # papers, slides, theses) is copied as-is by `resources` below.
+  render:
+    - index.qmd
+    - publications.qmd
+    - presentations.qmd
+    - students.qmd
+    - teaching.qmd
+    - 404.qmd
+    - "courses/**/*.md"
+    - "consulting/**/*.md"
+    - "research/**/*.md"
+  resources:
+    - CNAME
+    - "assets/**"
+    - "courses/**"
+    - "consulting/**"
+    - "research/papers/**"
+    - "research/presentations/**"
+    - "research/thesis/**"
+
+execute:
+  echo: false
+  warning: false
+  message: false
+
+website:
+  title: "Jarad Niemi"
+  description: "Professor of Statistics and Director of the Data Science Program at Iowa State University."
+  site-url: https://jarad.me
+  favicon: favicon.ico
+  repo-url: https://github.com/jarad/jarad.github.io
+  navbar:
+    left:
+      - text: Publications
+        href: publications.qmd
+      - text: Presentations
+        href: presentations.qmd
+      - text: Students
+        href: students.qmd
+      - text: Teaching
+        href: teaching.qmd
+      - text: Software
+        href: research/software.md
+      - text: CV
+        href: https://github.com/jarad/cv/raw/master/JaradNiemi-CV.pdf
+    right:
+      - icon: github
+        href: https://github.com/jarad
+        aria-label: GitHub
+      - icon: envelope
+        href: mailto:niemi@iastate.edu
+        aria-label: Email
+  page-footer:
+    left: "Jarad Niemi &middot; Department of Statistics &middot; Iowa State University"
+    right: "Publications, presentations, students and courses are built nightly from my [CV data](https://github.com/jarad/cv)."
+
+format:
+  html:
+    theme:
+      light: [cosmo, styles/theme.scss, styles/light.scss]
+      dark: [darkly, styles/theme.scss, styles/dark.scss]
+    respect-user-color-scheme: true
+    include-after-body:
+      - text: '<script src="/assets/site.js"></script>'
+    link-external-newwindow: false
+    anchor-sections: false
+    smooth-scroll: true

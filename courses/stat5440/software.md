@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: Software
+subtitle: Software
 ---
-{% include JB/setup %}
 
 There are now many available Blackbox Bayesian software packages. 
 This page provides links to those software pages.

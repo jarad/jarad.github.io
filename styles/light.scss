@@ -1,0 +1,22 @@
+/*-- scss:defaults --*/
+// Iowa State cardinal and gold
+$primary:    #C8102E;
+$secondary:  #524727;
+$link-color: #A30D25;
+$body-bg:    #ffffff;
+$body-color: #1f2328;
+$navbar-bg:  #C8102E;
+$navbar-fg:  #ffffff;
+$navbar-hl:  #F1BE48;
+$footer-bg:  #f7f4ee;
+
+/*-- scss:rules --*/
+:root {
+  --jn-gold: #F1BE48;
+  --jn-muted: #5c6168;
+  --jn-border: #e4ded3;
+  --jn-card: #fbf9f5;
+  --jn-badge-bg: #fbeccb;
+  --jn-badge-fg: #5e4500;
+  --jn-on-primary: #ffffff;
+}

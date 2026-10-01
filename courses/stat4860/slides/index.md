@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 486/586
-tagline: Slides and Code
+subtitle: Slides and Code
 ---
-{% include JB/setup %}
 
 # Slides
 

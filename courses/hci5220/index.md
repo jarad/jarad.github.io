@@ -1,9 +1,8 @@
 ---
 layout: page
 title: HCI/PSYCH 522
-tagline: Scientific Methods in Human Computer Interaction
+subtitle: Scientific Methods in Human Computer Interaction
 ---
-{% include JB/setup %}
 
 This website is designed to host course material for HCI/PSYCH 522 
 Scientific Methods in Human Computer Interaction at 

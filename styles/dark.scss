@@ -1,0 +1,25 @@
+/*-- scss:defaults --*/
+// gold carries the accent on a dark background; cardinal stays in the navbar
+$primary:    #F1BE48;
+$link-color: #F5CF75;
+$body-bg:    #16181c;
+$body-color: #e5e5e5;
+$navbar-bg:  #7C0A1D;
+$navbar-fg:  #ffffff;
+$navbar-hl:  #F1BE48;
+$footer-bg:  #1d2025;
+$input-bg:   #1e2126;
+$input-color: #e5e5e5;
+$input-border-color: #3b4048;
+$input-placeholder-color: #8b9098;
+
+/*-- scss:rules --*/
+:root {
+  --jn-gold: #F1BE48;
+  --jn-muted: #a8adb4;
+  --jn-border: #343840;
+  --jn-card: #1e2126;
+  --jn-badge-bg: #3a2f12;
+  --jn-badge-fg: #f5d48a;
+  --jn-on-primary: #1a1a1a;
+}

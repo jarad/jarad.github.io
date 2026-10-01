@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544 Previous midterms
-tagline: Bayesian Statistics
+subtitle: Bayesian Statistics
 ---
-{% include JB/setup %}
 
 - 2024: [exam](2024/midterm2024.pdf) and [solutions](2024/midterm2024_sol.pdf)
 - 2019: [exam](2019/midterm2019.pdf) and [solutions](2019/midterm2019_sol.pdf)

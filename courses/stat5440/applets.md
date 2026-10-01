@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: Applets
+subtitle: Applets
 ---
-{% include JB/setup %}
 
 Please run these apps from r using the `runGitHub` function from the `shiny` package:
 

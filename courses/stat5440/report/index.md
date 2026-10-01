@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: Bayesian Statistics
+subtitle: Bayesian Statistics
 ---
-{% include JB/setup %}
 
 The major culmination of STAT 544 is the final project report. 
 This report is a data analysis performed from a Bayesian perspective typically 

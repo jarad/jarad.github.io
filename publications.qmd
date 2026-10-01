@@ -1,0 +1,30 @@
+---
+title: "Publications"
+description: "Refereed journal articles by Jarad Niemi."
+aliases:
+  - research/publications.html
+  - research/index.html
+---
+
+```{r}
+source("R/site.R")
+p = published()
+all_bib = paste(vapply(seq_len(nrow(p)), function(i) bibtex(p[i, ]), ""), collapse = "\n\n")
+```
+
+<span class="advisee">*</span> marks a student advisee.
+Also on
+[Google Scholar](https://scholar.google.com/citations?user=sRLc6F8AAAAJ&hl=en),
+[ORCID](https://orcid.org/0000-0002-5079-158X) and
+[arXiv](https://arxiv.org/a/0000-0002-5079-158X.html).
+<a download="niemi.bib" href="data:text/plain;charset=utf-8,`r utils::URLencode(all_bib, reserved = TRUE)`">Download all as BibTeX</a>.
+
+```{r}
+#| output: asis
+items = vapply(seq_len(nrow(p)), function(i) pub_item(p[i, ]), "")
+emit('<div class="filterable">',
+     filter_controls("publications", flags = c(advisee = "With a student advisee")),
+     by_year(items, p$year),
+     '<p class="empty-filter" hidden>No publications match.</p>',
+     '</div>')
+```

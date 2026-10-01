@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 6150
-tagline: readings
+subtitle: readings
 ---
-{% include JB/setup %}
 
 # Relevant Readings
 

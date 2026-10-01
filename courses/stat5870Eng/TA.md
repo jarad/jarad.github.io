@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 5870 (Engineering)
-tagline: Statistical Methods for Research Workers
+subtitle: Statistical Methods for Research Workers
 ---
-{% include JB/setup %}
 
 ## Course overview
 

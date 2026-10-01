@@ -1,0 +1,23 @@
+---
+title: "Presentations"
+description: "Talks and posters by Jarad Niemi."
+aliases:
+  - research/presentations.html
+---
+
+```{r}
+source("R/site.R")
+d = presentations()
+```
+
+```{r}
+#| output: asis
+items = vapply(seq_len(nrow(d)), function(i) talk_item(d[i, ]), "")
+emit('<div class="filterable">',
+     filter_controls("presentations",
+                     buttons = setNames(c("All", "Talks", "Posters"), c("", "talk", "poster")),
+                     flags   = c(invited = "Invited only")),
+     by_year(items, substr(d$date, 1, 4)),
+     '<p class="empty-filter" hidden>No presentations match.</p>',
+     '</div>')
+```

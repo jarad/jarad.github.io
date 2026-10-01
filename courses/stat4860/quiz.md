@@ -1,7 +1,7 @@
 ---
 layout: page
 title: STAT 486/586
-tagline: Introduction to Statistical Computing
+subtitle: Introduction to Statistical Computing
 ---
 
 This page is intended to help TAs when constructing Canvas quizzes. 

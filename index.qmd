@@ -1,0 +1,79 @@
+---
+title: "Jarad Niemi"
+pagetitle: "Jarad Niemi"
+image: assets/headshot.svg
+image-alt: "Jarad Niemi"
+about:
+  id: hero
+  template: trestles
+  image-shape: round
+  image-width: 13em
+  links:
+    - icon: envelope
+      text: Email
+      href: mailto:niemi@iastate.edu
+    - icon: file-earmark-text
+      text: CV
+      href: https://github.com/jarad/cv/raw/master/JaradNiemi-CV.pdf
+    - icon: github
+      text: GitHub
+      href: https://github.com/jarad
+    - icon: person-badge
+      text: ORCID
+      href: https://orcid.org/0000-0002-5079-158X
+    - icon: mortarboard
+      text: Scholar
+      href: https://scholar.google.com/citations?user=sRLc6F8AAAAJ&hl=en
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/jaradniemi
+---
+
+```{r}
+source("R/site.R")
+pos = cv("positions")
+pos = pos[is.na(pos$end_date) & pos$institution == "Iowa State University", ]
+```
+
+::: {#hero}
+
+::: {.lead-in}
+`r paste(paste(pos$title, pos$unit, sep = ", "), collapse = " &middot; ")`<br>
+Iowa State University
+:::
+
+I am a professor in the [Department of Statistics](https://www.stat.iastate.edu/)
+at Iowa State University and director of its
+[Data Science Program](https://datascience.iastate.edu/).
+My research focuses on Bayesian inference and the computational methods that make it
+practical, such as Markov chain Monte Carlo and sequential Monte Carlo,
+with applications in disease forecasting, agriculture and the environment.
+
+:::
+
+## News
+
+```{r}
+#| output: asis
+n = news(6)
+emit('<ul class="news">',
+     paste0('<li><span class="when">', h(n$shown), '</span><span>', n$html, '</span></li>', collapse = ""),
+     '</ul>')
+```
+
+```{r}
+#| output: asis
+now = current_courses()
+if (nrow(now)) {
+  t = term_of()
+  emit('<h2>Teaching in ', t$term, ' ', t$year, '</h2><ul class="course-cards">',
+       paste0('<li class="course-card"><div class="course-number">', link(h(now$number), now$url),
+              '</div><div class="course-title">', txt(now$title), '</div></li>', collapse = ""),
+       '</ul>')
+}
+```
+
+## Contact
+
+Department of Statistics, 2103 Snedecor Hall, Iowa State University, Ames, IA 50011-1210<br>
+<niemi@iastate.edu> &middot; (515) 294-8679

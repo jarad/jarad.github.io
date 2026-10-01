@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: Report rubric
+subtitle: Report rubric
 ---
-{% include JB/setup %}
 
 The report will be graded on a scale of 0-10 for each of 10 categories: on-time, length, grammar, design, clarity, figure(s), table(s), math, accuracy, and Bayesian. 
 The description below discuss what I am looking for in each of the 10 categories. 

@@ -3,7 +3,6 @@ layout: page
 title: "Links"
 description: "Links to anything STAT 401A related"
 ---
-{% include JB/setup %}
 
 On this page I hope to link to anything that will be relevant for STAT 401A.
 

@@ -1,12 +1,49 @@
-jarad.github.io
-================
+# jarad.me
 
-This is my professional website (outside of a university).
+Source for [jarad.me](https://jarad.me), built with [Quarto](https://quarto.org).
 
-## Serve locally
+The publications, presentations, students, teaching and homepage news are not
+written here: they are generated from the CSV files in
+[jarad/cv](https://github.com/jarad/cv), the same data the CV PDF is built
+from. To change one of those lists, change the CV data.
 
-Navigate to the base folder for this website and type:
+## Layout
 
-    bundle exec jekyll serve
+    index.qmd                homepage: bio, news, this term's courses
+    publications.qmd         from cv/data/publications.csv (published only)
+    presentations.qmd        from cv/data/presentations.csv
+    students.qmd             from cv/data/studentcommittees.csv and people.csv
+    teaching.qmd             from cv/data/courses.csv
+    R/site.R                 CV data -> HTML; sources cv/R/cvdata.R for the
+                             rules it shares with the CV (bylines, advisees, dates)
+    styles/                  theme: Iowa State cardinal and gold, light and dark
+    assets/site.js           search and filters, BibTeX buttons
+    assets/people/           student photos, named <person_id>.jpg|png|webp
+    courses/, consulting/    older pages, rendered as they are
+    research/                papers, slides and theses served as files
 
+## Previewing locally
 
+Clone `jarad/cv` next to this repository (or set `CV_DIR` to wherever it is),
+then
+
+    quarto preview
+
+R needs only `knitr` and `rmarkdown`.
+
+## Publishing
+
+`.github/workflows/publish.yml` renders the site on every push, every pull
+request and every night, and publishes it from `master`. It requires
+**Settings → Pages → Source: GitHub Actions**. The nightly run is what carries
+CV data changes to the site; to publish one immediately, run the workflow from
+the Actions tab.
+
+A branch here is built against the branch of the same name in `jarad/cv` when
+one exists, so a change spanning both repositories can be checked together.
+
+## Old addresses
+
+Pages that moved list their old address under `aliases:` in their front
+matter, and Quarto writes a redirect there; for example
+`research/publications.html` now redirects to `publications.html`.

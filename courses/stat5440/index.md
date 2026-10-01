@@ -1,11 +1,10 @@
 ---
 layout: page
 title: STAT 544
-tagline: Bayesian Statistics
+subtitle: Bayesian Statistics
 ---
-{% include JB/setup %}
 
-<img src="http://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Bayes_icon.svg/200px-Bayes_icon.svg.png" align="right" />
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Bayes_icon.svg/200px-Bayes_icon.svg.png" align="right" />
 This website is designed to host course material for [STAT 544 - Bayesian Statistics](http://catalog.iastate.edu/showcourse/?code=STAT-544&edition=2023-24) at [Iowa State University](http://www.iastate.edu).
 
 ## Textbook

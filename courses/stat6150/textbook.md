@@ -1,9 +1,8 @@
 ---
 layout: page
-title: [STAT 6150](../)
-tagline: Textbook
+title: "[STAT 6150](../)"
+subtitle: Textbook
 ---
-{% include JB/setup %}
 
 The required textbook for the course is 
 

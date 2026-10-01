@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: Bayesian Statistics
+subtitle: Bayesian Statistics
 ---
-{% include JB/setup %}
 
 ## Report outline
 

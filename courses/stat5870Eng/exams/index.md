@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 5870 (Engineering)
-tagline: previous exams
+subtitle: previous exams
 ---
-{% include JB/setup %}
 
 Below are exams, keys, and data used in the exam.
 

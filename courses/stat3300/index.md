@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 330
-tagline: Probability and Statistics for Computer Science
+subtitle: Probability and Statistics for Computer Science
 ---
-{% include JB/setup %}
 
 This website is designed to host course material for STAT 330 - Probability and Statistics for Computer Science at 
 [Iowa State University](http://www.iastate.edu).

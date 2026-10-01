@@ -1,9 +1,8 @@
 --- 
 layout: page
 title: STAT 587 (Engineering)
-tagline: probability videos
+subtitle: probability videos
 ---
-{% include JB/setup %}
 
 ## Probability
 

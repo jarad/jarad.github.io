@@ -1,9 +1,7 @@
 ---
 layout: page
 title: STAT 401A prerequisites
-tagline: 
 ---
-{% include JB/setup %}
 
 <head>
     <script type="text/javascript"

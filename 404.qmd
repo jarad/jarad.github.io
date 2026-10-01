@@ -1,0 +1,8 @@
+---
+title: "Page not found"
+---
+
+This site was rebuilt in 2026, so some old addresses no longer exist.
+Try the [home page](/), [publications](/publications.html),
+[presentations](/presentations.html), [students](/students.html) or
+[teaching](/teaching.html).

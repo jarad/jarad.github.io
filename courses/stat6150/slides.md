@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 6150
-tagline: Slides
+subtitle: Slides
 ---
-{% include JB/setup %}
 
 I will post lecture slides here. 
 The Rnw files can be found [here](https://github.com/jarad/jarad.github.io/tree/master/courses/stat6150/slides).

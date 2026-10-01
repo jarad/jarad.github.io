@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 226
-tagline: Introduction to Business Statistics
+subtitle: Introduction to Business Statistics
 ---
-{% include JB/setup %}
 
 This website is designed to host course material for STAT 226 - 
 Introduction to Business Statistics at 

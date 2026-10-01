@@ -1,9 +1,7 @@
 ---
 layout: page
 title: "Horseshoe crab question"
-description: ""
 ---
-{% include JB/setup %}
 
 This question comes from the [Handbook of Biological Statistics](http://www.biostathandbook.com/).
 

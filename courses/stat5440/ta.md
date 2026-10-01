@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: TA responsibilities
+subtitle: TA responsibilities
 ---
-{% include JB/setup %}
 
 Set up for 10hr/week TA
 

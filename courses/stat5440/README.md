@@ -1,9 +1,8 @@
 ---
 layout: page
 title: STAT 544
-tagline: schedule
+subtitle: schedule
 ---
-{% include JB/setup %}
 
 This is the schedule as it occurred in Spring 2019:
 

@@ -1,10 +1,8 @@
 ---
 layout: page
 title: "Consulting"
-description: ""
 group: navigation
 ---
-{% include JB/setup %}
 
 This is currently a stub to organize consulting files. 
 

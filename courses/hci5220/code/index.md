@@ -1,9 +1,8 @@
 --- 
 layout: page
 title: HCI 522
-tagline: code
+subtitle: code
 ---
-{% include JB/setup %}
 
 This page will provide links to code for completing analyses for this class. 
 

@@ -1,9 +1,8 @@
 --- 
 layout: page
 title: STAT 5870 (Engineering)
-tagline: slides/videos
+subtitle: slides/videos
 ---
-{% include JB/setup %}
 
 Below are slides (.pdf), R code (.R) extracted from the code that generated the
 slides, and YouTube links to recorded videos.

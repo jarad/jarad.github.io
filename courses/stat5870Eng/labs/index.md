@@ -1,7 +1,7 @@
 ---
 layout: page
 title: STAT 5870 (Engineering) Lab
-tagline: Statistical Methods for Research Workers
+subtitle: Statistical Methods for Research Workers
 ---
 
 [Install R and (optionally) RStudio.](installation.html)
